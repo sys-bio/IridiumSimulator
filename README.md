@@ -1,6 +1,6 @@
 # Iridium
 
-[![swift-version](https://img.shields.io/badge/swift-5.1-brightgreen.svg)](https://github.com/apple/swift)
+[![delphi-version](https://img.shields.io/badge/delphi-11-brightgreen.svg)](https://github.com/apple/swift)
 
  <table style="width:100%">
   <tr>
