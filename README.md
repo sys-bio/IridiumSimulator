@@ -4,8 +4,9 @@
 
  <table style="width:100%">
   <tr>
-    <td><img alt="Licence", src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen"</td>
+    <td><img alt="Licence", src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen"></td>
     <td><img alt="Funding", src="https://img.shields.io/badge/Funding-NIH%20(GM123032)-blue"></td>
+   <td><img alt="Language", src="https://img.shields.io/badge/delphi-11-brightgreen.svg">/td>
    </tr>
 </table> 
 
