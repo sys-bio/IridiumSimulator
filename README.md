@@ -17,16 +17,4 @@ Supports: Time course simulation, steady-state, real-time interactive simulation
 
 Here are some screenshots to show you what it looks like:
 
-<div align="center">
-    <img src="/images/iridium2.png" width="400px"</img> 
-</div>
-
-<div align="center">
-    <img src="/images/iridium1.png" width="400px"</img> 
-</div>
-
-<div align="center">
-    <img src="/images/iridium3.png" width="400px"</img> 
-</div>
-
-
+<img src="/images/iridium1.png" width="40%"></img> <img src="/images/iridium3.png" width="40%"></img> <img src="/images/iridium2.png" width="40%"></img> 
