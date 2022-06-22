@@ -3,7 +3,7 @@ Coming soon
  
 Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
 
-Supports: Time course simulation, stady-state, parameter scans, slider control, snesitivity (MCA) analysis, and network structural analysis.
+Supports: Time course simulation, steady-state, realt-time interactive simulation, parameter scans, slider control, sensitivity analysis (MCA), and network structural analysis.
 
 Uses [antimony](https://github.com/sys-bio/antimony) format to enter models and is fully SBML compliant[SBML](https://github.com/sbmlteam/libsbml). 
 
