@@ -1,12 +1,10 @@
 # Iridium
 
-[![delphi-version](https://img.shields.io/badge/delphi-11-brightgreen.svg)](https://github.com/apple/swift)
-
  <table style="width:100%">
   <tr>
     <td><img alt="Licence", src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen"></td>
     <td><img alt="Funding", src="https://img.shields.io/badge/Funding-NIH%20(GM123032)-blue"></td>
-   <td><img alt="Language", src="https://img.shields.io/badge/Delphi-11-blue.svg">/td>
+   <td><img alt="Language", src="https://img.shields.io/badge/Delphi-11-blue.svg"></td>
    </tr>
 </table> 
 
