@@ -15,7 +15,7 @@ Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of
 
 Supports: Time course simulation, steady-state, real-time interactive simulation, parameter scans, slider control, MCA style sensitivity analysis (https://en.wikipedia.org/wiki/Metabolic_control_analysis), and network structural analysis. It uses the [antimony](https://github.com/sys-bio/antimony) format to describe models and is fully [SBML](https://github.com/sbmlteam/libsbml) compliant.
 
-**Update** (Jul 6th): I now have a Mac OS version including the M1 version working. I hope to release the source code and binaries for windows and Mac during the week of July 11th.
+**Update** (Jul 6th): I now have a Mac OS version including the M1 version working (thanks to Lucian Smith for generating the M1 roadrunner binaries for me). I hope to release the source code and binaries for windows and Mac during the week of July 11th.
 
 Here are some screenshots to show you what it looks like:
 
