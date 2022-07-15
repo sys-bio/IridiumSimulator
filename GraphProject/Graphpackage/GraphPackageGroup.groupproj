@@ -1,0 +1,72 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{B3066071-8B54-460A-8965-6480815AFC17}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="GraphPackage.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dclGraphPackage.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="TestProject.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AnotherTestProject.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="GraphPackage">
+        <MSBuild Projects="GraphPackage.dproj"/>
+    </Target>
+    <Target Name="GraphPackage:Clean">
+        <MSBuild Projects="GraphPackage.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GraphPackage:Make">
+        <MSBuild Projects="GraphPackage.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dclGraphPackage">
+        <MSBuild Projects="dclGraphPackage.dproj"/>
+    </Target>
+    <Target Name="dclGraphPackage:Clean">
+        <MSBuild Projects="dclGraphPackage.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dclGraphPackage:Make">
+        <MSBuild Projects="dclGraphPackage.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestProject">
+        <MSBuild Projects="TestProject.dproj"/>
+    </Target>
+    <Target Name="TestProject:Clean">
+        <MSBuild Projects="TestProject.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestProject:Make">
+        <MSBuild Projects="TestProject.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="AnotherTestProject">
+        <MSBuild Projects="AnotherTestProject.dproj"/>
+    </Target>
+    <Target Name="AnotherTestProject:Clean">
+        <MSBuild Projects="AnotherTestProject.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AnotherTestProject:Make">
+        <MSBuild Projects="AnotherTestProject.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="GraphPackage;dclGraphPackage;TestProject;AnotherTestProject"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="GraphPackage:Clean;dclGraphPackage:Clean;TestProject:Clean;AnotherTestProject:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="GraphPackage:Make;dclGraphPackage:Make;TestProject:Make;AnotherTestProject:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
