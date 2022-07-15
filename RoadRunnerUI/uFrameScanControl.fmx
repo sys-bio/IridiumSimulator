@@ -1,0 +1,365 @@
+object FrameScanControl: TFrameScanControl
+  Size.Width = 296.000000000000000000
+  Size.Height = 732.000000000000000000
+  Size.PlatformDefault = False
+  object pnlScanUpper: TLayout
+    Align = Top
+    Size.Width = 296.000000000000000000
+    Size.Height = 31.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object Label5: TLabel
+      StyledSettings = [Family, Style]
+      Position.X = 12.000000000000000000
+      Position.Y = 5.000000000000000000
+      Size.Width = 120.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 16.000000000000000000
+      TextSettings.FontColor = claCornsilk
+      Text = 'Parameter Scan'
+    end
+  end
+  object pnlScanLayout: TLayout
+    Align = Client
+    Size.Width = 296.000000000000000000
+    Size.Height = 701.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object Rectangle3: TRectangle
+      Fill.Kind = None
+      Position.X = 16.000000000000000000
+      Position.Y = 38.000000000000000000
+      Size.Width = 265.000000000000000000
+      Size.Height = 99.000000000000000000
+      Size.PlatformDefault = False
+      Stroke.Color = xFF80CEB5
+    end
+    object btnWhatToPlot: TButton
+      Position.X = 16.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 106.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      Text = 'What to plot?'
+      OnClick = btnWhatToPlotClick
+    end
+    object btnUpdate: TButton
+      Position.X = 134.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 80.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Update'
+      Visible = False
+    end
+    object lstScanSelectionList: TListBox
+      Position.X = 16.000000000000000000
+      Position.Y = 38.000000000000000000
+      Size.Width = 265.000000000000000000
+      Size.Height = 99.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      DisableFocusEffect = True
+      DefaultItemStyles.ItemStyle = ''
+      DefaultItemStyles.GroupHeaderStyle = ''
+      DefaultItemStyles.GroupFooterStyle = ''
+      OnChange = lstScanSelectionListChange
+      Viewport.Width = 261.000000000000000000
+      Viewport.Height = 95.000000000000000000
+    end
+    object btnStopScan: TButton
+      Position.X = 216.000000000000000000
+      Position.Y = 145.000000000000000000
+      Size.Width = 65.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'Stop'
+      OnClick = btnStopScanClick
+    end
+    object btnStartScan: TButton
+      Position.X = 16.000000000000000000
+      Position.Y = 145.000000000000000000
+      Size.Width = 101.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Scan'
+      OnClick = btnStartScanClick
+    end
+    object GroupBox5: TGroupBox
+      StyledSettings = [Family, Size, Style, Other]
+      Position.X = 8.000000000000000000
+      Position.Y = 179.000000000000000000
+      Size.Width = 273.000000000000000000
+      Size.Height = 112.000000000000000000
+      Size.PlatformDefault = False
+      Text = ' Scan Type '
+      TextSettings.FontColor = claCornsilk
+      TabOrder = 6
+      object rdoScanTimeCourse: TRadioButton
+        IsChecked = True
+        Position.X = 8.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 105.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Time Course'
+        OnChange = rdoScanTimeCourseChange
+      end
+      object rdoScanSteadyState: TRadioButton
+        Position.X = 126.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 103.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Steady State'
+        OnChange = rdoScanSteadyStateChange
+      end
+      object lblScanTimeStart: TLabel
+        Position.X = 8.000000000000000000
+        Position.Y = 54.000000000000000000
+        Size.Width = 72.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Time Start:'
+      end
+      object lblScanTimeEnd: TLabel
+        Position.X = 88.000000000000000000
+        Position.Y = 54.000000000000000000
+        Size.Width = 73.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Time End:'
+      end
+      object lblScanNumPoints: TLabel
+        Position.X = 170.000000000000000000
+        Position.Y = 54.000000000000000000
+        Size.Width = 103.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Num Of Points:'
+      end
+      object edtTimeStartScan: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 5
+        Text = '0.0'
+        Position.X = 8.000000000000000000
+        Position.Y = 75.000000000000000000
+        Size.Width = 72.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object edtTimeEndScan: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 8
+        Text = '10.0'
+        Position.X = 88.000000000000000000
+        Position.Y = 75.000000000000000000
+        Size.Width = 72.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object edtTimeCouseNumOfPointsScan: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 7
+        Text = '100'
+        Position.X = 169.000000000000000000
+        Position.Y = 75.000000000000000000
+        Size.Width = 73.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+    end
+    object GroupBox6: TGroupBox
+      StyledSettings = [Family, Size, Style, Other]
+      Position.X = 8.000000000000000000
+      Position.Y = 294.000000000000000000
+      Size.Width = 273.000000000000000000
+      Size.Height = 172.000000000000000000
+      Size.PlatformDefault = False
+      Text = ' First Parameter '
+      TextSettings.FontColor = claCornsilk
+      TabOrder = 5
+      object Label6: TLabel
+        Position.X = 8.000000000000000000
+        Position.Y = 31.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Parameter:'
+      end
+      object cboScan1: TComboBox
+        Position.X = 90.000000000000000000
+        Position.Y = 31.000000000000000000
+        Size.Width = 152.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+      end
+      object lblScanMin1: TLabel
+        Position.X = 8.000000000000000000
+        Position.Y = 62.000000000000000000
+        Size.Width = 75.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Min:'
+      end
+      object edtMin1: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 3
+        Text = '0.1'
+        Position.X = 8.000000000000000000
+        Position.Y = 83.000000000000000000
+        Size.Width = 72.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object edtMax1: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 5
+        Text = '1.0'
+        Position.X = 90.000000000000000000
+        Position.Y = 83.000000000000000000
+        Size.Width = 72.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object lblScanMax1: TLabel
+        Position.X = 90.000000000000000000
+        Position.Y = 62.000000000000000000
+        Size.Width = 73.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Max:'
+      end
+      object lblScanNumPoints1: TLabel
+        Position.X = 170.000000000000000000
+        Position.Y = 62.000000000000000000
+        Size.Width = 103.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Num Of Values:'
+      end
+      object edtNumScanValues: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 4
+        Text = '16'
+        Position.X = 170.000000000000000000
+        Position.Y = 83.000000000000000000
+        Size.Width = 72.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object chkLogScan1: TCheckBox
+        Position.X = 16.000000000000000000
+        Position.Y = 141.000000000000000000
+        Size.Width = 241.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = 'Logarithmic distribution of values'
+      end
+      object chkUseAList: TCheckBox
+        Position.X = 16.000000000000000000
+        Position.Y = 112.000000000000000000
+        Size.Width = 152.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 9
+        Text = 'Use a list of numbers:'
+        OnChange = chkUseAListChange
+      end
+      object edtList1: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 13
+        Position.X = 24.000000000000000000
+        Position.Y = 83.000000000000000000
+        Size.Width = 241.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Visible = False
+      end
+    end
+    object chkEnableTwoParameterScan: TCheckBox
+      Position.X = 152.000000000000000000
+      Position.Y = 552.000000000000000000
+      Size.Width = 120.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 7
+      Text = 'chkEnableTwoParameterScan'
+      Visible = False
+    end
+    object chkShowLegend: TCheckBox
+      IsChecked = True
+      Position.X = 24.000000000000000000
+      Position.Y = 533.000000000000000000
+      Size.Width = 120.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 9
+      Text = 'Show Legend'
+      OnChange = chkShowLegendChange
+    end
+    object GroupBox7: TGroupBox
+      Position.X = 8.000000000000000000
+      Position.Y = 469.000000000000000000
+      Size.Width = 273.000000000000000000
+      Size.Height = 54.000000000000000000
+      Size.PlatformDefault = False
+      Text = ' Select Output '
+      TabOrder = 8
+      object chkScanGraphOutput: TCheckBox
+        IsChecked = True
+        Position.X = 16.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+        Text = 'Plot Graph'
+      end
+      object chkScanTableOutput: TCheckBox
+        Position.X = 134.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 90.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+        Text = 'Table'
+      end
+    end
+    object cboColorPalette: TComboBox
+      DropDownCount = 16
+      Position.X = 24.000000000000000000
+      Position.Y = 599.000000000000000000
+      Size.Width = 163.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 10
+      OnChange = cboColorPaletteChange
+    end
+    object Label11: TLabel
+      Position.X = 24.000000000000000000
+      Position.Y = 577.000000000000000000
+      Text = 'Color palette:'
+      TabOrder = 11
+    end
+    object btnScanPython: TButton
+      Position.X = 152.000000000000000000
+      Position.Y = 533.000000000000000000
+      Size.Width = 129.000000000000000000
+      Size.Height = 23.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 12
+      Text = 'Generate Python'
+      OnClick = btnScanPythonClick
+    end
+  end
+end

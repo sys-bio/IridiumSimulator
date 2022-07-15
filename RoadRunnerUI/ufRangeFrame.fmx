@@ -1,0 +1,48 @@
+object frmRangeFrame: TfrmRangeFrame
+  Size.Width = 238.000000000000000000
+  Size.Height = 46.000000000000000000
+  Size.PlatformDefault = False
+  object lblLower: TLabel
+    Position.X = 8.000000000000000000
+    Size.Width = 87.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Lower Value:'
+    TabOrder = 0
+  end
+  object edtLower: TEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 1
+    Position.X = 8.000000000000000000
+    Position.Y = 18.000000000000000000
+    Size.Width = 73.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object lblUpper: TLabel
+    Position.X = 103.000000000000000000
+    Size.Width = 87.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Upper Value:'
+    TabOrder = 3
+  end
+  object edtUpper: TEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 2
+    Position.X = 103.000000000000000000
+    Position.Y = 18.000000000000000000
+    Size.Width = 73.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object lblParameterName: TLabel
+    Position.X = 189.000000000000000000
+    Position.Y = 19.000000000000000000
+    Size.Width = 81.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Symbol'
+    TabOrder = 4
+  end
+end

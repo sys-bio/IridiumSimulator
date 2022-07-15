@@ -1,0 +1,32 @@
+object frmConfigSlider: TfrmConfigSlider
+  Left = 0
+  Top = 0
+  BorderStyle = Single
+  Caption = 'Configure Slider'
+  ClientHeight = 174
+  ClientWidth = 406
+  Position = OwnerFormCenter
+  FormStyle = StayOnTop
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 124.000000000000000000
+    Size.Width = 406.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object btnClose: TButton
+      ModalResult = 8
+      Position.X = 304.000000000000000000
+      Position.Y = 16.000000000000000000
+      Size.Width = 80.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Close'
+    end
+  end
+end

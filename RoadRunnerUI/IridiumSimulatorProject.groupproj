@@ -1,0 +1,36 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{E5CB4684-0BA9-454C-984A-A7348498799B}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="roadrunnerUI.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="roadrunnerUI">
+        <MSBuild Projects="roadrunnerUI.dproj"/>
+    </Target>
+    <Target Name="roadrunnerUI:Clean">
+        <MSBuild Projects="roadrunnerUI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="roadrunnerUI:Make">
+        <MSBuild Projects="roadrunnerUI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="roadrunnerUI"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="roadrunnerUI:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="roadrunnerUI:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

@@ -1,0 +1,339 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Condition="Exists('$(BDS)\bin\CodeGear.Deployment.targets')" Project="$(BDS)\bin\CodeGear.Deployment.targets"/>
+    <ProjectExtensions>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <PropertyGroup/>
+    <PropertyGroup>
+        <OSX64_OutputDir Condition="'$(Platform)'=='OSXARM64'">OSX64\Release\</OSX64_OutputDir>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(Platform)'=='Win64'">
+        <DeployFile Include="roadrunnerUI_Icns.icns">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>roadrunnerUI_Icns.icns</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Win64\Release\roadrunnerUI.exe" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>roadrunnerUI.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="OSX32\Release\libroadrunner_c_api.dylib">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>libroadrunner_c_api.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Win64\Debug\roadrunnerUI.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>roadrunnerUI.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>sk4d.dll</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>sk4d.dll</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='OSX64'">
+        <DeployFile Include="OSX64\Debug\roadrunnerUI" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>roadrunnerUI</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="OSX64\Release\roadrunnerUI.info.plist" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\</RemoteDir>
+            <RemoteName>Info.plist</RemoteName>
+            <DeployClass>ProjectOSXInfoPList</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSX64\Release\roadrunnerUI" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>roadrunnerUI</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="OSX64\Debug\roadrunnerUI.entitlements" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\..\</RemoteDir>
+            <RemoteName>roadrunnerUI.entitlements</RemoteName>
+            <DeployClass>ProjectOSXEntitlements</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSX64\Debug\roadrunnerUI.info.plist" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\</RemoteDir>
+            <RemoteName>Info.plist</RemoteName>
+            <DeployClass>ProjectOSXInfoPList</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="roadrunnerUI_Icns3.icns" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\Resources\</RemoteDir>
+            <RemoteName>roadrunnerUI.icns</RemoteName>
+            <DeployClass>ProjectOSXResource</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSX64\Release\roadrunnerUI.entitlements" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\..\</RemoteDir>
+            <RemoteName>roadrunnerUI.entitlements</RemoteName>
+            <DeployClass>ProjectOSXEntitlements</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\OSX64\Release\sk4d.dylib" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>sk4d.dylib</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\OSX64\Release\sk4d.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>sk4d.dylib</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\delphi_PROJECTICNS.icns" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\Resources\</RemoteDir>
+            <RemoteName>roadrunnerUI.icns</RemoteName>
+            <DeployClass>ProjectOSXResource</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='Win32'">
+        <DeployFile Include="roadrunnerUI_Icns.icns">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>roadrunnerUI_Icns.icns</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\Win32\Release\sk4d.dll" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>sk4d.dll</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\Win32\Release\sk4d.dll" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>sk4d.dll</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="OSX32\Release\libroadrunner_c_api.dylib">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>libroadrunner_c_api.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Win32\Debug\roadrunnerUI.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI\</RemoteDir>
+            <RemoteName>roadrunnerUI.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='OSXARM64'">
+        <DeployFile Include="OSXARM64\OSX64ARM_libs\libroadrunner_c_api.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libroadrunner_c_api.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\OSXARM64\Release\sk4d.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>sk4d.dylib</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="..\..\..\..\22.0\CatalogRepository\Skia4Delphi-3.4.0\Binary\OSXARM64\Release\sk4d.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\Resources\StartUp\</RemoteDir>
+            <RemoteName>sk4d.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Debug\roadrunnerUI" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>roadrunnerUI</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Release\roadrunnerUI.info.plist" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\</RemoteDir>
+            <RemoteName>Info.plist</RemoteName>
+            <DeployClass>ProjectOSXInfoPList</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\delphi_PROJECTICNS.icns" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\Resources\</RemoteDir>
+            <RemoteName>roadrunnerUI.icns</RemoteName>
+            <DeployClass>ProjectOSXResource</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\delphi_PROJECTICNS.icns" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\Resources\</RemoteDir>
+            <RemoteName>roadrunnerUI.icns</RemoteName>
+            <DeployClass>ProjectOSXResource</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Release\roadrunnerUI" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>roadrunnerUI</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Debug\roadrunnerUI.entitlements" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\..\</RemoteDir>
+            <RemoteName>roadrunnerUI.entitlements</RemoteName>
+            <DeployClass>ProjectOSXEntitlements</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Debug\roadrunnerUI.info.plist" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\</RemoteDir>
+            <RemoteName>Info.plist</RemoteName>
+            <DeployClass>ProjectOSXInfoPList</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\OSX64ARM_libs\libantimony.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libantimony.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Release\roadrunnerUI.entitlements" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\..\</RemoteDir>
+            <RemoteName>roadrunnerUI.entitlements</RemoteName>
+            <DeployClass>ProjectOSXEntitlements</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(SKIADIR)\Binary\OSXARM64\Release\sk4d.dylib" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>sk4d.dylib</RemoteName>
+            <DeployClass>Skia</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
+</Project>

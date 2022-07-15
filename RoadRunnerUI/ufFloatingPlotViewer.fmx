@@ -1,0 +1,137 @@
+object frmFloatingPlotViewer: TfrmFloatingPlotViewer
+  Left = 0
+  Top = 0
+  Caption = 'Floating Graph'
+  ClientHeight = 560
+  ClientWidth = 948
+  Position = MainFormCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnShow = FormShow
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 510.000000000000000000
+    Size.Width = 948.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object btnEditGraph: TButton
+      Anchors = [akTop, akRight]
+      Position.X = 843.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 97.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Edit Graph'
+      OnClick = btnEditGraphClick
+    end
+  end
+  object Layout2: TLayout
+    Align = Left
+    Size.Width = 249.000000000000000000
+    Size.Height = 510.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object GroupBox2: TGroupBox
+      Align = Top
+      StyledSettings = [Family, Size, Style, Other]
+      Margins.Left = 10.000000000000000000
+      Margins.Right = 10.000000000000000000
+      Position.X = 10.000000000000000000
+      Size.Width = 229.000000000000000000
+      Size.Height = 61.000000000000000000
+      Size.PlatformDefault = False
+      Text = ' X Axis '
+      TextSettings.FontColor = claCornsilk
+      TabOrder = 8
+      object cbXAxis: TComboBox
+        Align = Client
+        Margins.Left = 10.000000000000000000
+        Margins.Top = 15.000000000000000000
+        Margins.Right = 10.000000000000000000
+        Margins.Bottom = 15.000000000000000000
+        Size.Width = 209.000000000000000000
+        Size.Height = 31.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        OnChange = cbXAxisChange
+      end
+    end
+    object GroupBox3: TGroupBox
+      Align = Top
+      StyledSettings = [Family, Size, Style, Other]
+      Margins.Left = 10.000000000000000000
+      Margins.Right = 10.000000000000000000
+      Position.X = 10.000000000000000000
+      Position.Y = 61.000000000000000000
+      Size.Width = 229.000000000000000000
+      Size.Height = 332.000000000000000000
+      Size.PlatformDefault = False
+      Text = ' Y Axis '
+      TextSettings.FontColor = claCornsilk
+      TabOrder = 7
+      object btnSetTimeCourseSelection: TButton
+        Hint = 'Select the variables for the y-axis'
+        Position.X = 14.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 78.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Select'
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object Rectangle4: TRectangle
+        Fill.Kind = None
+        Position.X = 10.000000000000000000
+        Position.Y = 69.000000000000000000
+        Size.Width = 209.000000000000000000
+        Size.Height = 255.000000000000000000
+        Size.PlatformDefault = False
+        Stroke.Color = xFF416BED
+      end
+      object lstYAxis: TListBox
+        Align = Bottom
+        Margins.Left = 10.000000000000000000
+        Margins.Right = 10.000000000000000000
+        Margins.Bottom = 10.000000000000000000
+        Position.X = 10.000000000000000000
+        Position.Y = 69.000000000000000000
+        Size.Width = 209.000000000000000000
+        Size.Height = 253.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        DisableFocusEffect = True
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        ShowCheckboxes = True
+        OnChangeCheck = lstYAxisChange
+        Viewport.Width = 205.000000000000000000
+        Viewport.Height = 249.000000000000000000
+      end
+    end
+  end
+  object plt: TRRGraph
+    subgraphs = <
+      item
+        subgraph.Id = 'SG6151'
+        subgraph.XMax = 10.000000000000000000
+        subgraph.YMax = 10.000000000000000000
+        subgraph.MainTitle = 'Main Title'
+        subgraph.XAxisTitle = 'X Axis'
+        subgraph.YAxisTitle = 'Y Axis'
+        subgraph.graphBorder = True
+        subgraph.properties.XGridLines = False
+        subgraph.properties.YGridLines = False
+        subgraph.properties.AutoXScaling = False
+        subgraph.properties.AutoYScaling = False
+      end>
+    Align = Client
+  end
+end

@@ -1,0 +1,60 @@
+object frmTextViewer: TfrmTextViewer
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 480
+  ClientWidth = 640
+  Position = MainFormCenter
+  StyleBook = StyleBook1
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 430.000000000000000000
+    Size.Width = 640.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object btnClose: TButton
+      Anchors = [akTop, akRight]
+      Position.X = 518.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 112.000000000000000000
+      Size.Height = 25.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Close'
+      OnClick = btnCloseClick
+    end
+    object btnCopyToClipboard: TButton
+      Position.X = 392.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 112.000000000000000000
+      Size.Height = 25.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Copy To Clipboard'
+      OnClick = btnCopyToClipboardClick
+    end
+  end
+  object textmemo: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    Align = Client
+    Size.Width = 640.000000000000000000
+    Size.Height = 430.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Viewport.Width = 636.000000000000000000
+    Viewport.Height = 426.000000000000000000
+  end
+  object StyleBook1: TStyleBook
+    Styles = <
+      item
+      end>
+    Left = 208
+    Top = 438
+  end
+end

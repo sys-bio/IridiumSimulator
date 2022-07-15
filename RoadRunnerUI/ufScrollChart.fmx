@@ -1,0 +1,507 @@
+object frmScrollChart: TfrmScrollChart
+  Left = 0
+  Top = 0
+  Caption = 'Real Time Plotter'
+  ClientHeight = 604
+  ClientWidth = 1046
+  Position = MainFormCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 554.000000000000000000
+    Size.Width = 1046.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+  end
+  object Layout2: TLayout
+    Align = Top
+    Size.Width = 1046.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object btnRealTimeSliders: TSpeedButton
+      Hint = 'Bring up sliders'
+      Position.X = 8.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 42.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      ParentShowHint = False
+      ShowHint = True
+      StyleLookup = 'btnSlidersStyle1'
+      OnClick = btnRealTimeSlidersClick
+      object Image10: TImage
+        MultiResBitmap.Height = 50
+        MultiResBitmap.Width = 50
+        MultiResBitmap.TransparentColor = 16711935
+        MultiResBitmap = <
+          item
+            Width = 50
+            Height = 50
+            PNG = {
+              89504E470D0A1A0A0000000D49484452000000320000003208060000001E3F88
+              B1000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+              0269494441546843ED99BF6FD34014C7DF9DDD360D0DEA843AB7C0CE5E81106C
+              2C0C55C7B23176EB54B5082AC4C0C6C806236260610355A0FE15A56544552720
+              6AFA23CE997CE19DE582EDF86CE79C86FB4851F22ECB7D7D77EFFB9E8F1C2386
+              E06FAB7C7EA4AEF7FCE37545BD451E2249DE8EAFA6BF848ADEDC7C2C77793837
+              D6854084F2CF5EFAE1D42D1E3A47204E3FC960F2A1A918AB420689D014119328
+              E4DDF3BD7BAD932B2F38AC0C49343711B69A1C66D215ED8E223AE030A2DD385C
+              BDBF76F53D871189423E6EFDDC9F0A5BF31C8E14A7A2FDF5CEC6E5050E23FA0F
+              A95E163785C087C3C2D42EA42A12852015F2CFA1B3F3240CF1E1702069734B5C
+              526417216999C3CAE8C9B3BB833216C041F7D5CC330ECF91E63323997EBBA2F3
+              FAF6C6A5071CE6C2EA19C193843F60A25D6A777838022B81FFBC60FA290FE5C6
+              EA8AC449DABE45CB13876388943A23F17D5EF7FE2E240402D04FF49D61491781
+              8ABE9F7485F70D8685AC635B9471FAD55E30113657E295ACA4D9060A4D8CFF11
+              69176367CFE3CE59CE5C162367DFDE3A7A8527CBE14891E6FA895B2BDE4B0FA2
+              AA323C2F69731BEF32DE04D3327C58246E89B49EBDAFBA74CF5D16A39E3D0D9D
+              7AF3642D2F98B961D34B8CB6162686321CAF6B78E81F509EFF681C2EDB36C442
+              D9463B3B32880CFBDB8D5A4DAC0291F7B60E5707A5D3A6364FD74B38C6146BA5
+              451C7DAE02797CED77C22879A500AC0BC9F2A23299CFAA90BC865AD9B5825E7A
+              0E2B23EF9B4600319E9AFCC06184EB47868D693FF37FF6236375ADF0F7F57115
+              94ED67B25E358D4DFAB57A4630B1AC7E06BD0CB292A90860754534DAA7748982
+              B1BADE503A1C8E0B05D12FD4437B22C715396D0000000049454E44AE426082}
+            FileName = 
+              'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+              '\RoadRunnerUI\Slider _50px_Color.png'
+          end>
+        HitTest = False
+        Position.X = 8.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 24.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+      end
+    end
+    object cboBackgroundColor: TColorComboBox
+      DropDownKind = Custom
+      Color = claNull
+      DisableFocusEffect = False
+      DropDownCount = 16
+      ItemIndex = 147
+      Position.X = 480.000000000000000000
+      Position.Y = 13.000000000000000000
+      Size.Width = 153.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      OnChange = cboBackgroundColorChange
+    end
+    object cboPlotBackgroundColor: TColorComboBox
+      DropDownKind = Custom
+      Color = claNull
+      DisableFocusEffect = False
+      DropDownCount = 16
+      ItemIndex = 147
+      Position.X = 680.000000000000000000
+      Position.Y = 14.000000000000000000
+      Size.Width = 153.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      OnChange = cboPlotBackgroundColorChange
+    end
+  end
+  object pnlchart: TLayout
+    Align = Client
+    Size.Width = 623.000000000000000000
+    Size.Height = 504.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+  end
+  object Layout3: TLayout
+    Align = Left
+    Position.Y = 50.000000000000000000
+    Size.Width = 193.000000000000000000
+    Size.Height = 504.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    object lstSelectionBox: TListBox
+      Position.X = 12.000000000000000000
+      Position.Y = 16.000000000000000000
+      Size.Width = 164.000000000000000000
+      Size.Height = 200.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      DisableFocusEffect = True
+      DefaultItemStyles.ItemStyle = ''
+      DefaultItemStyles.GroupHeaderStyle = ''
+      DefaultItemStyles.GroupFooterStyle = ''
+      ShowCheckboxes = True
+      OnChangeCheck = lstSelectionBoxChangeCheck
+      Viewport.Width = 160.000000000000000000
+      Viewport.Height = 196.000000000000000000
+    end
+    object btnReset: TButton
+      Position.X = 8.000000000000000000
+      Position.Y = 451.000000000000000000
+      Size.Width = 161.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'Reset'
+      OnClick = btnResetClick
+    end
+    object chkAutoScale: TCheckBox
+      Position.X = 12.000000000000000000
+      Position.Y = 224.000000000000000000
+      TabOrder = 3
+      Text = 'AutoScale'
+      OnChange = chkAutoScaleChange
+      object Label1: TLabel
+        Position.Y = 124.000000000000000000
+        Size.Width = 25.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = '20'
+        TabOrder = 18
+      end
+    end
+    object nbNumberOfPoints: TNumberBox
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      TabOrder = 4
+      Cursor = crIBeam
+      Min = 2.000000000000000000
+      Max = 5000.000000000000000000
+      Value = 100.000000000000000000
+      Position.X = 12.000000000000000000
+      Position.Y = 272.000000000000000000
+      Hint = 
+        'The more points the slower the simulation, but the smoother the ' +
+        'curve'
+      KillFocusByReturn = True
+      ParentShowHint = False
+      ShowHint = True
+      OnExit = nbNumberOfPointsExit
+    end
+    object trkSpeed: TTrackBar
+      CanParentFocus = True
+      Hint = 'A point is generated every t milliseconds'
+      Max = 50.000000000000000000
+      Min = 20.000000000000000000
+      Orientation = Horizontal
+      Position.X = 12.000000000000000000
+      Position.Y = 330.000000000000000000
+      Size.Width = 164.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 5
+      Value = 20.000000000000000000
+      ParentShowHint = False
+      ShowHint = True
+      OnChange = trkSpeedChange
+    end
+    object lbl1: TLabel
+      Position.X = 12.000000000000000000
+      Position.Y = 308.000000000000000000
+      Size.Width = 149.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Sampling rate in t millisecs:'
+      TabOrder = 7
+    end
+    object btnPauseRun: TButton
+      Position.X = 8.000000000000000000
+      Position.Y = 479.000000000000000000
+      Size.Width = 161.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Run'
+      OnClick = btnPauseRunClick
+    end
+    object Label2: TLabel
+      Position.X = 163.000000000000000000
+      Position.Y = 348.000000000000000000
+      Size.Width = 20.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = '50'
+      TabOrder = 20
+    end
+    object Label3: TLabel
+      Position.X = 12.000000000000000000
+      Position.Y = 251.000000000000000000
+      Text = 'Points plotted:'
+      TabOrder = 21
+    end
+    object chkShowLegend: TCheckBox
+      Position.X = 12.000000000000000000
+      Position.Y = 372.000000000000000000
+      TabOrder = 22
+      Text = 'Show Legend'
+      OnChange = chkShowLegendChange
+    end
+    object nbXAxisMax: TNumberBox
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      TabOrder = 23
+      Cursor = crIBeam
+      Value = 20.000000000000000000
+      ValueType = Float
+      KeyboardType = NumbersAndPunctuation
+      Position.X = 78.000000000000000000
+      Position.Y = 408.000000000000000000
+      Size.Width = 51.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      KillFocusByReturn = True
+      OnExit = nbXAxisMaxExit
+    end
+    object Label4: TLabel
+      Position.X = 12.000000000000000000
+      Position.Y = 409.000000000000000000
+      Size.Width = 63.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'X Axis Max:'
+      TabOrder = 6
+    end
+  end
+  object Timer: TTimer
+    Enabled = False
+    Interval = 25
+    OnTimer = TimerTimer
+    Left = 713
+    Top = 354
+  end
+  object Layout4: TLayout
+    Align = Right
+    Position.X = 816.000000000000000000
+    Position.Y = 50.000000000000000000
+    Size.Width = 230.000000000000000000
+    Size.Height = 504.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 5
+    object Line1: TLine
+      Align = Top
+      LineType = Top
+      Margins.Left = 10.000000000000000000
+      Margins.Right = 5.000000000000000000
+      Position.X = 10.000000000000000000
+      Position.Y = 33.000000000000000000
+      Size.Width = 215.000000000000000000
+      Size.Height = 4.000000000000000000
+      Size.PlatformDefault = False
+      Stroke.Color = claCornflowerblue
+    end
+    object Layout5: TLayout
+      Align = Top
+      Size.Width = 230.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      object Label5: TLabel
+        Position.X = 34.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 190.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Perturbation Controls'
+        TabOrder = 6
+      end
+    end
+    object Com: TLayout
+      Align = Top
+      Position.Y = 37.000000000000000000
+      Size.Width = 230.000000000000000000
+      Size.Height = 106.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 5
+      object Label7: TLabel
+        Position.X = 79.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 105.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Variable to pulse:'
+        TabOrder = 7
+      end
+      object Label6: TLabel
+        Position.X = 8.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 70.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Pulse:'
+        TabOrder = 5
+      end
+      object lblValue: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 81.000000000000000000
+        Size.Width = 62.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'lblValue'
+        TabOrder = 4
+      end
+      object btnUpPulse: TSpeedButton
+        Hint = 'Bring up sliders'
+        Position.X = 15.000000000000000000
+        Position.Y = 32.000000000000000000
+        Size.Width = 29.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        ParentShowHint = False
+        ShowHint = True
+        StyleLookup = 'btnSlidersStyle1'
+        OnClick = btnUpPulseClick
+        object Image1: TImage
+          MultiResBitmap.TransparentColor = 16711935
+          MultiResBitmap = <
+            item
+              Width = 24
+              Height = 24
+              PNG = {
+                89504E470D0A1A0A0000000D4948445200000018000000180806000000E0773D
+                F8000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+                009049444154484BEDD34B0A80201485612FB4AF5A441B68D88A822641631751
+                FB120CC5133D7CDC4A1AF9416404E71F298AE25FE32C17F3B84F1672EFA46192
+                8BD6549B33915EFBAE6DEC8F0456E0380EDC4832E01B074E241A888D432A120C
+                70C62116F1069E8C4328720BBC19075FE414F8320ED7C81EC8310EC7880DE41C
+                0744C85C7DA5F28E4355E9D51D8BE23521364A9D5C048BB720D2000000004945
+                4E44AE426082}
+              FileName = 
+                'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+                '_FMX_Version\RoadRunnerUI\Images\UpArrow.png'
+            end
+            item
+              Scale = 2.000000000000000000
+              Width = 48
+              Height = 48
+              PNG = {
+                89504E470D0A1A0A0000000D49484452000000300000003008060000005702F9
+                87000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+                00F9494441546843ED98CD0A82401446470C821EAF1768D743B5AA45DBE8E984
+                2031ACF9C26AD4F9B95747FA0E943ACEDCCED9660821841042880EC7F3B5693F
+                F65185C25EC5399C2ECDBD7EB9AFCAC2EC775B95DF5219DA95075A11E2035DF2
+                40234274D8903C908E101BE4230F2423448684C803A988E40131F2402222E970
+                8A3C488D883E28210F5222A20E49CA83D888E0031AF220262268B3A63C088DF0
+                DE38853C0889F0DA34A53CF08D18DD30873CF089187C39A73C188BE87D91833C
+                188A702EE6240FFA227E16729407AE888F879CE5C177C4FB6609F2A01BF1FC5A
+                923C4044D1FEED51DD6ABBBC2C36EBD2DE1142082184FC23C63C007A8BA5F4D8
+                43DA160000000049454E44AE426082}
+              FileName = 
+                'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+                '_FMX_Version\RoadRunnerUI\Images\UpArrow.png'
+            end>
+          HitTest = False
+          Position.X = 4.000000000000000000
+          Size.Width = 24.000000000000000000
+          Size.Height = 24.000000000000000000
+          Size.PlatformDefault = False
+        end
+      end
+      object btnDownPulse: TSpeedButton
+        Hint = 'Bring up sliders'
+        Position.X = 16.000000000000000000
+        Position.Y = 49.000000000000000000
+        Size.Width = 29.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        ParentShowHint = False
+        ShowHint = True
+        StyleLookup = 'btnSlidersStyle1'
+        OnClick = btnDownPulseClick
+        object Image2: TImage
+          MultiResBitmap.TransparentColor = 16711935
+          MultiResBitmap = <
+            item
+              Width = 24
+              Height = 24
+              PNG = {
+                89504E470D0A1A0A0000000D4948445200000018000000180806000000E0773D
+                F8000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+                00F249444154484B631805C31F304E9BB7E60090B287F2A90CFE1F640451B4B1
+                E4FFC1ACA410072610535254B8818519CCA40A6062626410E4E56E00B34144A0
+                AFE30146260647109B1AE0FFFFBF8E91A19EC050815A0002A9B1810718199928
+                B6046446666228D87010400997CCC4C003DC9C1C8D502EC9809D9DA511640694
+                0B06E0484607B317AF3FF0FBF73F92229D91F1FFC1CCC4100728170EB0C62C30
+                B8800AFF1F84728900D80D0701AC3E8001E2922F2439423918006FDA24947C91
+                93232E80D70242C9173939E202782D00015CC9173D39E202042D0001F4E48B2D
+                395205CC5BBCE1C0ACF9A0881F05A3000E181800FA97481EC24EA8FE00000000
+                49454E44AE426082}
+              FileName = 
+                'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+                '_FMX_Version\RoadRunnerUI\Images\downArrow.png'
+            end
+            item
+              Scale = 2.000000000000000000
+              Width = 48
+              Height = 48
+              PNG = {
+                89504E470D0A1A0A0000000D49484452000000300000003008060000005702F9
+                87000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+                0159494441546843EDD6C14AC3401006E05DB59422851C0A3E506F2245AC2214
+                D243A5077DA01E3C947AF122826F18F9EB569A4DA6D9EC4EB31B98EF906C2194
+                F943E7A74A0821841011E9CDF6BB30E75ED2B8F435C4DB6AAEF701A06F21303C
+                EEFF01A02F210EC3C385B9EFDD4C32734A57361E99D39F5280F96CAAC7D743F3
+                293DC3C1A55A3CDD967E35A500903FDFE9C155E999246855A897FCBE32582500
+                AC970FC925785D3DD6CE7472D05496FA78696D8D6F3A768853C34363008815A2
+                6978A8DD015B8C7AB5EB92E214A0EB7AADAB4B8A5300E8AA5EA9BAA43807802E
+                EA95AA4B8AD740E75A6A97A5B579BF51EE103EC3837700E00AE13B3CB4DA011B
+                47BDBAD62525284068BDB6A94B4A5000F0ADD7B67549090E003EF5DAB62E292C
+                5F72E0BAD4214B6B630D004D21388707F6004085E01E1E5876C05657AFA17549
+                394B00BB5E39EA328A8FCF9FE27DF7C5FA974308218410E950EA1747FD52921E
+                F149D30000000049454E44AE426082}
+              FileName = 
+                'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+                '_FMX_Version\RoadRunnerUI\Images\downArrow.png'
+            end>
+          HitTest = False
+          Position.X = 3.000000000000000000
+          Position.Y = 4.000000000000000000
+          Size.Width = 24.000000000000000000
+          Size.Height = 24.000000000000000000
+          Size.PlatformDefault = False
+        end
+      end
+      object Label8: TLabel
+        Position.X = 79.000000000000000000
+        Position.Y = 58.000000000000000000
+        Size.Width = 105.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Percentage change:'
+        TabOrder = 6
+      end
+      object nbPercentageChange: TNumberBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 10
+        Cursor = crIBeam
+        Max = 500.000000000000000000
+        Value = 50.000000000000000000
+        Position.X = 90.000000000000000000
+        Position.Y = 80.000000000000000000
+        Size.Width = 65.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnChange = nbPercentageChangeChange
+      end
+      object cboParameterNames: TComboBox
+        Position.X = 80.000000000000000000
+        Position.Y = 33.000000000000000000
+        Size.Width = 142.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 11
+      end
+    end
+    object Line2: TLine
+      Align = Top
+      LineType = Top
+      Margins.Left = 10.000000000000000000
+      Margins.Right = 5.000000000000000000
+      Position.X = 10.000000000000000000
+      Position.Y = 143.000000000000000000
+      Size.Width = 215.000000000000000000
+      Size.Height = 5.000000000000000000
+      Size.PlatformDefault = False
+      Stroke.Color = claCornflowerblue
+    end
+  end
+end

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created by XMLPrettyPrinter on 10/30/2014 from  -->
+<sbml xmlns = "http://www.sbml.org/sbml/level2/version4" level = "2" version = "4">
+   <model id = "NoTitle">
+      <listOfCompartments>
+         <compartment id = "compartment" size = "1"/>
+      </listOfCompartments>
+      <listOfSpecies>
+         <species id = "src" boundaryCondition = "true" initialConcentration = "0" compartment = "compartment"/>
+         <species id = "waste" boundaryCondition = "true" initialConcentration = "0" compartment = "compartment"/>
+         <species id = "X0" boundaryCondition = "true" initialConcentration = "0.1" compartment = "compartment"/>
+         <species id = "X1" boundaryCondition = "true" initialConcentration = "0" compartment = "compartment"/>
+         <species id = "S1" boundaryCondition = "false" initialConcentration = "1.08984406848373" compartment = "compartment"/>
+      </listOfSpecies>
+      <listOfParameters>
+         <parameter id = "J1_k1" value = "3.2"/>
+      </listOfParameters>
+      <listOfReactions>
+         <reaction id = "J0" reversible = "false">
+            <listOfReactants>
+               <speciesReference species = "X0" stoichiometry = "1"/>
+            </listOfReactants>
+            <listOfProducts>
+               <speciesReference species = "S1" stoichiometry = "1"/>
+            </listOfProducts>
+            <kineticLaw>
+               <math xmlns = "http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <divide/>
+                     <apply>
+                        <times/>
+                        <ci>
+                              X0
+                        </ci>
+                        <apply>
+                           <plus/>
+                           <cn type = "integer">
+                                 32
+                           </cn>
+                           <apply>
+                              <power/>
+                              <apply>
+                                 <divide/>
+                                 <ci>
+                                       S1
+                                 </ci>
+                                 <cn>
+                                       0.75
+                                 </cn>
+                              </apply>
+                              <cn>
+                                    3.2
+                              </cn>
+                           </apply>
+                        </apply>
+                     </apply>
+                     <apply>
+                        <plus/>
+                        <cn type = "integer">
+                              1
+                        </cn>
+                        <apply>
+                           <power/>
+                           <apply>
+                              <divide/>
+                              <ci>
+                                    S1
+                              </ci>
+                              <cn>
+                                    4.3
+                              </cn>
+                           </apply>
+                           <cn>
+                                 3.2
+                           </cn>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </kineticLaw>
+         </reaction>
+         <reaction id = "J1" reversible = "false">
+            <listOfReactants>
+               <speciesReference species = "S1" stoichiometry = "1"/>
+            </listOfReactants>
+            <listOfProducts>
+               <speciesReference species = "X1" stoichiometry = "1"/>
+            </listOfProducts>
+            <kineticLaw>
+               <math xmlns = "http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <times/>
+                     <ci>
+                           J1_k1
+                     </ci>
+                     <ci>
+                           S1
+                     </ci>
+                  </apply>
+               </math>
+            </kineticLaw>
+         </reaction>
+      </listOfReactions>
+   </model>
+</sbml>

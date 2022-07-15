@@ -1,0 +1,100 @@
+object frmPreferences: TfrmPreferences
+  Left = 0
+  Top = 0
+  BorderStyle = Single
+  Caption = 'Preferences....'
+  ClientHeight = 396
+  ClientWidth = 548
+  Position = MainFormCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Top
+    Size.Width = 548.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+  end
+  object Layout2: TLayout
+    Align = Bottom
+    Position.Y = 346.000000000000000000
+    Size.Width = 548.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object btnClose: TButton
+      Anchors = [akTop, akRight]
+      Position.X = 440.000000000000000000
+      Position.Y = 15.000000000000000000
+      TabOrder = 0
+      Text = 'Close'
+      OnClick = btnCloseClick
+    end
+    object btnSavePreferences: TButton
+      Position.X = 14.000000000000000000
+      Position.Y = 15.000000000000000000
+      Size.Width = 120.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Save Preferences'
+      OnClick = btnSavePreferencesClick
+    end
+  end
+  object Layout3: TLayout
+    Align = Client
+    Size.Width = 548.000000000000000000
+    Size.Height = 296.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object TabControl1: TTabControl
+      Align = Client
+      Size.Width = 548.000000000000000000
+      Size.Height = 296.000000000000000000
+      Size.PlatformDefault = False
+      TabIndex = 0
+      TabOrder = 0
+      TabPosition = PlatformDefault
+      Sizes = (
+        548s
+        270s)
+      object TabItem1: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = True
+        Size.Width = 89.000000000000000000
+        Size.Height = 26.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'Model Editor'
+        ExplicitSize.cx = 89.000000000000000000
+        ExplicitSize.cy = 26.000000000000000000
+        object Label1: TLabel
+          Position.X = 32.000000000000000000
+          Position.Y = 38.000000000000000000
+          Size.Width = 73.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Font Size:'
+          TabOrder = 0
+        end
+        object sbFontSize: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 1
+          Cursor = crIBeam
+          Min = 6.000000000000000000
+          Max = 72.000000000000000000
+          Value = 6.000000000000000000
+          Position.X = 88.000000000000000000
+          Position.Y = 38.000000000000000000
+          OnChange = sbFontSizeChange
+        end
+      end
+    end
+  end
+end

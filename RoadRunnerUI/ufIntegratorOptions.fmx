@@ -1,0 +1,144 @@
+object frmIntegratorOptions: TfrmIntegratorOptions
+  Left = 0
+  Top = 0
+  BorderStyle = Single
+  Caption = '   Integrator Options'
+  ClientHeight = 470
+  ClientWidth = 548
+  Position = MainFormCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 420.000000000000000000
+    Size.Width = 548.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object btnClose: TButton
+      Anchors = [akTop, akRight]
+      ModalResult = 8
+      Position.X = 445.000000000000000000
+      Position.Y = 16.000000000000000000
+      Size.Width = 80.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Close'
+      OnClick = btnCloseClick
+    end
+  end
+  object lbl2: TLabel
+    Position.X = 129.000000000000000000
+    Position.Y = 9.000000000000000000
+    Size.Width = 74.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Description:'
+  end
+  object lblIntegratorHint: TLabel
+    Position.X = 128.000000000000000000
+    Position.Y = 109.000000000000000000
+    Size.Width = 345.000000000000000000
+    Size.Height = 32.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'lblIntegratorHint'
+  end
+  object lstParameterNames: TListBox
+    Position.X = 128.000000000000000000
+    Position.Y = 156.000000000000000000
+    Size.Width = 153.000000000000000000
+    Size.Height = 225.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 10
+    DisableFocusEffect = True
+    DefaultItemStyles.ItemStyle = ''
+    DefaultItemStyles.GroupHeaderStyle = ''
+    DefaultItemStyles.GroupFooterStyle = ''
+    OnChange = lstParameterNamesChange
+    Viewport.Width = 149.000000000000000000
+    Viewport.Height = 221.000000000000000000
+  end
+  object lstSolverNames: TListBox
+    Position.X = 8.000000000000000000
+    Position.Y = 29.000000000000000000
+    Size.Width = 105.000000000000000000
+    Size.Height = 233.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 9
+    DisableFocusEffect = True
+    DefaultItemStyles.ItemStyle = ''
+    DefaultItemStyles.GroupHeaderStyle = ''
+    DefaultItemStyles.GroupFooterStyle = ''
+    OnChange = lstSolverNamesChange
+    Viewport.Width = 101.000000000000000000
+    Viewport.Height = 229.000000000000000000
+  end
+  object mmoIntegratorDescription: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    ReadOnly = True
+    TextSettings.WordWrap = True
+    Cursor = crDefault
+    Position.X = 128.000000000000000000
+    Position.Y = 27.000000000000000000
+    Size.Width = 409.000000000000000000
+    Size.Height = 86.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 12
+    Viewport.Width = 409.000000000000000000
+    Viewport.Height = 86.000000000000000000
+  end
+  object mmoParameterDescription: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    ReadOnly = True
+    TextSettings.WordWrap = True
+    Cursor = crDefault
+    Position.X = 299.000000000000000000
+    Position.Y = 156.000000000000000000
+    Size.Width = 232.000000000000000000
+    Size.Height = 101.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 13
+    Viewport.Width = 232.000000000000000000
+    Viewport.Height = 101.000000000000000000
+  end
+  object lbl1: TLabel
+    Position.X = 9.000000000000000000
+    Position.Y = 9.000000000000000000
+    Size.Width = 115.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Select an integrator:'
+  end
+  object lbl3: TLabel
+    Position.X = 129.000000000000000000
+    Position.Y = 137.000000000000000000
+    Size.Width = 176.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Integrator Tuning Parameters:'
+  end
+  object edtParameterName: TEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 16
+    Position.X = 299.000000000000000000
+    Position.Y = 296.000000000000000000
+    Size.Width = 232.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    OnExit = edtParameterNameExit
+  end
+  object lblParameterNameToChange: TLabel
+    Position.X = 301.000000000000000000
+    Position.Y = 272.000000000000000000
+    Size.Width = 228.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'None'
+  end
+end

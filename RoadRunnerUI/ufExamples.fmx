@@ -1,0 +1,60 @@
+object frmExamples: TfrmExamples
+  Left = 0
+  Top = 0
+  BorderStyle = Single
+  Caption = 'Builtin Examples'
+  ClientHeight = 396
+  ClientWidth = 368
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object Rectangle1: TRectangle
+    Fill.Kind = None
+    Position.X = 20.000000000000000000
+    Position.Y = 46.000000000000000000
+    Size.Width = 326.000000000000000000
+    Size.Height = 283.000000000000000000
+    Size.PlatformDefault = False
+    Stroke.Color = xFF3664D7
+  end
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 346.000000000000000000
+    Size.Width = 368.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object btnClose: TButton
+      Position.X = 266.000000000000000000
+      Position.Y = 15.000000000000000000
+      TabOrder = 0
+      Text = 'Close'
+      OnClick = btnCloseClick
+    end
+  end
+  object ltExamples: TListBox
+    Position.X = 20.000000000000000000
+    Position.Y = 46.000000000000000000
+    Size.Width = 326.000000000000000000
+    Size.Height = 283.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    DisableFocusEffect = True
+    DefaultItemStyles.ItemStyle = ''
+    DefaultItemStyles.GroupHeaderStyle = ''
+    DefaultItemStyles.GroupFooterStyle = ''
+    OnItemClick = ltExamplesItemClick
+    Viewport.Width = 322.000000000000000000
+    Viewport.Height = 279.000000000000000000
+  end
+  object Label1: TLabel
+    Position.X = 24.000000000000000000
+    Position.Y = 16.000000000000000000
+    Size.Width = 209.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Pick an example from the list below:'
+    TabOrder = 2
+  end
+end
