@@ -17,6 +17,8 @@ Supports: Time course simulation, steady-state, real-time interactive simulation
 
 **Update** (Jul 6th): I now have a Mac OS version including the M1 version working (thanks to Lucian Smith for generating the M1 roadrunner binaries for me). I hope to release the source code and binaries for windows and Mac during the week of July 11th.
 
+Source code abd binaries for WIndows 64 have been uploaded. I have a working Mac version as bundle but I'm not if that is the propoery way to distriubte so I am exploring dmg files.
+
 Here are some screenshots to show you what it looks like:
 
 <img src="/images/iridium1.png" width="40%"></img> <img src="/images/iridium3.png" width="40%"></img> <img src="/images/iridium2.png" width="40%"></img> 
