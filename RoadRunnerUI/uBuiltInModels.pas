@@ -27,6 +27,7 @@ var
 implementation
 
 function getMassActionThreeStepPathway : string; forward;
+function getassActionTwentyStepPathway : string; forward;
 function getFeedbackModel : string; forward;
 function getThreeStepPathway : string; forward;
 function getLorenzAttractor : string; forward;
@@ -78,7 +79,18 @@ begin
   builtInModels.Add(model);
 
   model := TBuiltInModel.Create;
-  model.id := 'threeStepPathway';
+  model.id := 'TwentyStepPathway';
+  model.displayName := 'Twenty Step Mass-action Pathway';
+  model.modelStr := getassActionTwentyStepPathway;
+  model.Ymin := 0;
+  model.Ymax := 100;
+  model.Xmax := 0.0;
+  model.Xmax := 40.0;
+  model.timeEnd := '40.0';
+  builtInModels.Add(model);
+
+  model := TBuiltInModel.Create;
+  model.id := 'ThreeStepPathway';
   model.displayName := 'Enzyme Catalyzed Three Step Pathway';
   model.modelStr := getThreeStepPathway;
   model.Ymin := 0;
@@ -89,7 +101,7 @@ begin
   builtInModels.Add(model);
 
   model := TBuiltInModel.Create;
-  model.id := 'threeStepConservedPathway';
+  model.id := 'ThreeStepConservedPathway';
   model.displayName := 'Two Moiety Conerved Cycle Model';
   model.modelStr := getFourSpeciesMoietyCycle;
   model.Ymin := 0;
@@ -670,6 +682,63 @@ begin
 
   'at time > 40: k2 = k2*3' + sLineBreak +
   'at time > 80: k2 = 0.3' + sLineBreak;
+end;
+
+
+function getassActionTwentyStepPathway : string;
+begin
+  result := '' + sLineBreak +
+
+  '// Twenty Step Mass-Action Linear Chain' + sLineBreak + sLineBreak +
+
+  'J1: $Xo -> S1; k10*Xo - k11*S1;' + sLineBreak +
+  'J2: S1 -> S2; k20*S1 - k21*S2;' + sLineBreak +
+  'J3: S2 -> S3; k30*S2 - k31*S3;' + sLineBreak +
+  'J4: S3 -> S4; k40*S3 - k41*S4;' + sLineBreak +
+  'J5: S4 -> S5; k50*S4 - k51*S5;' + sLineBreak +
+  'J6: S5 -> S6; k60*S5 - k61*S6;' + sLineBreak +
+  'J7: S6 -> S7; k70*S6 - k71*S7;' + sLineBreak +
+  'J8: S7 -> S8; k80*S7 - k81*S8;' + sLineBreak +
+  'J9: S8 -> S9; k90*S8 - k91*S9;' + sLineBreak +
+  'J10: S9 -> S10; k100*S9 - k101*S10;' + sLineBreak +
+  'J11: S10 -> S11; k110*S10 - k111*S11;' + sLineBreak +
+  'J12: S11 -> S12; k120*S11 - k121*S12;' + sLineBreak +
+  'J13: S12 -> S13; k130*S12 - k131*S13;' + sLineBreak +
+  'J14: S13 -> S14; k140*S13 - k141*S14;' + sLineBreak +
+  'J15: S14 -> S15; k150*S14 - k151*S15;' + sLineBreak +
+  'J16: S15 -> S16; k160*S15 - k161*S16;' + sLineBreak +
+  'J17: S16 -> S17; k170*S16 - k171*S17;' + sLineBreak +
+  'J18: S17 -> S18; k180*S17 - k181*S18;' + sLineBreak +
+  'J19: S18 -> S19; k190*S18 - k191*S19;' + sLineBreak +
+  'J20: S19 -> $X1; k200*S19 - k201*X1;' + sLineBreak + sLineBreak +
+
+  'k10 = 4.32;  k11 = 0.36' + sLineBreak +
+  'k20 = 0.37;  k21 = 0.46' + sLineBreak +
+  'k30 = 5.01;  k31 = 0.86' + sLineBreak +
+  'k40 = 2.22;  k41 = 0.85' + sLineBreak +
+  'k50 = 1.29;  k51 = 0.83' + sLineBreak +
+  'k60 = 2.25;  k61 = 0.37' + sLineBreak +
+  'k70 = 0.9;  k71 = 0.25' + sLineBreak +
+  'k80 = 0.28;  k81 = 0.75' + sLineBreak +
+  'k90 = 2.81;  k91 = 0.41' + sLineBreak +
+  'k100 = 2.30;  k101 = 0.05' + sLineBreak +
+  'k110 = 0.50;  k111 = 0.17' + sLineBreak +
+  'k120 = 0.90;  k121 = 0.70' + sLineBreak +
+  'k130 = 0.98;  k131 = 0.46' + sLineBreak +
+  'k140 = 4.22;  k141 = 0.75' + sLineBreak +
+  'k150 = 0.71;  k151 = 0.44' + sLineBreak +
+  'k160 = 1.33;  k161 = 0.11' + sLineBreak +
+  'k170 = 0.33;  k171 = 0.21' + sLineBreak +
+  'k180 = 2.21;  k181 = 0.67' + sLineBreak +
+  'k190 = 3.84;  k191 = 0.45' + sLineBreak +
+  'k200 = 4.19;  k201 = 0.24' + sLineBreak + sLineBreak +
+  'Xo = 10.00' + sLineBreak +
+  'X1 = 0' + sLineBreak +  sLineBreak +
+  'S1 = 0; S2 = 0; S3 = 0; S4 = 0;' + sLineBreak +
+  'S5 = 0; S6 = 0; S7 = 0; S8 = 0;' + sLineBreak +
+  'S9 = 0; S10 = 0; S11 = 0; S12 = 0;' + sLineBreak +
+  'S13 = 0; S14 = 0; S15 = 0; S16 = 0;' + sLineBreak +
+  'S17 = 0; S18 = 0; S19 = 0' + sLineBreak;
 end;
 
 initialization

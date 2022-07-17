@@ -46,12 +46,23 @@ object frmSliders: TfrmSliders
       Anchors = [akTop, akRight]
       Position.X = 420.000000000000000000
       Position.Y = 14.000000000000000000
-      Size.Width = 109.000000000000000000
+      Size.Width = 110.000000000000000000
       Size.Height = 22.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 2
       Text = 'Restore values'
       OnClick = btnResetClick
+    end
+    object btnClearAll: TButton
+      Anchors = [akTop, akRight]
+      Position.X = 297.000000000000000000
+      Position.Y = 14.000000000000000000
+      Size.Width = 110.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      Text = 'Clear All Sliders'
+      OnClick = btnClearAllClick
     end
   end
   object Layout2: TLayout

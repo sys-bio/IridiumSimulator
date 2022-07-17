@@ -28,6 +28,7 @@ type
     Timer1: TTimer;
     Rectangle1: TRectangle;
     rangeFrame: TfrmRangeFrame;
+    btnClearAll: TButton;
     procedure btnCloseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure lstParametersChange(Sender: TObject);
@@ -36,6 +37,7 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure rangeFrameedtLowerExit(Sender: TObject);
     procedure rangeFrameedtUpperExit(Sender: TObject);
+    procedure btnClearAllClick(Sender: TObject);
   private
     { Private declarations }
     currentRowPosition : integer;
@@ -102,6 +104,11 @@ begin
 end;
 
 
+procedure TfrmSliders.btnClearAllClick(Sender: TObject);
+begin
+  freeSliders;
+end;
+
 procedure TfrmSliders.btnCloseClick(Sender: TObject);
 begin
   Close;
@@ -150,7 +157,7 @@ var i, j : integer;
     btn1, btn2 : TSpeedButton;
 begin
   try
-    for i := 0 to sliderList.Count - 1 do
+    for i := sliderList.Count - 1 downto 0 do
         begin
         btn1 := sliderList[i].closeButton;
         btn2 := sliderList[i].configButton;
@@ -172,10 +179,9 @@ begin
             end;
         btn1.Free; btn2.Free;
         end;
-   configButtonClick (nil);
   except
     on E: Exception do
-       showmessage ('Internal error: index = ' + inttostr (index));
+       showmessage ('Internal error: ' + e.Message);
     end;
 end;
 
