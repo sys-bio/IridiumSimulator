@@ -792,8 +792,8 @@ object frmMain: TfrmMain
                 Size.Height = 620.000000000000000000
                 Size.PlatformDefault = False
                 TabOrder = 0
-                Viewport.Width = 435.000000000000000000
-                Viewport.Height = 620.000000000000000000
+                Viewport.Width = 421.000000000000000000
+                Viewport.Height = 596.000000000000000000
               end
               object Layout7: TLayout
                 Align = Bottom
@@ -1044,7 +1044,7 @@ object frmMain: TfrmMain
               Size.Width = 82.000000000000000000
               Size.Height = 28.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 41
+              TabOrder = 42
               Text = 'Unselect All'
               OnClick = btnUnSelectAllClick
             end
@@ -1105,7 +1105,7 @@ object frmMain: TfrmMain
             Position.X = 226.000000000000000000
             Position.Y = 205.000000000000000000
             Size.Width = 42.000000000000000000
-            Size.Height = 28.000000000000000000
+            Size.Height = 31.000000000000000000
             Size.PlatformDefault = False
             ParentShowHint = False
             ShowHint = True
@@ -1147,7 +1147,7 @@ object frmMain: TfrmMain
                     '\RoadRunnerUI\Slider _50px_Color.png'
                 end>
               HitTest = False
-              Position.X = 8.000000000000000000
+              Position.X = 10.000000000000000000
               Position.Y = 4.000000000000000000
               Size.Width = 24.000000000000000000
               Size.Height = 24.000000000000000000
@@ -47084,7 +47084,7 @@ object frmMain: TfrmMain
     DefaultExt = 'ant'
     Filter = 'Antimony file|*.ant|Text file|*.txt|Any file|*.*'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
-    Left = 609
-    Top = 266
+    Left = 785
+    Top = 434
   end
 end

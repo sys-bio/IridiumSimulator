@@ -5,7 +5,7 @@ object frmSplash: TfrmSplash
   BorderStyle = Single
   Caption = 'Iridium'
   ClientHeight = 72
-  ClientWidth = 322
+  ClientWidth = 324
   Position = ScreenCenter
   StyleBook = StyleBook1
   FormFactor.Width = 320
@@ -13,10 +13,10 @@ object frmSplash: TfrmSplash
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
   object SkLabel1: TSkLabel
-    Position.X = 50.000000000000000000
+    Position.X = 20.000000000000000000
     Position.Y = 21.000000000000000000
-    Size.Width = 119.000000000000000000
-    Size.Height = 27.000000000000000000
+    Size.Width = 119.428573608398400000
+    Size.Height = 27.428571701049800000
     Size.PlatformDefault = False
     StyledSettings = [Family, Style]
     TextSettings.Font.Size = 20.000000000000000000

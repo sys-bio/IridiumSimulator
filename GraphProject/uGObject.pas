@@ -216,7 +216,7 @@ begin
   //graphObjects[xaxisTitleId].textProperties.style := [TFontStyle.fsBold];
   textProperties.fontcolor := claBlack;
   textProperties.value := 'X Axis';
-  textProperties.setFontSize(12);
+  textProperties.setFontSize(14);
   visible := true;
 end;
 
@@ -231,7 +231,7 @@ begin
   //graphObjects[yaxisTitleId].textProperties.style := [TFontStyle.fsBold];
   textProperties.fontcolor := claBlack;
   textProperties.value := 'Y Axis';
-  textProperties.setFontSize(12);
+  textProperties.setFontSize(14);
   visible := true;
 end;
 

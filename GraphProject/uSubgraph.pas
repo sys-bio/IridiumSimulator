@@ -1177,12 +1177,20 @@ var
   r: TRectF;
   pt: TPointF;
   box: TBox;
+  gdArea : TRectF;
+  gdHeight : single;
 begin
   textProperties := properties.YAxisTitleObject.textProperties;
   if textProperties.value = '' then
      exit;
 
   twidth := textProperties.computeDimensions(LPaint).x;
+
+  // Update the logical dimensions based on the current Y axis text
+  gdArea := getGraphDeviceDrawingArea;
+  gdHeight := gdArea.Bottom - gdArea.Top;
+  properties.YAxisTitleObject.logicalBox.top := ((gdHeight/2) - twidth/2)/gdHeight;
+
   box := relativeToDevice2(properties.YAxisTitleObject);
 
   horizDisplacement := 16;
@@ -1224,6 +1232,8 @@ var
   pt: TPointF;
   ds : TDataColumns;
   index : integer;
+  gdArea : TRectF;
+  gdWidth : single;
 begin
   panel := parentGraph as TRRGraph;
 
@@ -1260,9 +1270,9 @@ begin
          LPaint.color := textProperties.fontColor;
          LPaint.Style := TSkPaintStyle.Fill;
 
-         box := relativeToDevice2(properties.MainTitleObject);
-
          pt := textProperties.computeDimensions(LPaint);
+
+         box := relativeToDevice2(properties.MainTitleObject);
 
          x := box.left;
          y := box.top;
@@ -1275,6 +1285,9 @@ begin
       // drawMainTitleSelected(canvas);
     end;
 
+  //legend.logicalBox.w := widthOfLegend / (rBoxGraphingArea.w * panel.Width);
+  //legend.logicalBox.h := aBox.top / (rBoxGraphingArea.h * panel.Height);
+
   if properties.bDrawXAxisTitle then
     begin
       textProperties := properties.XAxisTitleObject.textProperties;
@@ -1284,6 +1297,11 @@ begin
          LPaint.Style := TSkPaintStyle.Fill;
 
          twidth := textProperties.computeDimensions(LPaint).x;
+
+         // Update the logical dimensions based on the current X axis text
+         gdArea := getGraphDeviceDrawingArea;
+         gdWidth := gdArea.Right - gdArea.Left;
+         properties.XAxisTitleObject.logicalBox.left := ((gdWidth/2) - twidth/2)/gdwidth;
          box := relativeToDevice2(properties.XAxisTitleObject);
 
          x := box.left;
