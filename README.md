@@ -17,7 +17,7 @@ Supports: Time course simulation, steady-state, real-time interactive simulation
 
 **Update** (Jul 6th): I now have a Mac OS version including the M1 version working (thanks to Lucian Smith for generating the M1 roadrunner binaries for me). I hope to release the source code and binaries for windows and Mac during the week of July 11th.
 
-Source code abd binaries for WIndows 64 have been uploaded. I have a working Mac version as a bundle but I'm not sure if that is the propoery way to distriubte Mac apps so I am figuring out how to create a dmg file.
+Source code and binaries for WIndows 64 have been uploaded. I have a working Mac version as a bundle but I'm not sure if that is the propoery way to distriubte Mac apps so I am figuring out how to create a dmg file.
 
 I would like to thank Guillermo Canedo Ramirez who did an excellent job in making the real-time scrolling chart.
 
