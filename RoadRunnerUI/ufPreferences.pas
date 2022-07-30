@@ -41,7 +41,7 @@ implementation
 
 procedure TfrmPreferences.btnCloseClick(Sender: TObject);
 begin
-  uConfiguration.configOpts.fontSize := trunc (sbFontSize.Value);
+  uConfiguration.configOpts.modelInputManagerConfig.fontSize := trunc (sbFontSize.Value);
 
   Close;
 end;
@@ -55,14 +55,14 @@ procedure TfrmPreferences.FormCreate(Sender: TObject);
 begin
   //stylebook := stylebook1;
   fireEvent := False;
-  sbFontSize.Value := uConfiguration.configOpts.fontSize;
+  sbFontSize.Value := uConfiguration.configOpts.modelInputManagerConfig.fontSize;
   fireEvent := True;
 end;
 
 procedure TfrmPreferences.sbFontSizeChange(Sender: TObject);
 begin
   if fireEvent then
-     uConfiguration.configOpts.fontSize := trunc (sbFontSize.Value);
+     uConfiguration.configOpts.modelInputManagerConfig.fontSize := trunc (sbFontSize.Value);
 end;
 
 end.

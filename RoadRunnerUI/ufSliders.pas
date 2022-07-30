@@ -441,4 +441,6 @@ begin
             (lstParameters.Items.Objects[lstParameters.ItemIndex] as TSliderInitialValue).value);
 end;
 
+initialization
+  frmSliders := nil;
 end.

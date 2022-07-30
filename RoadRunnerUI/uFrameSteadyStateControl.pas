@@ -13,24 +13,31 @@ uses
   FMX.Grid, FMX.ScrollBox,
   FMX.Objects,
   uRRList,
-  uController;
+  uController, FMX.Layouts;
 
 type
   TFrameSteadyStateControl = class(TFrame)
+    Layout1: TLayout;
     Label8: TLabel;
     btnConfigureSteadyStateSolver: TButton;
+    Layout2: TLayout;
     btnGetSteadyState: TButton;
+    lblSteadyState: TLabel;
     btnSteadyStateSliders: TSpeedButton;
     Image11: TImage;
-    lblSteadyState: TLabel;
+    Layout3: TLayout;
     SteadyStateGrid: TStringGrid;
     gridSymbolColumn: TStringColumn;
     gridValueColumn: TStringColumn;
+    Splitter1: TSplitter;
+    Layout4: TLayout;
     Label4: TLabel;
     gridEigenValues: TStringGrid;
     StringColumn1: TStringColumn;
     StringColumn2: TStringColumn;
+    Layout5: TLayout;
     btnMoreSteadyState: TButton;
+    Splitter2: TSplitter;
     procedure btnGetSteadyStateClick(Sender: TObject);
     procedure btnMoreSteadyStateClick(Sender: TObject);
     procedure btnSteadyStateSlidersClick(Sender: TObject);
@@ -101,9 +108,8 @@ var
   sbmlStr: string;
 begin
   sbmlStr := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
-  controller.loadSBMLModel(sbmlStr);
+  controller.loadSBMLModel(sbmlStr, true);
 
-  controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
   collectModelSymbols;
   //if Assigned(frmFloatingPlotViewer) then
   //   frmFloatingPlotViewer.initializeFloatingGraph;
@@ -178,7 +184,6 @@ procedure TFrameSteadyStateControl.btnGetSteadyStateClick(Sender: TObject);
 var
   strList: TStringList;
   i, j: integer;
-  floatValues: TArray<double>;
 begin
   if controller.outOfDate then
     loadModelFromMemo;

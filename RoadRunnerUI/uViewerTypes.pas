@@ -13,8 +13,6 @@ type
       XColumnIndex : integer;
       YColumnChoice: array of boolean;
       YColumnNames : array of string;
-      autoXScale : boolean;
-      autoYScale : boolean;
       showLegend : boolean;
       timeStart : double;   // if autoXScale is false you can use these
       timeEnd : double;     // to specify the x-axis limits

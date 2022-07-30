@@ -50,6 +50,8 @@ type
        //controller : TController;
        simulator : TObject;
 
+       listOfValues : TDoubleArray;
+
        function  doTimeCourseSingleParameterScan (scanSelectionList : TStringList; scanArguments : TScanArguments) : T2DMatrix;
        function  doSteadyStateSingleParameterScan(selectionList: TStringList) : T2DMatrix;
 
@@ -181,7 +183,7 @@ var aMin, aMax : double;
     current : double;
 begin
   if scanArguments.FScanValuesType = stList then
-     result := scanArguments.FListValues
+     result := listOfValues
   else
      begin
      if scanArguments.FLogScan then
@@ -290,7 +292,6 @@ begin
               intermediateResult.columnHeader[j] := selectionList[j+1] + '(' + scanArguments.FParameterId + '=' + floattostr (scanValues[i]) + ')';
 
           result.AugmentColumns(intermediateResult);
-          //result := TMatrix.Augment (result, intermediateResult);
           intermediateResult.Free;
         finally
         end;

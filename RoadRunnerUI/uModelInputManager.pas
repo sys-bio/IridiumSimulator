@@ -6,14 +6,30 @@ Uses SysUtils,
      Classes,
      FMX.Dialogs,
      FMX.Memo,
+     Json,
      uAntimonyAPI;//, uController;
 
 type
+  TModelInputManagerConfig = class (TObject)
+     private
+       FFontSize : integer;
+     public
+       function saveToJson : TJSONObject;
+       constructor readFromJson (obj : TJSONObject);
+       constructor Create;
+       constructor CreateDefault;
+     published
+       property fontSize : integer read FFontSize write FFontSize;
+  end;
+
+
   TModelInputManager = class (TObject)
       saveSBMLDialog : TSaveDialog;
       openSBMLDialog : TOpenDialog;
 
       antimonyStr : string;
+
+      config : TModelInputManagerConfig;
 
       modelMemo : TMemo;
       antimonyLoaded : boolean;
@@ -35,10 +51,41 @@ implementation
 
 Uses IOUtils;
 
+constructor TModelInputManagerConfig.Create;
+begin
+  inherited;
+  fontSize := 16;
+end;
+
+constructor TModelInputManagerConfig.CreateDefault;
+begin
+  Create;
+end;
+
+
+constructor TModelInputManagerConfig.readFromJson (obj : TJSONObject);
+begin
+  fontSize := obj.GetValue<integer>('fontSize', 16);
+end;
+
+
+function TModelInputManagerConfig.saveToJson : TJSONObject;
+var obj : TJSONObject;
+begin
+  obj := TJSONObject.Create;
+  obj.AddPair ('fontSize', fontSize);
+  if fontSize = 0 then
+     fontSize := 16;
+  result := obj;
+end;
+
+
 constructor TModelInputManager.Create;
 begin
   antimonyLoaded := False;
   currentAntimonyFileName := '';
+
+  config := TModelInputManagerConfig.Create;
 
   loadAntimonyLibrary;
   saveSBMLDialog := TSaveDialog.Create (nil);

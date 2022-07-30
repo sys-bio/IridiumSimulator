@@ -12,10 +12,11 @@ Uses SysUtils,
      uFormViewer,
      uViewerTypes,
      uModelInputManager,
-     Generics.Collections;
+     Generics.Collections,
+     ufFrameViewerBase;
 
 type
-  TListOfViewers = TList<TViewer>;
+  TListOfViewers = TList<TFrameViewerBase>;
   TListOfFormViewers = TList<TFormViewer>;
 
   TController = class (TObject)
@@ -37,9 +38,9 @@ type
       procedure setPalette (palette : string);
       procedure setShowLegend (value : boolean);
 
-      procedure loadSBMLModel (sbmlStr : string);
+      procedure loadSBMLModel (sbmlStr : string; conservedMoietyAnalysis : boolean);
 
-      procedure RegisterViewer (viewer: TViewer);
+      procedure RegisterViewer (viewer: TFrameViewerBase);
       procedure RegisterFormViewer (viewer: TFormViewer);
 
       procedure ViewerModelHasChanged (sender: TObject);
@@ -81,7 +82,7 @@ begin
   inherited;
 end;
 
-procedure TController.RegisterViewer (viewer: TViewer);
+procedure TController.RegisterViewer (viewer: TFrameViewerBase);
 begin
   listOfViewers.Add(viewer);
 end;
@@ -125,7 +126,8 @@ end;
 
 procedure TController.setShowLegend (value : boolean);
 begin
-  viewerPackage.showLegend := value;
+  //controller.
+  //viewerPackage.showLegend := value;
 end;
 
 procedure TController.setSelectionList (selectionList : TStringList);
@@ -184,8 +186,9 @@ begin
 end;
 
 
-procedure TController.loadSBMLModel (sbmlStr : string);
+procedure TController.loadSBMLModel (sbmlStr : string; conservedMoietyAnalysis : boolean);
 begin
+  simulator.roadrunner.setComputeAndAssignConservationLaws(conservedMoietyAnalysis);
   if not simulator.roadrunner.loadSBMLFromString(sbmlStr) then
       raise exception.Create(simulator.roadrunner.getLastError());
 end;
@@ -208,8 +211,8 @@ begin
   viewerPackage.XColumnIndex := 0;
   viewerPackage.timeStart := scanArguments.FTimeStart;
   viewerPackage.timeEnd := scanArguments.FTimeEnd;
-  viewerPackage.autoXScale := True;
-  viewerPackage.autoYScale := True;
+  //viewerPackage.autoXScale := True;
+  //viewerPackage.autoYScale := True;
 //
   setLength (viewerPackage.YColumnNames, selectionList.Count);
   for i := 0 to selectionList.Count - 1 do
@@ -232,7 +235,7 @@ begin
 
   viewerPackage.XAxisTitle := scanArguments.FParameterId;
   viewerPackage.XColumnIndex := 0;
-  viewerPackage.autoXScale := True;
+  // HMS viewerPackage.autoXScale := True;
 
   setLength (viewerPackage.YColumnNames, selectionList.Count);
   for i := 0 to selectionList.Count - 1 do

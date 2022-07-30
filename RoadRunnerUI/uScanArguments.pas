@@ -8,6 +8,7 @@ type
   TScanRunType = (srSimulation, srSteadyState);
   TScanType = (stRange, stList);
 
+  // This is populated by the GUI
   TScanArguments = class (TObject)
     public
       FScanRun : TScanRunType;

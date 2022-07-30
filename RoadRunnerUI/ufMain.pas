@@ -15,18 +15,22 @@ uses
   FMX.Grid.Style, FMX.ScrollBox, FMX.Controls.Presentation, FMX.Memo.Types,
   Skia.FMX, Skia, FMX.Colors, uRRList, uSetup, ufStructuralAnalysis,
   uNewMatrix, uColorList, ufScrollChart, uController, uViewer,
-  uPlotFormViewer, uTableFormViewer,
-  uFrameFunctionPlotter, uFrameScanControl, uFrameSteadyStateControl,
-  uConfiguration
+  uPlotFrameViewer,
+  uTableFrameViewer,
+  uFrameFunctionPlotter,
+  uFrameScanControl,
+  uFrameSteadyStateControl,
+  uConfiguration,
+  ufMainConfig
 {$IFDEF MSWINDOWS}
-    , Winapi.Windows, Winapi.ShellAPI
+    , Winapi.Windows, Winapi.ShellAPI, ufFrameSplitPanel
 {$ENDIF}
 {$IFDEF POSIX}
     , Posix.Stdlib
 {$ENDIF POSIX};
 
 const
-  VERSION = '0.951 Beta';
+  VERSION = '0.952 Beta';
 
 type
   TfrmMain = class(TForm)
@@ -41,26 +45,12 @@ type
     FunctionTabControl: TTabControl;
     tabTimeCourse: TTabItem;
     pnlControls: TLayout;
-    btnSimulate: TButton;
-    GroupBox1: TGroupBox;
-    Label1: TLabel;
-    edtTimeStart: TEdit;
-    Label2: TLabel;
-    edtTimeEnd: TEdit;
-    Label3: TLabel;
-    edtNumberOfPoints: TEdit;
-    btnReset: TButton;
-    GroupBox2: TGroupBox;
-    cbXAxis: TComboBox;
-    GroupBox3: TGroupBox;
-    lstYAxis: TListBox;
     tabSteadyState: TTabItem;
     tbScan: TTabItem;
     btnTimeCourse: TSpeedButton;
     btnSteadyState: TSpeedButton;
     btnLoadAntimony: TSpeedButton;
     Rectangle2: TRectangle;
-    btnSetTimeCourseSelection: TButton;
     rrMainMenu: TMainMenu;
     mnuMacFile: TMenuItem;
     mnuSeparator1: TMenuItem;
@@ -69,30 +59,14 @@ type
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
-    GroupBox4: TGroupBox;
     btnScan: TSpeedButton;
     Image6: TImage;
-    Label7: TLabel;
     mnuOptions: TMenuItem;
-    btnConfigIntegrator: TButton;
     StyleBook1: TStyleBook;
     mnuSaveGraphasPdf: TMenuItem;
     MenuItem2: TMenuItem;
     SavePDFDialog: TSaveDialog;
-    tbAntimony: TTabControl;
-    tbModelDefinition: TTabItem;
-    tbTabularResults: TTabItem;
-    Layout4: TLayout;
     Button2: TButton;
-    Panel2: TPanel;
-    Layout8: TLayout;
-    btnOpenGraph: TSpeedButton;
-    Image5: TImage;
-    pnlGraphPlusControlPanel: TLayout;
-    pnlModelAndControlsPanel: TLayout;
-    moModel: TMemo;
-    Layout7: TLayout;
-    Splitter1: TSplitter;
     btnStructAnalysis: TSpeedButton;
     Image7: TImage;
     mnuLoadAntimonyModel: TMenuItem;
@@ -108,18 +82,11 @@ type
     Image8: TImage;
     SpeedButton1: TSpeedButton;
     Image9: TImage;
-    chkAutoscaleX: TCheckBox;
     mnuMainExamples: TMenuItem;
-    chkAutoScaleY: TCheckBox;
-    Rectangle4: TRectangle;
-    btnTimeCourseSliders: TSpeedButton;
-    Image10: TImage;
     Rectangle5: TRectangle;
     btnRealTimeTool: TSpeedButton;
     Image4: TImage;
     mnuUseFloatingGraph: TMenuItem;
-    tabularPanel: TLayout;
-    plotPanel: TLayout;
     mnuAnalysis: TMenuItem;
     mnuTimecourseSimulation: TMenuItem;
     mnuSteadyState: TMenuItem;
@@ -129,11 +96,59 @@ type
     mnuStructuralAnalysis: TMenuItem;
     btnFunctionPlot: TSpeedButton;
     Image12: TImage;
-    btnUnSelectAll: TButton;
     mnuPreferences: TMenuItem;
     mnuExamples: TMenuItem;
     mnuConfig: TMenuItem;
     mnuSpace1: TMenuItem;
+    Button1: TButton;
+    tbAntimony: TTabControl;
+    tbModelDefinition: TTabItem;
+    Layout4: TLayout;
+    Panel2: TPanel;
+    Layout8: TLayout;
+    btnOpenGraph: TSpeedButton;
+    Image5: TImage;
+    btnOpenTabular: TSpeedButton;
+    Image11: TImage;
+    pnlOutputPanel: TLayout;
+    pnlModelAndControlsPanel: TLayout;
+    moModel: TMemo;
+    Layout7: TLayout;
+    Splitter1: TSplitter;
+    frameSplitPanel: TframeSplitPanels;
+    Label4: TLabel;
+    Label5: TLabel;
+    Rectangle3: TRectangle;
+    Rectangle6: TRectangle;
+    pnlBottomPanel: TLayout;
+    GroupBox3: TGroupBox;
+    btnSetTimeCourseSelection: TButton;
+    Rectangle4: TRectangle;
+    lstYAxis: TListBox;
+    btnUnSelectAll: TButton;
+    Layout5: TLayout;
+    Label7: TLabel;
+    btnConfigIntegrator: TButton;
+    Layout6: TLayout;
+    GroupBox1: TGroupBox;
+    Label1: TLabel;
+    edtTimeStart: TEdit;
+    Label2: TLabel;
+    edtTimeEnd: TEdit;
+    Label3: TLabel;
+    edtNumberOfPoints: TEdit;
+    Layout9: TLayout;
+    btnSimulate: TButton;
+    btnReset: TButton;
+    btnTimeCourseSliders: TSpeedButton;
+    Image10: TImage;
+    Layout10: TLayout;
+    GroupBox4: TGroupBox;
+    chkAutoscaleX: TCheckBox;
+    chkAutoScaleY: TCheckBox;
+    Layout11: TLayout;
+    GroupBox2: TGroupBox;
+    cbXAxis: TComboBox;
     procedure FormCreate(Sender: TObject);
     procedure btnSimulateClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
@@ -165,8 +180,6 @@ type
     procedure edtNumberOfPointsChange(Sender: TObject);
     procedure edtTimeEndChange(Sender: TObject);
     procedure edtTimeStartChange(Sender: TObject);
-    procedure tbModelDefinitionClick(Sender: TObject);
-    procedure tbTabularResultsClick(Sender: TObject);
     procedure chkAutoScaleYChange(Sender: TObject);
     procedure btnFunctionPlotClick(Sender: TObject);
     procedure btnUnSelectAllClick(Sender: TObject);
@@ -174,6 +187,9 @@ type
     procedure moModelChange(Sender: TObject);
     procedure mnuConfigClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure Button1Click(Sender: TObject);
+    procedure btnOpenTabularClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
 
@@ -188,6 +204,9 @@ type
 
     procedure openGraphPanel;
     procedure closeGraphPanel;
+
+    procedure openTabularPanel;
+    procedure closeTabularPanel;
 
     procedure mnuHelpClick(Sender: TObject);
     procedure mnuHelpAntimonyClick(Sender: TObject);
@@ -206,6 +225,8 @@ type
   public
     { Public declarations }
 
+    config : TfrmMainConfig;
+
     antimonyLoaded: boolean;
     roadRunnerLoaded: boolean;
     errMsg: AnsiString;
@@ -222,8 +243,8 @@ type
 
     selectedPalette: string;
     controller: TController;
-    plotViewer : TPlotFormViewer;
-    tableViewer : TTableFormViewer;
+    plotViewer : TPlotFrameViewer;
+    tableViewer : TTableFrameViewer;
 
     procedure OnPickExample(index: integer);
     procedure selectIntegrator;
@@ -248,7 +269,6 @@ Uses uRoadRunner.API, Math, uSymbolDetails, uRRCommon, ufSelectionChoices,
 
 const
    TIMECOURSE_FUNCTION = 0;
-
 
 // ------------------------------------------------------------------------
 
@@ -289,18 +309,6 @@ begin
 end;
 
 
-procedure TfrmMain.tbTabularResultsClick(Sender: TObject);
-begin
- tabularPanel.Visible := True;
-end;
-
-
-procedure TfrmMain.tbModelDefinitionClick(Sender: TObject);
-begin
-  tabularPanel.Visible := False;
-end;
-
-
 procedure TfrmMain.loadRoadRunnerLibrary;
 begin
   if not loadRoadRunner(errMsg) then
@@ -320,8 +328,7 @@ begin
   model := builtInModels[index];
 
   sbmlStr := controller.modelInputManager.getSBMLFromAntimony (model.modelStr);
-  controller.loadSBMLModel(sbmlStr);
-  controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
+  controller.loadSBMLModel(sbmlStr, true);
 
   loadModelIntoMemo(model.modelStr);
 
@@ -347,9 +354,8 @@ begin
   model := builtInModels.getBuiltInModel(name);
 
   sbmlStr := controller.modelInputManager.getSBMLFromAntimony (model.modelStr);
-  controller.loadSBMLModel(sbmlStr);
+  controller.loadSBMLModel(sbmlStr, true);
 
-  controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
   loadModelIntoMemo(model.modelStr);
 
   controller.ViewerSetProperty('UserScale_Xmin', model.Xmin);
@@ -514,15 +520,13 @@ begin
   if sbmlStr = '' then
      exit;
 
-  controller.loadSBMLModel(sbmlStr);
+  controller.loadSBMLModel(sbmlStr, true);
 
   antStr := controller.modelInputManager.getAntimonyFromSBML(sbmlStr);
   loadModelIntoMemo(antStr);
 
   currentAntimonyFileName := ChangeFileExt(path, '.ant');
   frmMain.Caption := 'Iridium: ' + currentAntimonyFileName;
-
-  controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
 end;
 
 
@@ -542,7 +546,7 @@ begin
       currentAntimonyFileName := OpenAntimonyDialog.FileName;
       frmMain.Caption := 'Iridium: ' + currentAntimonyFileName;
     end;
-  controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
+  //controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
 end;
 
 
@@ -550,6 +554,7 @@ procedure TfrmMain.OnPickExample(index: integer);
 begin
   loadBuiltInModel(index);
   loadModelFromMemo;
+  populateXYSelectors;  // required to update viewerpackage in controller
 end;
 
 
@@ -600,7 +605,7 @@ begin
   try
     frmPreferences.StyleBook := StyleBook1;
     frmPreferences.ShowModal;
-    controller.modelInputManager.modelMemo.Font.Size := configOpts.fontSize;
+    controller.modelInputManager.modelMemo.Font.Size := configOpts.modelInputManagerConfig.fontSize;
   finally
     frmPreferences.Free;
   end;
@@ -718,27 +723,53 @@ end;
 
 procedure TfrmMain.openGraphPanel;
 begin
-  Splitter1.visible := true;
-  Splitter1.position.x := plotViewer.plt.position.x;
-  pnlGraphPlusControlPanel.visible := true;
-  pnlGraphPlusControlPanel.Width := configOpts.graphPanelWidth;
+  frameSplitPanel.toggleUpper;
 end;
 
 
 procedure TfrmMain.closeGraphPanel;
 begin
-  pnlGraphPlusControlPanel.visible := false;
-  Splitter1.visible := false;
+  //pnlPlotBase.visible := false;
+  //Splitter1.visible := false;
 end;
 
 
+procedure TfrmMain.openTabularPanel;
+begin
+  //Splitter1.visible := true;
+  //Splitter1.position.x := plotViewer.plt.position.x;
+  //pnlPlotBase.Align := TAlignLayout.Top;
+  //pnlTabularBase.visible := true;
+  //pnlTabularBase.Height := 200;
+  //pnlOutputPanel.Width := configOpts.graphPanelWidth;
+  //pnlPlotBase.Height := 300;
+end;
+
+
+procedure TfrmMain.closeTabularPanel;
+begin
+  //pnlPlotBase.height := pnlOutputPanel.Height;
+  //pnlTabularBase.height := 25;
+  //pnlTabularBase.Align := TAlignLayout.Bottom;
+  //pnlPlotBase.Align := TAlignLayout.Client;
+  //Splitter1.visible := false;
+end;
+
 procedure TfrmMain.btnOpenGraphClick(Sender: TObject);
 begin
-  if configOpts.IsGraphPanelOpen then
-     closeGraphPanel
-  else
-     openGraphPanel;
-  configOpts.IsGraphPanelOpen := not configOpts.IsGraphPanelOpen;
+  configOpts.mainConfig.IsGraphPanelOpen := frameSplitPanel.toggleUpper;
+end;
+
+
+procedure TfrmMain.btnOpenTabularClick(Sender: TObject);
+begin
+  configOpts.mainConfig.IsTabularPanelOpen := frameSplitPanel.toggleLower;
+
+  //if configOpts.IsTabularPanelOpen then
+  //   closeTabularPanel
+  //else
+  //   openTabularPanel;
+  //configOpts.IsTabularPanelOpen := not configOpts.IsTabularPanelOpen;
 end;
 
 
@@ -755,9 +786,8 @@ begin
   list := controller.simulator.roadrunner.getFloatingSpeciesIds();
   try
     sbmlStr := controller.modelInputManager.getSBMLFromAntimony(moModel.Lines.Text);
-    controller.loadSBMLModel(sbmlStr);
+    controller.loadSBMLModel(sbmlStr, true);
 
-    controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
     collectModelSymbols;
     ViewerModelHasChanged;
 
@@ -801,20 +831,82 @@ begin
 end;
 
 
+function compareTwoStringLists (s1, s2 : TStringList) : boolean;
+begin
+  if s1.Count <> s2.Count then
+     exit (false);
+
+  for var i := 0 to s1.Count - 1 do
+      if s1[i] <> s2[i] then
+         exit (false);
+
+  exit (True);
+end;
+
+
+function compareModels (r1, r2 : TRoadRunner) : boolean;
+var r1_floatingSpeciesIds : TStringList;
+    r1_boundarySpeciesIds : TStringList;
+    r1_reactionRatesIds : TStringList;
+    r1_globalParameters : TStringList;
+
+    r2_floatingSpeciesIds : TStringList;
+    r2_boundarySpeciesIds : TStringList;
+    r2_reactionRatesIds : TStringList;
+    r2_globalParameters : TStringList;
+begin
+  r1_floatingSpeciesIds := r1.getFloatingSpeciesIds;   r1_floatingSpeciesIds.Sort;
+  r1_boundarySpeciesIds := r1.getBoundarySpeciesIds;   r1_boundarySpeciesIds.Sort;
+  r1_reactionRatesIds := r1.getReactionIds;            r1_reactionRatesIds.Sort;
+  r1_globalParameters := r1.getGlobalParameterIds;     r1_globalParameters.Sort;
+
+  r2_floatingSpeciesIds := r2.getFloatingSpeciesIds;   r2_floatingSpeciesIds.Sort;
+  r2_boundarySpeciesIds := r2.getBoundarySpeciesIds;   r2_boundarySpeciesIds.Sort;
+  r2_reactionRatesIds := r2.getReactionIds;            r2_reactionRatesIds.Sort;
+  r2_globalParameters := r2.getGlobalParameterIds;     r2_globalParameters.Sort;
+
+  if not compareTwoStringLists (r1_floatingSpeciesIds, r2_floatingSpeciesIds) then
+     exit (False);
+
+  if not compareTwoStringLists (r1_boundarySpeciesIds, r2_boundarySpeciesIds) then
+     exit (False);
+
+  if not compareTwoStringLists (r1_reactionRatesIds, r2_reactionRatesIds) then
+     exit (False);
+
+  if not compareTwoStringLists (r1_globalParameters, r2_globalParameters) then
+     exit (False);
+
+  // Structure appears the same
+  exit (True);
+end;
+
+
 procedure TfrmMain.loadModelFromMemo;
 var sbmlStr: string;
+    r : TRoadRunner;
+    structureIsTheSame : boolean;
 begin
   if controller.outOfDate then
      begin
      sbmlStr := controller.modelInputManager.getSBMLFromAntimony(moModel.Lines.Text);
-     controller.loadSBMLModel(sbmlStr);
+     r := TRoadRunner.Create;
+     r.setComputeAndAssignConservationLaws(true);
+     try
+       r.loadSBMLFromString(sbmlStr);
+       structureIsTheSame := compareModels (controller.simulator.roadrunner, r);
 
-     controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
-     collectModelSymbols;
-     ViewerModelHasChanged;
-     controller.outOfDate := false;
+       controller.loadSBMLModel(sbmlStr, true);
 
-     populateXYSelectors;  // required to update viewerpackage in controller
+       collectModelSymbols;
+       ViewerModelHasChanged;
+       controller.outOfDate := false;
+
+       if not structureIsTheSame then
+          populateXYSelectors;  // required to update viewerpackage in controller
+     finally
+       r.Free;
+     end;
      end;
 end;
 
@@ -928,6 +1020,12 @@ begin
   lstYAxisChange(Sender);
 end;
 
+
+procedure TfrmMain.Button1Click(Sender: TObject);
+begin
+  label4.Text :=  IntToHex(claCrimson, 8);
+  label5.Text := inttostr ( StrToInt('$' + label4.text));
+end;
 
 // Toolbar/Menu selection of scanning frame
 procedure TfrmMain.btnScanClick(Sender: TObject);
@@ -1114,11 +1212,16 @@ end;
 
 procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  configOpts.graphPanelWidth := pnlGraphPlusControlPanel.Width;
-  configOpts.formWidth := Width;
-  configOpts.formHeight := Height;
-  configOpts.formLeft := frmMain.Left;
-  configOpts.formTop := frmMain.Top;
+  configOpts.mainConfig.formLeft := frmMain.Left;
+  configOpts.mainConfig.formWidth := frmMain.Width;
+  configOpts.mainConfig.formHeight := frmMain.Height;
+  configOpts.mainConfig.formTop := frmMain.Top;
+  configOpts.mainConfig.outputPanelWidth := pnlOutputPanel.Width;
+  configOpts.mainConfig.upperOutputPanelHeight := 100*frameSplitPanel.currentUpperHeight/frameSplitPanel.Height;
+
+  configOpts.textFormViewer.dataMemoBackgroundColor := tableViewer.config.dataMemoBackgroundColor;
+  configOpts.textFormViewer.dataMemoFontColor := tableViewer.config.dataMemoFontColor;
+
   saveConfigurationFile (CONFIG_FILE_NAME);
 
   if controller.outOfDate then
@@ -1136,36 +1239,52 @@ end;
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
   mu, smu: TMenuItem;
+  f : TextFile;
+  configOk : boolean;
 begin
+  fireEvent := false;
+
+//  AssignFile (f, '~/Library/Logs/iridium.log');
+//  rewrite (f);
+//  writeln (f, 'Start logging');
+//  closefile (f);
+
   controller := TController.Create;
   controller.modelInputManager.setInputMemo(moModel);
 
   controller.setTimeEnd (strtofloat (edtTimeEnd.Text));
   controller.setTimeStart (strtofloat (edtTimeStart.Text));
   controller.setNumberOfPoints (strtoint (edtNumberOfPoints.Text));
-  controller.viewerPackage.autoXScale := False;
-  controller.viewerPackage.autoYScale := False;
+  //controller.viewerPackage.autoXScale := False;
+  //controller.viewerPackage.autoYScale := False;
   controller.viewerPackage.showLegend := True;
 
-  plotViewer := TPlotFormViewer.Create(controller, plotPanel);
-  tableViewer := TTableFormViewer.Create(controller, tabularPanel);
+  //frameSplitPanel.setUp;
 
-  chkAutoscaleX.IsChecked := True;
+  configOk := readConfigurationFile (CONFIG_FILE_NAME);
+  frmMain.Width := configOpts.mainConfig.formWidth;
+  frmMain.Height := configOpts.mainConfig.formHeight;
+  pnlOutputPanel.width := configOpts.mainConfig.outputPanelWidth;
 
-  readConfigurationFile (CONFIG_FILE_NAME);
-  frmMain.Width := configOpts.formWidth;
-  frmMain.Height := configOpts.formHeight;
-  pnlGraphPlusControlPanel.width := configOpts.graphPanelWidth;
+  plotViewer := TPlotFrameViewer.Create(self);
+  plotViewer.Parent := frameSplitPanel.pnlUpper;
+  plotViewer.Align := TAlignLayout.Client;
+  plotViewer.Setup(controller);
 
-  if configOpts.IsGraphPanelOpen then
-     openGraphPanel
-  else
-     closeGraphPanel;
+  tableViewer := TTableFrameViewer.Create (self);
+  tableViewer.Parent := frameSplitPanel.pnlLower;
+  tableViewer.Align := TAlignLayout.Client;
+  tableViewer.Setup(controller, configOpts.textFormViewer);
 
-  plotViewer.plt.Width := configOpts.graphPanelWidth;
-  controller.modelInputManager.modelMemo.Font.Size := configOpts.fontSize;
+  //chkAutoscaleX.IsChecked := True;
 
-  frmSliders := nil;
+  plotViewer.plt.Width := configOpts.mainConfig.outputPanelWidth;
+  controller.modelInputManager.modelMemo.Font.Size := configOpts.modelInputManagerConfig.fontSize;
+  //controller.modelInputManager.config.fontSize := configOpts.modelInputManagerConfig.fontSize;
+
+  tableViewer.config.dataMemoBackgroundColor := configOpts.textFormViewer.dataMemoBackgroundColor;
+  tableViewer.config.dataMemoFontColor := configOpts.textFormViewer.dataMemoFontColor;
+
   currentAntimonyFileName := '';
   launchPath := ExtractFileDir(ParamStr(0));
   selectedPalette := 'Default';
@@ -1232,20 +1351,34 @@ begin
       mu.AddObject(smu);
     end;
 
-  fireEvent := false;
+  fireEvent := True;
   lblVersion.text := 'RoadRunner Version: ' + controller.simulator.roadrunner.getVersionStr;
+end;
+
+
+procedure TfrmMain.FormShow(Sender: TObject);
+begin
+  frameSplitPanel.setPercentageUpperHeight (configOpts.mainConfig.upperOutputPanelHeight);
+
+  if configOpts.mainConfig.IsGraphPanelOpen then
+     frameSplitPanel.setUpperVisible
+  else
+     frameSplitPanel.setUpperInVisible;
+
+  if not configOpts.mainConfig.IsTabularPanelOpen then
+     frameSplitPanel.setLowerInVisible;
 end;
 
 
 procedure TfrmMain.chkAutoscaleXChange(Sender: TObject);
 begin
-  controller.viewerPackage.autoXScale := chkAutoscaleX.IsChecked;
+  //controller.viewerPackage.autoXScale := chkAutoscaleX.IsChecked;
 end;
 
 
 procedure TfrmMain.chkAutoScaleYChange(Sender: TObject);
 begin
-  controller.viewerPackage.autoYScale := chkAutoscaleY.IsChecked;
+  //controller.viewerPackage.autoYScale := chkAutoscaleY.IsChecked;
 end;
 
 

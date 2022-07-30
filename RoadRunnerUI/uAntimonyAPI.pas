@@ -118,29 +118,30 @@ var path : string;
 begin
   path := ExtractFilePath(ParamStr(0)) + libAntimonyName;
 
-  FLibHandle := SafeLoadLibrary('' + libAntimonyName);
+  try
+    FLibHandle := SafeLoadLibrary('' + libAntimonyName);
 {$IF DEFINED(MACOS)}
-  if FLibHandle = 0 then
-     begin
-     DLErrorMsg := string(dlerror);
-     raise Exception.Create('antimony library could not be loaded: ' + DLErrorMsg);
-     end;
+    if FLibHandle = 0 then
+       begin
+       DLErrorMsg := string(dlerror);
+       raise Exception.Create('antimony library could not be loaded: ' + DLErrorMsg);
+       end;
 {$ELSE}
-  if FLibHandle = 0 then
-     begin
-      raise Exception.Create('antimony library could not be loaded');
-     end;
+    if FLibHandle = 0 then
+       begin
+        raise Exception.Create('antimony library could not be loaded');
+       end;
 {$ENDIF}
 
-  result := true;
-  try
-     @ant_libLoadSBMLString := GetProcAddress(FLibHandle, 'loadSBMLString');
-     @libLoadString  := GetProcAddress (FLibHandle, 'loadString');
-     @libGetSBMLString := GetProcAddress (FLibHandle, 'getSBMLString');
-     @libGetAntimonyString := GetProcAddress (FLibHandle, 'getAntimonyString');
-     @loadAntimonyString := GetProcAddress (FLibHandle, 'loadAntimonyString');
-     @libGetMainModuleName := GetProcAddress (FLibHandle, 'getMainModuleName');
-     @libGetlastError := GetProcAddress (FLibHandle, 'getLastError');
+    result := true;
+
+    @ant_libLoadSBMLString := GetProcAddress(FLibHandle, 'loadSBMLString');
+    @libLoadString  := GetProcAddress (FLibHandle, 'loadString');
+    @libGetSBMLString := GetProcAddress (FLibHandle, 'getSBMLString');
+    @libGetAntimonyString := GetProcAddress (FLibHandle, 'getAntimonyString');
+    @loadAntimonyString := GetProcAddress (FLibHandle, 'loadAntimonyString');
+    @libGetMainModuleName := GetProcAddress (FLibHandle, 'getMainModuleName');
+    @libGetlastError := GetProcAddress (FLibHandle, 'getLastError');
   except
      on E: Exception do
         begin

@@ -11,6 +11,7 @@ const
 
 type
   TFunctionTime = reference to function(t: double): double;
+  TOnRedraw = procedure of object;
 
   PDataCol = ^TDataCol;
   TDataCol = record
@@ -20,6 +21,7 @@ type
 
   TDataSource = class (TObject)
       Data: PDataCol;
+      Redraw: TOnRedraw;
       //PX: Pointer;
       currentX: double;
       cols: TList;
@@ -35,10 +37,8 @@ type
       destructor  Destroy; override;
 
       function isOut(wPlane: double): Boolean;
-      //procedure trimDelta;
       procedure getNewLimits(var minX, maxX: double);
       procedure removeFirst;
-      //function getMinX: Double;
       procedure init;
       function isEmpty: Boolean;
       procedure removeAll;
@@ -49,6 +49,7 @@ type
   end;
 
   TDataSerie = class (TObject)
+
       functionTime: TFunctionTime;
       dataSource: TDataSource;
       color: TAlphaColor;
@@ -58,13 +59,13 @@ type
       FVisible: Boolean;
       count: Integer;
       procedure add(x, y: double);
+      procedure addX(x: double);
       procedure addY(y: double);
       constructor Create;
       destructor  Destroy; override;
       procedure init;
-      function GetVisible: Boolean;
       procedure SetVisible(val: Boolean);
-      property visible: Boolean read GetVisible write SetVisible;
+      property visible: Boolean read FVisible write SetVisible;
   end;
 
   PData = ^TData;
@@ -109,34 +110,6 @@ begin
   addY(y, serie);
 end;
 
-{
-procedure TDataSource.add(x, y: double; serie: TObject);
-var
-  D: PData;
-  QX: Pointer;
-begin
-  QX := Pointer(x);
-  //QX := @x;
-  New(D);
-  D^.y := y;
-  D^.serie := serie as TDataSerie;
-  D^.serie.count := D^.serie.count + 1;
-  if y < minY then minY := y;
-  if y > maxY then maxY := y;
-
-  if PX <> QX then
-    begin
-      New(Data);
-      Data^.x := x;
-      Data^.rows := TList.Create;
-      cols.Add(Data);
-      PX := QX;
-    end;
-
-  Data^.rows.Add(D);
-end;
-}
-
 procedure TDataSource.removeFirst;
 var
   P: PDataCol;
@@ -171,20 +144,24 @@ begin
       col := cols[i];
       for j := 0 to col^.rows.Count - 1 do updateYMinAndYMax(col^.rows[j]);
     end;
+
 end;
 
 function TDataSource.isEmpty: Boolean;
 var
-  i, count: Integer;
+  i: Integer;
   col: PDataCol;
 begin
-  count := 0;
   for i := cols.Count - 1 downto 0 do
     begin
       col := cols[i];
-      count := count + col^.rows.Count;
+      if col^.rows.Count > 0 then
+        begin
+          Result := false;
+          Exit;
+        end;
     end;
-  Result := count = 0;
+  Result := true;
 end;
 
 procedure TDataSource.deleteAllSeries;
@@ -202,9 +179,6 @@ begin
           Dispose(row);
           col^.rows.Delete(j);
         end;
-      //col^.rows.Free;
-      //Dispose(col);
-      //cols.Delete(i);
     end;
   init;
 end;
@@ -228,15 +202,7 @@ begin
             end;
         end;
 
-      //if col^.rows.Count = 0 then
-        //begin
-          //col^.rows.Free;
-          //Dispose(col);
-          //cols.Delete(i);
-        //end;
-
     end;
-
     if isEmpty then init;
 end;
 
@@ -298,22 +264,6 @@ begin
    currentX := -1;
 end;
 
-{
-procedure TDataSource.trimDelta;
-var
-  P: PDataCol;
-  xMax: Double;
-begin
-  P := cols[0];
-  xMax := P^.x + Interval;
-  repeat
-    Delete(P);
-    cols.Delete(0);
-    P := cols[0];
-  until P^.x > xMax;
-end;
-}
-
 procedure TDataSource.getNewLimits(var minX, maxX: double);
 var
   P: PDataCol;
@@ -323,21 +273,6 @@ begin
   P := cols[cols.Count - 1];
   maxX := P^.x;
 end;
-
-{
-function TDataSource.getMinX: Double;
-var
-  P: PDataCol;
-begin
-  if cols.Count > 0 then
-  begin
-    P := cols[0];
-    Result := P^.x;
-  end
-  else
-    Result := 0;
-end;
-}
 
 function TDataSource.isOut(wPlane: double): Boolean;
 var
@@ -381,6 +316,11 @@ begin
   LPath := nil;
 end;
 
+procedure TDataSerie.addX(x: double);
+begin
+  dataSource.addX(x);
+end;
+
 procedure TDataSerie.addY(y: double);
 begin
   dataSource.addY(y, self);
@@ -391,17 +331,13 @@ begin
   dataSource.add(x, y, self);
 end;
 
-function TDataSerie.GetVisible: Boolean;
-begin
-  Result := FVisible;
-end;
-
 procedure TDataSerie.SetVisible(val: Boolean);
 begin
   if val <> FVisible then
     begin
       FVisible := val;
       dataSource.getYMinAndYMax;
+      if Assigned(dataSource.Redraw) then dataSource.Redraw;
     end;
 end;
 

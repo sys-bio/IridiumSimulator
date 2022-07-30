@@ -634,6 +634,8 @@ end;
 
 procedure TScrollingChart.restart;
 begin
+  if stage = nil then exit;
+
   restartSeries;
   globaldata.dataSource.reset;
   plane.x := xMinIni;
@@ -879,6 +881,7 @@ begin
      begin
        globalData := TGlobalData.Create;
        title := globalData.title;
+       globalData.dataSource.Redraw := Redraw;
 
        plane := TPlaneXY.Create;
        xAxis := plane.xAxis;

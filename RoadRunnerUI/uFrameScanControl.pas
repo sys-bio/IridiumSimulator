@@ -112,14 +112,14 @@ uses StrUtils,
      ufFloatingPlotViewer,
      ufTextViewer;
 
+
 procedure TFrameScanControl.loadModelFromMemo;
 var
   sbmlStr: string;
 begin
   sbmlStr := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
-  controller.loadSBMLModel(sbmlStr);
+  controller.loadSBMLModel(sbmlStr, true);
 
-  controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
   collectModelSymbols;
   //if Assigned(frmFloatingPlotViewer) then
   //   frmFloatingPlotViewer.initializeFloatingGraph;

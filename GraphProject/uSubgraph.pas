@@ -236,7 +236,7 @@ type
     function deviceToWorld(x, y: single): TPointF;
     function deltaDeviceToDeltaWorld(x, y: single): TPointF;
     function legend_relativeToDevice: TBox;
-    function relativeToDevice(graphObject: TGraphObject): TBox;
+    //function relativeToDevice(graphObject: TGraphObject): TBox;
     function relativeToDevice2(graphObject: TGraphBase): TBox;
 
     procedure unselectAllObjects;
@@ -665,42 +665,42 @@ begin
   result.h := h1 * rBox.h;
 end;
 
-function TSubgraph.relativeToDevice(graphObject: TGraphObject): TBox;
-var
-  rBox: TLogicalBox;
-  rBoxGraphingArea: TLogicalBox;
-  panel: TRRGraph;
-  w0, w1, w2, w3: single;
-  h0, h1, h2, h3, h4, h5: single;
-begin
-  if graphObject.ObjType = coGraphingArea then
-    begin
-      result := rectToBox(getGraphDeviceDrawingArea);
-      exit;
-    end;
-
-  panel := parentGraph as TRRGraph;
-  rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
-  rBox := graphObject.logicalBox;
-
-  w0 := panel.Width;
-  w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
-
-  w2 := w1 * rBox.left; // Width in pixels of distance of Id object to edge of graphing area
-  w3 := w0 * rBoxGraphingArea.left; // Distance from edge to graphing are
-
-  result.left := w2 + w3; // Correct
-  result.w := w1 * rBox.w;
-
-  h0 := panel.Height;
-  h1 := rBoxGraphingArea.h * h0; // Height in pixels of graphing area
-
-  h2 := h1 * rBox.top; // Height in pixels of distance of Id object to edge of graphing area
-  h3 := h0 * (1 - rBoxGraphingArea.top); // Distance from edge to graphing area
-
-  result.top := (h2 + h3);
-  result.h := h1 * rBox.h;
-end;
+//function TSubgraph.relativeToDevice(graphObject: TGraphObject): TBox;
+//var
+//  rBox: TLogicalBox;
+//  rBoxGraphingArea: TLogicalBox;
+//  panel: TRRGraph;
+//  w0, w1, w2, w3: single;
+//  h0, h1, h2, h3, h4, h5: single;
+//begin
+//  if graphObject.ObjType = coGraphingArea then
+//    begin
+//      result := rectToBox(getGraphDeviceDrawingArea);
+//      exit;
+//    end;
+//
+//  panel := parentGraph as TRRGraph;
+//  rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
+//  rBox := graphObject.logicalBox;
+//
+//  w0 := panel.Width;
+//  w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
+//
+//  w2 := w1 * rBox.left; // Width in pixels of distance of Id object to edge of graphing area
+//  w3 := w0 * rBoxGraphingArea.left; // Distance from edge to graphing are
+//
+//  result.left := w2 + w3; // Correct
+//  result.w := w1 * rBox.w;
+//
+//  h0 := panel.Height;
+//  h1 := rBoxGraphingArea.h * h0; // Height in pixels of graphing area
+//
+//  h2 := h1 * rBox.top; // Height in pixels of distance of Id object to edge of graphing area
+//  h3 := h0 * (1 - rBoxGraphingArea.top); // Distance from edge to graphing area
+//
+//  result.top := (h2 + h3);
+//  result.h := h1 * rBox.h;
+//end;
 
 procedure TSubgraph.unselectAllObjects;
 var
@@ -729,6 +729,9 @@ begin
   XData := ds.find(properties.dataBlocks[0].xaxisColumn, index);
   if XData = nil then
     raise Exception.Create('X axis not specified in data block: ' + properties.dataBlocks[0].xaxisColumn);
+
+  if length (XData.data) = 0 then
+     exit;
 
   XmaxComputedLimit := XData.data[0];
   XminComputedLimit := XData.data[0];
@@ -1285,9 +1288,6 @@ begin
       // drawMainTitleSelected(canvas);
     end;
 
-  //legend.logicalBox.w := widthOfLegend / (rBoxGraphingArea.w * panel.Width);
-  //legend.logicalBox.h := aBox.top / (rBoxGraphingArea.h * panel.Height);
-
   if properties.bDrawXAxisTitle then
     begin
       textProperties := properties.XAxisTitleObject.textProperties;
@@ -1299,6 +1299,7 @@ begin
          twidth := textProperties.computeDimensions(LPaint).x;
 
          // Update the logical dimensions based on the current X axis text
+         // Doing this means a user can't move the text left or right, only up and down.
          gdArea := getGraphDeviceDrawingArea;
          gdWidth := gdArea.Right - gdArea.Left;
          properties.XAxisTitleObject.logicalBox.left := ((gdWidth/2) - twidth/2)/gdwidth;
@@ -1351,6 +1352,7 @@ begin
     end
   else
     drawSelectedGraphingArea(ACanvas);
+
 
   ACanvas.Save;
   try
@@ -1507,6 +1509,9 @@ begin
       XData := columns[0];
       xaxisColumn := XData.name;
     end;
+
+  if length (XData.data) = 0 then
+     exit;
 
   for i := 0 to columns.Count - 1 do
     begin
@@ -1724,6 +1729,14 @@ begin
   ds := properties.dataBlocks[0];
   if ds = nil then
     exit;
+
+  xaxisColumn := properties.dataBlocks[0].xaxisColumn;
+  XData := ds.columns.find(xaxisColumn, index);
+  if XData = nil then
+     exit;
+
+  if length (XData.data) = 0 then
+     exit;
 
   LPaint.PathEffect := nil;
   rectf := getGraphDeviceDrawingArea;

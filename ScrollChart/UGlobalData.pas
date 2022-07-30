@@ -13,6 +13,7 @@ interface
       vertical: TVAlign;
     end;
 
+
     TOnCompleteEvent = procedure(X, Y: single) of object;
     TMouseMoveEvent = procedure(Sender: TObject; Shift: TShiftState; X, Y: Single) of object;
     TSwitch = reference to function (b: array of const; m: byte): TPoint;

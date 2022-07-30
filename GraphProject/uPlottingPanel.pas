@@ -825,7 +825,7 @@ begin
 
   if currentSubGraphId <> -1 then
      begin
-     aBox := subgraphs[currentSubGraphId].relativeToDevice(subgraphs[currentSubGraphId].properties.graphObjects[graphingAreaId]);
+     aBox := subgraphs[currentSubGraphId].relativeToDevice2(subgraphs[currentSubGraphId].properties.graphObjects[graphingAreaId]);
      if PtOverHandle (aBox , x, y, dragDirection) then
         Cursor := crCross;
      end;

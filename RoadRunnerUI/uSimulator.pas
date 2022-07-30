@@ -89,6 +89,7 @@ begin
     scanControl.minValue := scanArguments.minValue;
     scanControl.maxValue :=  scanArguments.maxValue;
     scanControl.scanValuesType := scanArguments.FScanValuesType;
+    scanControl.listOfValues := scanArguments.FListValues;
 
     simulationData := scanControl.doTimeCourseSingleParameterScan(selectionList, scanArguments);
 end;

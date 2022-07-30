@@ -87,8 +87,8 @@ begin
   controller.viewerPackage.XAxisTitle := 'X Value';
   controller.viewerPackage.YColumnChoice[0] := False;
   controller.viewerPackage.YColumnChoice[1] := True;
-  controller.viewerPackage.autoYScale := chkAutoYScale.IsChecked;
-  controller.viewerPackage.showLegend := showLegend;
+  //controller.viewerPackage.autoYScale := chkAutoYScale.IsChecked;
+  //controller.viewerPackage.showLegend := showLegend;
   setLength (controller.viewerPackage.YColumnNames, 2);
   controller.viewerPackage.YColumnNames[0] := 'x';
   controller.viewerPackage.YColumnNames[1] := 'y';

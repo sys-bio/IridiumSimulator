@@ -622,7 +622,7 @@ procedure TLegendBox.draw;
    d: TGlobalData;
    LBlob: ISkTextBlob;
    w, h, tx, ty, widthBox, heightBox: double;
-   i: Integer;
+   i, n: Integer;
    P, topLeft: TPointF;
    ABounds: TRectF;
    leg: TLegend;
@@ -639,18 +639,19 @@ procedure TLegendBox.draw;
    paint.StrokeJoin := TSkStrokeJoin.Round;
 
    paint.Style := TSkPaintStyle.Fill;
-
+   n := 0;
    for i := 0 to length(d.series) - 1 do
-     begin
-       font.MeasureText(d.series[i].name, ABounds, paint);
-       if ABounds.Width > w then w := ABounds.Width;
-       h := h + ABounds.Height;
-     end;
+     if d.series[i].visible then
+       begin
+         font.MeasureText(d.series[i].name, ABounds, paint);
+         if ABounds.Width > w then w := ABounds.Width;
+         h := h + ABounds.Height;
+         n := n + 1;
+       end;
 
    widthBox := leg.pad + w + leg.space + leg.widthLine + leg.pad;
-   heightBox := leg.pad + h + (length(d.series) - 1)*leg.gap + leg.pad;
+   heightBox := leg.pad + h + (n - 1)*leg.gap + leg.pad;
    if heightBox < 2*leg.pad then heightBox := 2*leg.pad;
-
 
    offSet := data.getPivot(width, height, leg.reference);
    pivot := data.getPivot(widthBox, heightBox, leg.pivot);
@@ -666,24 +667,25 @@ procedure TLegendBox.draw;
    tx := box.topLeft.X + leg.pad;
    ty := box.topLeft.Y + leg.pad;
    for i := 0 to length(d.series) - 1 do
-     begin
-       paint.Color := leg.fontColor;
-       font.MeasureText(d.series[i].name, ABounds, paint);
-       LBlob := TSkTextBlob.MakeFromText(d.series[i].name, font);
+     if d.series[i].visible then
+       begin
+         paint.Color := leg.fontColor;
+         font.MeasureText(d.series[i].name, ABounds, paint);
+         LBlob := TSkTextBlob.MakeFromText(d.series[i].name, font);
 
-       d.canvas.DrawTextBlob(LBlob, tx, ty + ABounds.Height, paint);
+         d.canvas.DrawTextBlob(LBlob, tx, ty + ABounds.Height, paint);
 
-       paint.StrokeWidth := 2; //d.series[i].lineWidth;
-       paint.Color := d.series[i].color;
-       d.canvas.DrawLine(
-           tx + w + leg.space,
-           ty + ABounds.Height/2,
-           tx + w + leg.space + leg.widthLine,
-           ty + ABounds.Height/2,
-           paint);
+         paint.StrokeWidth := 2; //d.series[i].lineWidth;
+         paint.Color := d.series[i].color;
+         d.canvas.DrawLine(
+             tx + w + leg.space,
+             ty + ABounds.Height/2,
+             tx + w + leg.space + leg.widthLine,
+             ty + ABounds.Height/2,
+             paint);
 
-       ty := ty + ABounds.Height + leg.gap;
-     end;
+         ty := ty + ABounds.Height + leg.gap;
+       end;
 
  end;
 

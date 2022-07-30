@@ -266,8 +266,8 @@ begin
 
   plt.subgraphs[0].XAxisTitle := viewerPackage.XAxisTitle;
 
-  plt.subgraphs[0].properties.AutoXScaling := viewerPackage.autoXScale;
-  plt.subgraphs[0].properties.AutoYScaling := viewerPackage.autoYScale;
+  //plt.subgraphs[0].properties.AutoXScaling := viewerPackage.autoXScale;
+  //plt.subgraphs[0].properties.AutoYScaling := viewerPackage.autoYScale;
 
 //  plt.subgraphs[0].XAxisTitle := cbXAxis.Items[cbXAxis.itemindex];
 //  if chkAutoscaleX.IsChecked then
