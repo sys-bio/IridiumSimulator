@@ -205,7 +205,7 @@ object FrameScanControl: TFrameScanControl
       object lblScanMin1: TLabel
         Position.X = 8.000000000000000000
         Position.Y = 62.000000000000000000
-        Size.Width = 75.000000000000000000
+        Size.Width = 154.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
         Text = 'Min:'

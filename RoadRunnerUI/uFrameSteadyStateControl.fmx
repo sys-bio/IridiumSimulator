@@ -2,162 +2,228 @@ object FrameSteadyStateControl: TFrameSteadyStateControl
   Size.Width = 320.000000000000000000
   Size.Height = 676.000000000000000000
   Size.PlatformDefault = False
-  object Label8: TLabel
-    StyledSettings = [Family, Style]
-    Position.X = 12.000000000000000000
-    Position.Y = 17.000000000000000000
-    Size.Width = 180.000000000000000000
-    Size.Height = 17.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.Font.Size = 16.000000000000000000
-    TextSettings.FontColor = claCornsilk
-    Text = 'Compute Steady State'
-    TabOrder = 6
-  end
-  object btnConfigureSteadyStateSolver: TButton
-    Position.X = 200.000000000000000000
-    Position.Y = 14.000000000000000000
-    Size.Width = 74.000000000000000000
-    Size.Height = 28.000000000000000000
+  object Layout1: TLayout
+    Align = Top
+    Size.Width = 320.000000000000000000
+    Size.Height = 53.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
-    Text = 'Config'
-    OnClick = btnConfigureSteadyStateSolverClick
+    object Label8: TLabel
+      StyledSettings = [Family, Style]
+      Position.X = 12.000000000000000000
+      Position.Y = 17.000000000000000000
+      Size.Width = 180.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 16.000000000000000000
+      TextSettings.FontColor = claCornsilk
+      Text = 'Compute Steady State'
+      TabOrder = 6
+    end
+    object btnConfigureSteadyStateSolver: TButton
+      Position.X = 200.000000000000000000
+      Position.Y = 14.000000000000000000
+      Size.Width = 74.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Config'
+      OnClick = btnConfigureSteadyStateSolverClick
+    end
   end
-  object btnGetSteadyState: TButton
-    Position.X = 8.000000000000000000
-    Position.Y = 59.000000000000000000
-    Size.Width = 176.000000000000000000
-    Size.Height = 27.000000000000000000
+  object Layout2: TLayout
+    Align = Top
+    Position.Y = 53.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 76.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
-    Text = 'Compute the Steady-State'
-    OnClick = btnGetSteadyStateClick
-  end
-  object btnSteadyStateSliders: TSpeedButton
-    Hint = 'Bring up sliders'
-    Position.X = 209.000000000000000000
-    Position.Y = 59.000000000000000000
-    Size.Width = 42.000000000000000000
-    Size.Height = 28.000000000000000000
-    Size.PlatformDefault = False
-    ParentShowHint = False
-    ShowHint = True
-    StyleLookup = 'btnSlidersStyle1'
-    OnClick = btnSteadyStateSlidersClick
-    object Image11: TImage
-      MultiResBitmap.Height = 50
-      MultiResBitmap.Width = 50
-      MultiResBitmap.TransparentColor = 16711935
-      MultiResBitmap = <
-        item
-          Width = 50
-          Height = 50
-          PNG = {
-            89504E470D0A1A0A0000000D49484452000000320000003208060000001E3F88
-            B1000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
-            0269494441546843ED99BF6FD34014C7DF9DDD360D0DEA843AB7C0CE5E81106C
-            2C0C55C7B23176EB54B5082AC4C0C6C806236260610355A0FE15A56544552720
-            6AFA23CE997CE19DE582EDF86CE79C86FB4851F22ECB7D7D77EFFB9E8F1C2386
-            E06FAB7C7EA4AEF7FCE37545BD451E2249DE8EAFA6BF848ADEDC7C2C77793837
-            D6854084F2CF5EFAE1D42D1E3A47204E3FC960F2A1A918AB420689D014119328
-            E4DDF3BD7BAD932B2F38AC0C49343711B69A1C66D215ED8E223AE030A2DD385C
-            BDBF76F53D871189423E6EFDDC9F0A5BF31C8E14A7A2FDF5CEC6E5050E23FA0F
-            A95E163785C087C3C2D42EA42A12852015F2CFA1B3F3240CF1E1702069734B5C
-            526417216999C3CAE8C9B3BB833216C041F7D5CC330ECF91E63323997EBBA2F3
-            FAF6C6A5071CE6C2EA19C193843F60A25D6A777838022B81FFBC60FA290FE5C6
-            EA8AC449DABE45CB13876388943A23F17D5EF7FE2E240402D04FF49D61491781
-            8ABE9F7485F70D8685AC635B9471FAD55E30113657E295ACA4D9060A4D8CFF11
-            69176367CFE3CE59CE5C162367DFDE3A7A8527CBE14891E6FA895B2BDE4B0FA2
-            AA323C2F69731BEF32DE04D3327C58246E89B49EBDAFBA74CF5D16A39E3D0D9D
-            7AF3642D2F98B961D34B8CB6162686321CAF6B78E81F509EFF681C2EDB36C442
-            D9463B3B32880CFBDB8D5A4DAC0291F7B60E5707A5D3A6364FD74B38C6146BA5
-            451C7DAE02797CED77C22879A500AC0BC9F2A23299CFAA90BC865AD9B5825E7A
-            0E2B23EF9B4600319E9AFCC06184EB47868D693FF37FF6236375ADF0F7F57115
-            94ED67B25E358D4DFAB57A4630B1AC7E06BD0CB292A90860754534DAA7748982
-            B1BADE503A1C8E0B05D12FD4437B22C715396D0000000049454E44AE426082}
-          FileName = 
-            'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
-            '\RoadRunnerUI\Slider _50px_Color.png'
-        end>
-      HitTest = False
-      Position.X = 9.000000000000000000
-      Position.Y = 2.000000000000000000
-      Size.Width = 24.000000000000000000
-      Size.Height = 24.000000000000000000
+    object btnGetSteadyState: TButton
+      Position.X = 8.000000000000000000
+      Position.Y = 19.000000000000000000
+      Size.Width = 176.000000000000000000
+      Size.Height = 27.000000000000000000
       Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Compute the Steady-State'
+      OnClick = btnGetSteadyStateClick
+    end
+    object lblSteadyState: TLabel
+      Position.X = 11.000000000000000000
+      Position.Y = 49.000000000000000000
+      Size.Width = 177.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = '0.0'
+      TabOrder = 1
+    end
+    object btnSteadyStateSliders: TSpeedButton
+      Hint = 'Bring up sliders'
+      Position.X = 209.000000000000000000
+      Position.Y = 19.000000000000000000
+      Size.Width = 42.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      ParentShowHint = False
+      ShowHint = True
+      StyleLookup = 'btnSlidersStyle1'
+      OnClick = btnSteadyStateSlidersClick
+      object Image11: TImage
+        MultiResBitmap.Height = 50
+        MultiResBitmap.Width = 50
+        MultiResBitmap.TransparentColor = 16711935
+        MultiResBitmap = <
+          item
+            Width = 50
+            Height = 50
+            PNG = {
+              89504E470D0A1A0A0000000D49484452000000320000003208060000001E3F88
+              B1000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+              0269494441546843ED99BF6FD34014C7DF9DDD360D0DEA843AB7C0CE5E81106C
+              2C0C55C7B23176EB54B5082AC4C0C6C806236260610355A0FE15A56544552720
+              6AFA23CE997CE19DE582EDF86CE79C86FB4851F22ECB7D7D77EFFB9E8F1C2386
+              E06FAB7C7EA4AEF7FCE37545BD451E2249DE8EAFA6BF848ADEDC7C2C77793837
+              D6854084F2CF5EFAE1D42D1E3A47204E3FC960F2A1A918AB420689D014119328
+              E4DDF3BD7BAD932B2F38AC0C49343711B69A1C66D215ED8E223AE030A2DD385C
+              BDBF76F53D871189423E6EFDDC9F0A5BF31C8E14A7A2FDF5CEC6E5050E23FA0F
+              A95E163785C087C3C2D42EA42A12852015F2CFA1B3F3240CF1E1702069734B5C
+              526417216999C3CAE8C9B3BB833216C041F7D5CC330ECF91E63323997EBBA2F3
+              FAF6C6A5071CE6C2EA19C193843F60A25D6A777838022B81FFBC60FA290FE5C6
+              EA8AC449DABE45CB13876388943A23F17D5EF7FE2E240402D04FF49D61491781
+              8ABE9F7485F70D8685AC635B9471FAD55E30113657E295ACA4D9060A4D8CFF11
+              69176367CFE3CE59CE5C162367DFDE3A7A8527CBE14891E6FA895B2BDE4B0FA2
+              AA323C2F69731BEF32DE04D3327C58246E89B49EBDAFBA74CF5D16A39E3D0D9D
+              7AF3642D2F98B961D34B8CB6162686321CAF6B78E81F509EFF681C2EDB36C442
+              D9463B3B32880CFBDB8D5A4DAC0291F7B60E5707A5D3A6364FD74B38C6146BA5
+              451C7DAE02797CED77C22879A500AC0BC9F2A23299CFAA90BC865AD9B5825E7A
+              0E2B23EF9B4600319E9AFCC06184EB47868D693FF37FF6236375ADF0F7F57115
+              94ED67B25E358D4DFAB57A4630B1AC7E06BD0CB292A90860754534DAA7748982
+              B1BADE503A1C8E0B05D12FD4437B22C715396D0000000049454E44AE426082}
+            FileName = 
+              'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+              '\RoadRunnerUI\Slider _50px_Color.png'
+          end>
+        HitTest = False
+        Position.X = 9.000000000000000000
+        Position.Y = 2.000000000000000000
+        Size.Width = 24.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+      end
     end
   end
-  object lblSteadyState: TLabel
-    Position.X = 11.000000000000000000
-    Position.Y = 89.000000000000000000
-    Size.Width = 177.000000000000000000
-    Size.Height = 17.000000000000000000
+  object Layout3: TLayout
+    Align = Top
+    Position.Y = 129.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 135.000000000000000000
     Size.PlatformDefault = False
-    Text = '0.0'
     TabOrder = 2
-  end
-  object SteadyStateGrid: TStringGrid
-    CanFocus = True
-    ClipChildren = True
-    Position.X = 10.000000000000000000
-    Position.Y = 124.000000000000000000
-    Size.Width = 265.000000000000000000
-    Size.Height = 161.000000000000000000
-    Size.PlatformDefault = False
-    TextSettings.FontColor = claCornsilk
-    StyledSettings = [Family, Size, Style]
-    TabOrder = 3
-    RowHeight = 21.000000000000000000
-    Options = [Editing, ColumnResize, ColLines, RowLines, AlwaysShowSelection, Tabs, Header]
-    Viewport.Width = 265.000000000000000000
-    Viewport.Height = 161.000000000000000000
-    object gridSymbolColumn: TStringColumn
-      Header = 'Symbol'
-      Size.Width = 114.000000000000000000
+    object SteadyStateGrid: TStringGrid
+      Align = Client
+      CanFocus = True
+      ClipChildren = True
+      Margins.Left = 10.000000000000000000
+      Margins.Top = 10.000000000000000000
+      Margins.Right = 10.000000000000000000
+      Margins.Bottom = 10.000000000000000000
+      Size.Width = 300.000000000000000000
+      Size.Height = 115.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claCornsilk
+      StyledSettings = [Family, Size, Style]
+      TabOrder = 0
+      RowHeight = 21.000000000000000000
+      Options = [Editing, ColumnResize, ColLines, RowLines, AlwaysShowSelection, Tabs, Header]
+      Viewport.Width = 280.000000000000000000
+      Viewport.Height = 90.000000000000000000
+      object gridSymbolColumn: TStringColumn
+        Header = 'Symbol'
+        Size.Width = 114.000000000000000000
+      end
+      object gridValueColumn: TStringColumn
+        Header = 'Value'
+        Size.Width = 114.000000000000000000
+      end
     end
-    object gridValueColumn: TStringColumn
-      Header = 'Value'
-      Size.Width = 114.000000000000000000
-    end
   end
-  object Label4: TLabel
-    Position.X = 10.000000000000000000
-    Position.Y = 295.000000000000000000
-    Size.Width = 120.000000000000000000
-    Size.Height = 17.000000000000000000
+  object Splitter1: TSplitter
+    Align = Top
+    Cursor = crVSplit
+    MinSize = 20.000000000000000000
+    Position.Y = 264.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 8.000000000000000000
     Size.PlatformDefault = False
-    Text = 'Eigenvalues:'
-    TabOrder = 5
   end
-  object gridEigenValues: TStringGrid
-    CanFocus = True
-    ClipChildren = True
-    Position.X = 10.000000000000000000
-    Position.Y = 316.000000000000000000
-    Size.Width = 265.000000000000000000
-    Size.Height = 145.000000000000000000
+  object Layout4: TLayout
+    Align = Top
+    Position.Y = 272.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 169.000000000000000000
     Size.PlatformDefault = False
-    TextSettings.FontColor = claCornsilk
-    StyledSettings = [Family, Size, Style]
     TabOrder = 4
-    RowHeight = 21.000000000000000000
-    Viewport.Width = 265.000000000000000000
-    Viewport.Height = 145.000000000000000000
-    object StringColumn1: TStringColumn
-      Header = 'Real'
-      Size.Width = 114.000000000000000000
+    object Label4: TLabel
+      Align = Top
+      Margins.Left = 10.000000000000000000
+      Position.X = 10.000000000000000000
+      Size.Width = 310.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Eigenvalues:'
+      TabOrder = 1
     end
-    object StringColumn2: TStringColumn
-      Header = 'Immaginary'
-      Size.Width = 114.000000000000000000
+    object gridEigenValues: TStringGrid
+      Align = Client
+      CanFocus = True
+      ClipChildren = True
+      Margins.Left = 10.000000000000000000
+      Margins.Top = 5.000000000000000000
+      Margins.Right = 10.000000000000000000
+      Margins.Bottom = 10.000000000000000000
+      Size.Width = 300.000000000000000000
+      Size.Height = 137.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claCornsilk
+      StyledSettings = [Family, Size, Style]
+      TabOrder = 0
+      RowHeight = 21.000000000000000000
+      Viewport.Width = 280.000000000000000000
+      Viewport.Height = 112.000000000000000000
+      object StringColumn1: TStringColumn
+        Header = 'Real'
+        Size.Width = 114.000000000000000000
+      end
+      object StringColumn2: TStringColumn
+        Header = 'Immaginary'
+        Size.Width = 114.000000000000000000
+      end
     end
   end
-  object btnMoreSteadyState: TButton
-    Position.X = 16.000000000000000000
-    Position.Y = 472.000000000000000000
-    TabOrder = 7
-    Text = 'More >>'
-    OnClick = btnMoreSteadyStateClick
+  object Layout5: TLayout
+    Align = Client
+    Size.Width = 320.000000000000000000
+    Size.Height = 227.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 5
+    object btnMoreSteadyState: TButton
+      Position.X = 8.000000000000000000
+      Position.Y = 16.000000000000000000
+      Size.Width = 80.000000000000000000
+      Size.Height = 21.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'More >>'
+      OnClick = btnMoreSteadyStateClick
+    end
+  end
+  object Splitter2: TSplitter
+    Align = Top
+    Cursor = crVSplit
+    MinSize = 20.000000000000000000
+    Position.Y = 441.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 8.000000000000000000
+    Size.PlatformDefault = False
   end
 end
