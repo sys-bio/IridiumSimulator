@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleVersion</key>
+	<string>1.0.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.hsauro.iridium</string>
+	<key>CFBundleName</key>
+	<string>Iridium</string>
+	<key>CFBundleDisplayName</key>
+	<string>roadrunnerUI_OSX64</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleExecutable</key>
+	<string>roadrunnerUI</string>
+
+	<key>CFBundleIconFile</key>
+	<string>roadrunnerUI.icns</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>MacOSX</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.9</string>
+
+</dict>
+</plist>

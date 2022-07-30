@@ -51,12 +51,9 @@ uses
   ufRangeFrame in 'ufRangeFrame.pas' {frmRangeFrame: TFrame},
   uModel in 'uModel.pas',
   UComps in '..\ScrollChart\UComps.pas',
-  UConst in '..\ScrollChart\UConst.pas',
   UContainer in '..\ScrollChart\UContainer.pas',
   UDataSource in '..\ScrollChart\UDataSource.pas',
   UGlobalData in '..\ScrollChart\UGlobalData.pas',
-  UNiceScale in '..\ScrollChart\UNiceScale.pas',
-  UPlane2D in '..\ScrollChart\UPlane2D.pas',
   UScrollingChart in '..\ScrollChart\UScrollingChart.pas',
   UStage in '..\ScrollChart\UStage.pas',
   ufScrollChart in 'ufScrollChart.pas' {frmScrollChart},
@@ -66,9 +63,9 @@ uses
   uInputs in 'uInputs.pas',
   uViewer in 'uViewer.pas',
   uFormViewer in 'uFormViewer.pas',
-  uPlotFormViewer in 'uPlotFormViewer.pas',
+  uPlotFormViewerOld in 'uPlotFormViewerOld.pas',
   uViewerTypes in 'uViewerTypes.pas',
-  uTableFormViewer in 'uTableFormViewer.pas',
+  uTableFormViewerOld in 'uTableFormViewerOld.pas',
   uCommonTypes in 'uCommonTypes.pas',
   uScanArguments in 'uScanArguments.pas',
   uModelInputManager in 'uModelInputManager.pas',
@@ -79,12 +76,24 @@ uses
   ufPreferences in 'ufPreferences.pas' {frmPreferences},
   uConfiguration in 'uConfiguration.pas',
   ufSplash in 'ufSplash.pas' {frmSplash},
-  ufTextViewer in 'ufTextViewer.pas' {frmTextViewer};
+  ufTextViewer in 'ufTextViewer.pas' {frmTextViewer},
+  ufFrameSplitPanel in 'ufFrameSplitPanel.pas' {frameSplitPanels: TFrame},
+  ufMainConfig in 'ufMainConfig.pas',
+  ufFrameViewerBase in 'ufFrameViewerBase.pas' {FrameViewerBase: TFrame},
+  uTableFrameViewer in 'uTableFrameViewer.pas' {TableFrameViewer: TFrame},
+  uPlotFrameViewer in 'uPlotFrameViewer.pas' {PlotFrameViewer: TFrame};
 
 {$R *.res}
 
+var f: TextFile;
+
 begin
   GlobalUseSkia := True;
+
+  //AssignFile (f, '/tmp/iridium1.log');
+  //rewrite (f);
+  //writeln (f, 'Start logging');
+  //closefile (f);
 
   Application.Initialize;
 
@@ -92,8 +101,11 @@ begin
   frmSplash.Show;
   Application.ProcessMessages;
 
+  GlobalUseSkia := True;
+
   try
     TRoadRunnerAPI.Initialize;
+
   except
     on e: Exception do
        begin
@@ -108,7 +120,5 @@ begin
 
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmGraphPackageDlg, frmGraphPackageDlg);
-  Application.CreateForm(TfrmSliders, frmSliders);
-  Application.CreateForm(TfrmAbout, frmAbout);
   Application.Run;
 end.

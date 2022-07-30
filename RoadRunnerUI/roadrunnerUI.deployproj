@@ -46,7 +46,7 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Release'">
+        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Debug'">
             <RemoteDir>roadrunnerUI\</RemoteDir>
             <RemoteName>sk4d.dll</RemoteName>
             <DeployClass>Skia</DeployClass>
@@ -56,7 +56,7 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Release'">
             <RemoteDir>roadrunnerUI\</RemoteDir>
             <RemoteName>sk4d.dll</RemoteName>
             <DeployClass>Skia</DeployClass>
@@ -68,6 +68,15 @@
         </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='OSX64'">
+        <DeployFile Include="OSX64\OSX64_Libs\libantimony.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libantimony.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="OSX64\Debug\roadrunnerUI" Condition="'$(Config)'=='Debug'">
             <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
             <RemoteName>roadrunnerUI</RemoteName>
@@ -83,6 +92,15 @@
             <RemoteName>Info.plist</RemoteName>
             <DeployClass>ProjectOSXInfoPList</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSX64\OSX64_Libs\libroadrunner_c_api.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libroadrunner_c_api.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -232,15 +250,6 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
             <Required>True</Required>
-        </DeployFile>
-        <DeployFile Include="..\..\..\..\22.0\CatalogRepository\Skia4Delphi-3.4.0\Binary\OSXARM64\Release\sk4d.dylib" Condition="'$(Config)'=='Release'">
-            <RemoteDir>roadrunnerUI.app\Contents\Resources\StartUp\</RemoteDir>
-            <RemoteName>sk4d.dylib</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="OSXARM64\Debug\roadrunnerUI" Condition="'$(Config)'=='Debug'">
             <RemoteDir>roadrunnerUI.app\Contents\MacOS\</RemoteDir>
