@@ -135,8 +135,8 @@ object FrameSteadyStateControl: TFrameSteadyStateControl
       TabOrder = 0
       RowHeight = 21.000000000000000000
       Options = [Editing, ColumnResize, ColLines, RowLines, AlwaysShowSelection, Tabs, Header]
-      Viewport.Width = 280.000000000000000000
-      Viewport.Height = 90.000000000000000000
+      Viewport.Width = 300.000000000000000000
+      Viewport.Height = 115.000000000000000000
       object gridSymbolColumn: TStringColumn
         Header = 'Symbol'
         Size.Width = 114.000000000000000000
@@ -188,8 +188,8 @@ object FrameSteadyStateControl: TFrameSteadyStateControl
       StyledSettings = [Family, Size, Style]
       TabOrder = 0
       RowHeight = 21.000000000000000000
-      Viewport.Width = 280.000000000000000000
-      Viewport.Height = 112.000000000000000000
+      Viewport.Width = 300.000000000000000000
+      Viewport.Height = 137.000000000000000000
       object StringColumn1: TStringColumn
         Header = 'Real'
         Size.Width = 114.000000000000000000

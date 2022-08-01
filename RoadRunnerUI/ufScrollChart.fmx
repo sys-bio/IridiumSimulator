@@ -159,7 +159,7 @@ object frmScrollChart: TfrmScrollChart
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
         Text = '20'
-        TabOrder = 18
+        TabOrder = 19
       end
     end
     object nbNumberOfPoints: TNumberBox

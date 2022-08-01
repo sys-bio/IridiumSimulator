@@ -111,8 +111,6 @@ begin
   controller.loadSBMLModel(sbmlStr, true);
 
   collectModelSymbols;
-  //if Assigned(frmFloatingPlotViewer) then
-  //   frmFloatingPlotViewer.initializeFloatingGraph;
   controller.outOfDate := false;
 end;
 
@@ -157,7 +155,7 @@ begin
   for i := 0 to alist.Count - 1 do
     begin
       value := controller.simulator.roadrunner.getValue(alist[i]);
-      frmSliders.lstParameters.Items.AddObject(alist[i], TSliderInitialValue.Create(value));
+      frmSliders.lstParameters.Items.AddObject(alist[i], TSliderInitialValue.Create(value/10, value*5, value));
     end;
 
   frmSliders.Show;

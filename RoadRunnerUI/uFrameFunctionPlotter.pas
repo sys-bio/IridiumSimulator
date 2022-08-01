@@ -148,7 +148,7 @@ begin
          end;
 
   for i := 0 to alist.Count - 1 do
-      frmSliders.lstParameters.Items.AddObject(alist[i], TSliderInitialValue.Create(1.0));
+      frmSliders.lstParameters.Items.AddObject(alist[i], TSliderInitialValue.Create(0, 10, 1.0));
 
   frmSliders.Show;
   frmSliders.BringToFront;

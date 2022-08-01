@@ -13,22 +13,27 @@ type
   TSliderListener =  procedure (parameter : string; value : double) of object;
 
   TSliderInitialValue = class (TObject)
+    lowRange, highRange : double;
     value : double;
-    constructor Create (value : double);
+    constructor Create (lowRange, highRange, value : double);
   end;
 
   TfrmSliders = class(TForm)
     Layout1: TLayout;
     Layout2: TLayout;
     btnClose: TButton;
-    Label1: TLabel;
-    lstParameters: TListBox;
     chkFixYAxis: TCheckBox;
     btnReset: TButton;
     Timer1: TTimer;
-    Rectangle1: TRectangle;
-    rangeFrame: TfrmRangeFrame;
     btnClearAll: TButton;
+    btnMakeAllSliders: TButton;
+    VertScrollBox: TVertScrollBox;
+    Layout3: TLayout;
+    Label1: TLabel;
+    rangeFrame: TfrmRangeFrame;
+    Layout4: TLayout;
+    lstParameters: TListBox;
+    Rectangle1: TRectangle;
     procedure btnCloseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure lstParametersChange(Sender: TObject);
@@ -38,6 +43,7 @@ type
     procedure rangeFrameedtLowerExit(Sender: TObject);
     procedure rangeFrameedtUpperExit(Sender: TObject);
     procedure btnClearAllClick(Sender: TObject);
+    procedure btnMakeAllSlidersClick(Sender: TObject);
   private
     { Private declarations }
     currentRowPosition : integer;
@@ -57,8 +63,7 @@ type
     sliderList : TSliderList;
     OnNotifyChange : TSliderListener;
     procedure freeSliders;
-    procedure AddSlider (parameter : string; value : double);
-    procedure registerObserver ();
+    procedure AddSlider (parameter : string; lowRange, highRange : double; value : double);
   end;
 
 var
@@ -71,17 +76,19 @@ implementation
 
 Uses ufMain, ufConfigSlider, uCoyoteCommon;
 
-const UPPER_ROW_POSITION = 64;
+const UPPER_ROW_POSITION = 12;
       SLIDER_VERTICAL_DISTANCE = 48;//26;
-      LEFT_MARGIN = 196;
+      LEFT_MARGIN = 24;
       GAP = 10;
       LB2_VERT_OFFSET = 16;
       LB2_HORIZ_OFFSET = 32;
 
 
-constructor TSliderInitialValue.Create (value : double);
+constructor TSliderInitialValue.Create (lowRange, highRange, value : double);
 begin
   self.value := value;
+  self.lowRange := lowRange;
+  self.highRange := highRange;
 end;
 
 
@@ -98,12 +105,6 @@ begin
 end;
 
 
-procedure TfrmSliders.registerObserver ();
-begin
-
-end;
-
-
 procedure TfrmSliders.btnClearAllClick(Sender: TObject);
 begin
   freeSliders;
@@ -112,6 +113,26 @@ end;
 procedure TfrmSliders.btnCloseClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TfrmSliders.btnMakeAllSlidersClick(Sender: TObject);
+var si : TSliderInitialValue;
+begin
+  if lstParameters.Count > 150 then
+     begin
+     showmessage ('More than 15 sliders is a big excessive');
+     exit;
+     end;
+
+  freeSliders;
+  for var i := 0 to lstParameters.Count - 1 do
+      begin
+      si := lstParameters.Items.Objects[i] as TSliderInitialValue;
+      addSlider (lstParameters.Items[i],
+            si.lowRange,
+            si.highRange,
+            si.value);
+      end;
 end;
 
 procedure TfrmSliders.updateRangeLabel (index : integer);
@@ -337,7 +358,7 @@ begin
 end;
 
 
-procedure TfrmSliders.addSlider (parameter : string; value : double);
+procedure TfrmSliders.addSlider (parameter : string; lowRange, highRange : double; value : double);
 var slider : TTrackBar;
     sliderInfo : TSliderInfo;
     lb1, lb2 : TLabel;
@@ -348,7 +369,7 @@ var slider : TTrackBar;
 begin
   buttonWidth := 20;
   closeButton := TSpeedButton.Create(Self);
-  closeButton.Parent := self;
+  closeButton.Parent := VertScrollBox;
   closeButton.Width := buttonWidth;
   closeButton.Height := 20;
   closeButton.Text := 'X';
@@ -361,7 +382,7 @@ begin
   closeButton.OnClick := closeButtonClick;
 
   configButton := TSpeedButton.Create(Self);
-  configButton.Parent := self;
+  configButton.Parent := VertScrollBox;
   configButton.Width := buttonWidth;
   configButton.Height := 20;
   configButton.Text := 'C';
@@ -374,28 +395,28 @@ begin
   configButton.OnClick := configButtonClick;
 
   slider :=  TTrackBar.Create (Self);
-  slider.Parent := Self;
+  slider.Parent := VertScrollBox;
   slider.Position.X := configButton.Position.X + configButton.width + GAP;
   slider.Position.Y := currentRowPosition;
 
-  slider.Width := (self.width - 136) - slider.Position.X;
+  slider.Width := (VertScrollBox.width - 136) - slider.Position.X;
   slider.Anchors := [TAnchorKind.akLeft, TAnchorKind.akTop, TAnchorKind.akRight];
 
   lb1 := TLabel.Create (Self);
-  lb1.Parent := Self;
+  lb1.Parent := VertScrollBox;
   lb1.Position.X := slider.position.X + slider.Width + GAP;
   lb1.Position.Y := currentRowPosition - 2;
   lb1.Anchors := [TAnchorKind.akTop, TAnchorKind.akRight];
 
   lb2 := TLabel.Create (Self);
-  lb2.Parent := Self;
+  lb2.Parent := VertScrollBox;
   lb2.Position.X := slider.position.X + LB2_HORIZ_OFFSET;
   lb2.Position.Y := currentRowPosition - LB2_VERT_OFFSET;
   lb2.Anchors := [TAnchorKind.akTop, TAnchorKind.akLeft];
   lb2.OnClick := configButtonClick;
   lb2.HitTest := True;
 
-  sliderInfo := TSliderInfo.Create(parameter, 0, 0.1, 5, 0.1, lb1, lb2);
+  sliderInfo := TSliderInfo.Create(parameter, 0, lowRange, highRange, value/10, lb1, lb2);
   sliderInfo.closeButton := closeButton;
   sliderInfo.configButton := configButton;
   sliderInfo.slider := slider;
@@ -432,13 +453,18 @@ end;
 
 procedure TfrmSliders.lstParametersChange(Sender: TObject);
 var i : integer;
+   si : TSliderInitialValue;
 begin
   // Check if the slider has already been added
   for i := 0 to sliderList.Count - 1 do
       if sliderList[i].parameter = lstParameters.Items[lstParameters.ItemIndex] then
          exit;
+
+  si := lstParameters.Items.Objects[lstParameters.ItemIndex] as TSliderInitialValue;
   addSlider (lstParameters.Items[lstParameters.ItemIndex],
-            (lstParameters.Items.Objects[lstParameters.ItemIndex] as TSliderInitialValue).value);
+            si.lowRange,
+            si.highRange,
+            si.value);
 end;
 
 initialization

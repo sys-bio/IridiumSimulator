@@ -198,7 +198,7 @@ begin
     for i := 0 to list.Count - 1 do
         begin
         value := controller.simulator.roadrunner.getValue (list[i]);
-        frmSliders.lstParameters.Items.AddObject(list[i], TSliderInitialValue.Create (value));
+        frmSliders.lstParameters.Items.AddObject(list[i], TSliderInitialValue.Create (value/10, value*10, value));
         end;
 
   finally

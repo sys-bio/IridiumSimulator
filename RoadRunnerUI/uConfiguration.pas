@@ -13,7 +13,9 @@ type
      FMainConfig : TfrmMainConfig;
      FModelInputManagerConfig : TModelInputManagerConfig;
      FTextFormViewer : TTableFormViewerConfig;
+     FUIStyle : string;
     published
+      property UIStyle : string read FUIStyle write FUIStyle;
       property mainConfig : TfrmMainConfig read FMainConfig write FMainConfig;
       property modelInputManagerConfig : TModelInputManagerConfig read FModelInputManagerConfig write FModelInputManagerConfig;
       property textFormViewer : TTableFormViewerConfig read FTextFormViewer write FTextFormViewer;
@@ -83,6 +85,7 @@ begin
   try
    topObj.AddPair(SIGNATURE, VERSION);
    topObj.AddPair ('config', mainObj);
+   mainObj.AddPair ('style', FUIStyle);
    mainObj.AddPair ('mainForm', FMainConfig.saveToJson);
    mainObj.AddPair ('modelInputManager', FModelInputManagerConfig.saveToJson);
    mainObj.AddPair ('textFormViewer', FTextFormViewer.saveToJson);
@@ -118,6 +121,10 @@ begin
      end;
 
   Obj.TryGetValue ('config', configObj);
+  UIStyle := configObj.GetValue<string>('style', 'MineShaft_Win_Style');
+  if UIStyle = '' then
+     UIStyle := 'MineShaft_Win_Style';
+
   mainObj := configObj.Get('mainForm').JsonValue as TJSONObject;
   FMainConfig := TfrmMainConfig.readFromJson(mainObj);
 

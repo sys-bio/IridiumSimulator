@@ -34,12 +34,9 @@ const
 
 type
   TfrmMain = class(TForm)
-    Layout1: TLayout;
     Layout2: TLayout;
     Layout3: TLayout;
-    btnClose: TButton;
     pnlMain: TLayout;
-    lblVersion: TLabel;
     OpenSBMLDialog: TOpenDialog;
     Rectangle1: TRectangle;
     FunctionTabControl: TTabControl;
@@ -62,7 +59,7 @@ type
     btnScan: TSpeedButton;
     Image6: TImage;
     mnuOptions: TMenuItem;
-    StyleBook1: TStyleBook;
+    MineShaft_Win_Style: TStyleBook;
     mnuSaveGraphasPdf: TMenuItem;
     MenuItem2: TMenuItem;
     SavePDFDialog: TSaveDialog;
@@ -100,7 +97,6 @@ type
     mnuExamples: TMenuItem;
     mnuConfig: TMenuItem;
     mnuSpace1: TMenuItem;
-    Button1: TButton;
     tbAntimony: TTabControl;
     tbModelDefinition: TTabItem;
     Layout4: TLayout;
@@ -116,8 +112,6 @@ type
     Layout7: TLayout;
     Splitter1: TSplitter;
     frameSplitPanel: TframeSplitPanels;
-    Label4: TLabel;
-    Label5: TLabel;
     Rectangle3: TRectangle;
     Rectangle6: TRectangle;
     pnlBottomPanel: TLayout;
@@ -142,13 +136,14 @@ type
     btnReset: TButton;
     btnTimeCourseSliders: TSpeedButton;
     Image10: TImage;
-    Layout10: TLayout;
-    GroupBox4: TGroupBox;
-    chkAutoscaleX: TCheckBox;
-    chkAutoScaleY: TCheckBox;
     Layout11: TLayout;
     GroupBox2: TGroupBox;
     cbXAxis: TComboBox;
+    Layout1: TLayout;
+    btnClose: TButton;
+    lblVersion: TLabel;
+    Calypso_Win_Style: TStyleBook;
+    cboStyleList: TComboBox;
     procedure FormCreate(Sender: TObject);
     procedure btnSimulateClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
@@ -173,14 +168,12 @@ type
     procedure mnuImportSBMLClick(Sender: TObject);
     procedure mnuExportSBMLClick(Sender: TObject);
     procedure moModelImmediateChange(Sender: TObject);
-    procedure chkAutoscaleXChange(Sender: TObject);
     procedure btnTimeCourseSlidersClick(Sender: TObject);
     procedure btnRealTimeToolClick(Sender: TObject);
     procedure mnuUseFloatingGraphClick(Sender: TObject);
     procedure edtNumberOfPointsChange(Sender: TObject);
     procedure edtTimeEndChange(Sender: TObject);
     procedure edtTimeStartChange(Sender: TObject);
-    procedure chkAutoScaleYChange(Sender: TObject);
     procedure btnFunctionPlotClick(Sender: TObject);
     procedure btnUnSelectAllClick(Sender: TObject);
     procedure mnuPreferencesClick(Sender: TObject);
@@ -190,6 +183,7 @@ type
     procedure Button1Click(Sender: TObject);
     procedure btnOpenTabularClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure cboStyleListChange(Sender: TObject);
   private
     { Private declarations }
 
@@ -283,7 +277,7 @@ begin
   if frmIntegratorOptions = nil then
     begin
       frmIntegratorOptions := TfrmIntegratorOptions.Create(nil);
-      frmIntegratorOptions.StyleBook := StyleBook1;
+      // HMS frmIntegratorOptions.StyleBook := StyleBook1;
     end;
   sl := uRoadRunner.API.getListOfRegisteredIntegrators();
   try
@@ -339,7 +333,6 @@ begin
 
   edtTimeEnd.Text := model.timeEnd;
   edtNumberOfPoints.Text := inttostr(model.numberOfPoints);
-  chkAutoscaleX.IsChecked := False;
   controller.setTimeEnd(strtofloat (model.timeEnd));
   controller.setNumberOfPoints(model.numberOfPoints);
 end;
@@ -365,7 +358,6 @@ begin
 
   edtTimeEnd.Text := model.timeEnd;
   edtNumberOfPoints.Text := inttostr(model.numberOfPoints);
-  chkAutoscaleX.IsChecked := False;
   controller.setTimeEnd(strtofloat (model.timeEnd));
   controller.setNumberOfPoints(model.numberOfPoints);
 end;
@@ -431,7 +423,7 @@ begin
   if not Assigned(frmFloatingPlotViewer) then
     frmFloatingPlotViewer := TfrmFloatingPlotViewer.Create(nil);
   frmFloatingPlotViewer.controller := controller;
-  frmFloatingPlotViewer.StyleBook := StyleBook1;
+  frmFloatingPlotViewer.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
   frmFloatingPlotViewer.Show;
 end;
 
@@ -464,7 +456,7 @@ begin
   str := controller.simulator.roadrunner.getVersionStr();
   // str := str + sLineBreak + uRoadRunner.getlibSBMLVersion();
   frmAbout := TfrmAbout.Create(nil);
-  frmAbout.StyleBook := StyleBook1;
+  frmAbout.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
   frmAbout.lblRoadRunner.Text := 'Using libroadRunner version: ' + str;
   frmAbout.lbllibSBML.Text := 'Using libSBML vesion: ' + controller.simulator.roadrunner.getlibSBMLVersion();
   frmAbout.lbSkia.Text := 'Using skia: ' + Skia.SkVersion + ', Milestone: ' + inttostr(TSkVersion.LibraryMajor);
@@ -492,7 +484,7 @@ begin
       for var i := 0 to builtInModels.Count - 1 do
         frmExamples.ltExamples.Items.Add(builtInModels[i].displayName);
     end;
-  frmExamples.StyleBook := StyleBook1;
+  frmExamples.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
 
   if frmMain.Left > frmExamples.Width then
      begin
@@ -603,7 +595,7 @@ procedure TfrmMain.mnuPreferencesClick(Sender: TObject);
 begin
   frmPreferences := TfrmPreferences.Create(nil);
   try
-    frmPreferences.StyleBook := StyleBook1;
+    frmPreferences.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
     frmPreferences.ShowModal;
     controller.modelInputManager.modelMemo.Font.Size := configOpts.modelInputManagerConfig.fontSize;
   finally
@@ -660,7 +652,7 @@ begin
   t := FunctionTabControl.Add;
   t.Text := 'Function Plotter';
   frame := TframeFunctionPlotter.Create(FunctionTabControl);
-  frame.stylebook1 := StyleBook1;
+  frame.stylebook1 := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
   frame.Parent := t;
   frame.Align := TAlignLayout.Client;
   frame.Visible := True;
@@ -781,7 +773,7 @@ begin
   if frmScrollChart = nil then
     frmScrollChart := TfrmScrollChart.Create(nil, controller);
 
-  frmScrollChart.StyleBook := StyleBook1;
+  frmScrollChart.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
 
   list := controller.simulator.roadrunner.getFloatingSpeciesIds();
   try
@@ -814,7 +806,6 @@ end;
 procedure TfrmMain.edtTimeEndChange(Sender: TObject);
 begin
   controller.setTimeEnd(strtofloat (edtTimeEnd.Text));
-  chkAutoscaleX.IsChecked := False;
 end;
 
 
@@ -934,7 +925,7 @@ begin
   t := FunctionTabControl.Add;
   t.Text := 'Steady-State Control';
   frame := TFrameSteadyStateControl.Create(FunctionTabControl);
-  frame.stylebook1 := StyleBook1;
+  frame.stylebook1 := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
   frame.Parent := t;
   frame.Align := TAlignLayout.Client;
   frame.Visible := True;
@@ -986,7 +977,7 @@ begin
   if not Assigned(frmSliders) then
     frmSliders := TfrmSliders.Create(nil);
   frmSliders.OnNotifyChange := OnTimeCourseSliderNotify;
-  frmSliders.StyleBook := StyleBook1;
+  frmSliders.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
 
   list := controller.simulator.roadrunner.getGlobalParameterIds;
   // We can't change total masses for time course
@@ -1002,7 +993,7 @@ begin
   for i := 0 to list.Count - 1 do
     begin
       value := controller.simulator.roadrunner.getValue(list[i]);
-      frmSliders.lstParameters.Items.AddObject(list[i], TSliderInitialValue.Create(value));
+      frmSliders.lstParameters.Items.AddObject(list[i], TSliderInitialValue.Create(value/10, 5*value, value));
     end;
 
   list.Free;
@@ -1023,8 +1014,6 @@ end;
 
 procedure TfrmMain.Button1Click(Sender: TObject);
 begin
-  label4.Text :=  IntToHex(claCrimson, 8);
-  label5.Text := inttostr ( StrToInt('$' + label4.text));
 end;
 
 // Toolbar/Menu selection of scanning frame
@@ -1043,7 +1032,7 @@ begin
   t := FunctionTabControl.Add;
   t.Text := 'Scanning Control';
   frame := TFrameScanControl.Create(FunctionTabControl);
-  frame.stylebook1 := StyleBook1;
+  frame.stylebook1 := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
   frame.Parent := t;
   frame.Align := TAlignLayout.Client;
   frame.Visible := True;
@@ -1199,6 +1188,12 @@ begin
 end;
 
 
+procedure TfrmMain.cboStyleListChange(Sender: TObject);
+begin
+  StyleBook := TStyleBook(cboStyleList.ListItems[cboStyleList.ItemIndex].Data);
+  configOpts.UIStyle := StyleBook.Name;
+end;
+
 procedure TfrmMain.cbXAxisChange(Sender: TObject);
 begin
   if fireEvent then
@@ -1244,6 +1239,13 @@ var
 begin
   fireEvent := false;
 
+  cboStyleList.Items.Add(MineShaft_Win_Style.StyleName);
+  cboStyleList.ListItems[0].Data := MineShaft_Win_Style;
+
+  cboStyleList.Items.Add(Calypso_Win_Style.StyleName);
+  cboStyleList.ListItems[1].Data := Calypso_Win_Style;
+
+
 //  AssignFile (f, '~/Library/Logs/iridium.log');
 //  rewrite (f);
 //  writeln (f, 'Start logging');
@@ -1255,16 +1257,24 @@ begin
   controller.setTimeEnd (strtofloat (edtTimeEnd.Text));
   controller.setTimeStart (strtofloat (edtTimeStart.Text));
   controller.setNumberOfPoints (strtoint (edtNumberOfPoints.Text));
-  //controller.viewerPackage.autoXScale := False;
-  //controller.viewerPackage.autoYScale := False;
-  controller.viewerPackage.showLegend := True;
 
-  //frameSplitPanel.setUp;
+  controller.viewerPackage.showLegend := True;
 
   configOk := readConfigurationFile (CONFIG_FILE_NAME);
   frmMain.Width := configOpts.mainConfig.formWidth;
   frmMain.Height := configOpts.mainConfig.formHeight;
   pnlOutputPanel.width := configOpts.mainConfig.outputPanelWidth;
+  // ick up the UI style and apply it.
+  var found := False;
+  for var i := 0 to cboStyleList.Count - 1 do
+      if TStyleBook (cboStyleList.ListItems[i].Data).Name = configOpts.UIStyle then
+         begin
+         cboStyleList.ItemIndex := i;
+         found := True;
+         break;
+         end;
+  if not found then
+     cboStyleList.ItemIndex := 0;
 
   plotViewer := TPlotFrameViewer.Create(self);
   plotViewer.Parent := frameSplitPanel.pnlUpper;
@@ -1275,8 +1285,6 @@ begin
   tableViewer.Parent := frameSplitPanel.pnlLower;
   tableViewer.Align := TAlignLayout.Client;
   tableViewer.Setup(controller, configOpts.textFormViewer);
-
-  //chkAutoscaleX.IsChecked := True;
 
   plotViewer.plt.Width := configOpts.mainConfig.outputPanelWidth;
   controller.modelInputManager.modelMemo.Font.Size := configOpts.modelInputManagerConfig.fontSize;
@@ -1367,18 +1375,6 @@ begin
 
   if not configOpts.mainConfig.IsTabularPanelOpen then
      frameSplitPanel.setLowerInVisible;
-end;
-
-
-procedure TfrmMain.chkAutoscaleXChange(Sender: TObject);
-begin
-  //controller.viewerPackage.autoXScale := chkAutoscaleX.IsChecked;
-end;
-
-
-procedure TfrmMain.chkAutoScaleYChange(Sender: TObject);
-begin
-  //controller.viewerPackage.autoYScale := chkAutoscaleY.IsChecked;
 end;
 
 
