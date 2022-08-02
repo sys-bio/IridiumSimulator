@@ -30,7 +30,7 @@ uses
 {$ENDIF POSIX};
 
 const
-  VERSION = '0.952 Beta';
+  VERSION = '0.953 Beta';
 
 type
   TfrmMain = class(TForm)
@@ -144,6 +144,7 @@ type
     lblVersion: TLabel;
     Calypso_Win_Style: TStyleBook;
     cboStyleList: TComboBox;
+    chkAlwaysReset: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnSimulateClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
@@ -259,7 +260,9 @@ Uses uRoadRunner.API, Math, uSymbolDetails, uRRCommon, ufSelectionChoices,
   ufIntegratorOptions, ufSteadyStateOptions, FMX.Styles.Objects,
   ufMoreSteadyState, uParameterScan, ufFloatingPlotViewer,
   IOUtils, uRoadRunner, ufExamples, ufAbout, uSimulator, uViewerTypes,
-  uScanArguments, ufPreferences;
+  uScanArguments,
+  uTimeCourseConfig,
+  ufPreferences;
 
 const
    TIMECOURSE_FUNCTION = 0;
@@ -907,6 +910,8 @@ begin
   loadModelFromMemo;
 
   controller.runTimeCourseSimulation;
+  if chkAlwaysReset.IsChecked then
+     controller.simulator.roadrunner.reset();
 end;
 
 
@@ -1214,6 +1219,7 @@ begin
   configOpts.mainConfig.outputPanelWidth := pnlOutputPanel.Width;
   configOpts.mainConfig.upperOutputPanelHeight := 100*frameSplitPanel.currentUpperHeight/frameSplitPanel.Height;
 
+
   configOpts.textFormViewer.dataMemoBackgroundColor := tableViewer.config.dataMemoBackgroundColor;
   configOpts.textFormViewer.dataMemoFontColor := tableViewer.config.dataMemoFontColor;
 
@@ -1264,7 +1270,8 @@ begin
   frmMain.Width := configOpts.mainConfig.formWidth;
   frmMain.Height := configOpts.mainConfig.formHeight;
   pnlOutputPanel.width := configOpts.mainConfig.outputPanelWidth;
-  // ick up the UI style and apply it.
+  chkAlwaysReset.IsChecked := configOpts.timeCourceConfig.alwaysResetAfterSimulation;
+  // pick up the UI style and apply it.
   var found := False;
   for var i := 0 to cboStyleList.Count - 1 do
       if TStyleBook (cboStyleList.ListItems[i].Data).Name = configOpts.UIStyle then

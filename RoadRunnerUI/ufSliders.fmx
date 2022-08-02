@@ -54,7 +54,7 @@ object frmSliders: TfrmSliders
     end
     object btnClearAll: TButton
       Anchors = [akTop, akRight]
-      Position.X = 297.000000000000000000
+      Position.X = 298.000000000000000000
       Position.Y = 14.000000000000000000
       Size.Width = 110.000000000000000000
       Size.Height = 22.000000000000000000

@@ -154,6 +154,7 @@ begin
             gradient.Color := colorPalettes[i].color;
             gradient.Color1 := colorPalettes[i].color1;
             CurrentColorPalette := palette;
+            exit;
             end;
      end;
 end;

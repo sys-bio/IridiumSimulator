@@ -14,6 +14,8 @@ type
      private
        FFontSize : integer;
      public
+       class var configName : string;
+       class function readSection (obj : TJSONObject) : TModelInputManagerConfig;
        function saveToJson : TJSONObject;
        constructor readFromJson (obj : TJSONObject);
        constructor Create;
@@ -50,6 +52,16 @@ type
 implementation
 
 Uses IOUtils;
+
+class function TModelInputManagerConfig.readSection (obj : TJSONObject) : TModelInputManagerConfig;
+var mainObj : TJSONObject;
+begin
+  if obj.TryGetValue(TModelInputManagerConfig.configName, mainObj) then
+     result := TModelInputManagerConfig.readFromJson(mainObj)
+  else
+     result := TModelInputManagerConfig.CreateDefault;
+end;
+
 
 constructor TModelInputManagerConfig.Create;
 begin
@@ -172,4 +184,6 @@ begin
 end;
 
 
+initialization
+  TModelInputManagerConfig.configName := 'modelInputManager';
 end.

@@ -4,7 +4,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
   ActiveControl = edtMainTitle
   BorderStyle = Single
   Caption = 'SubGraph Editor'
-  ClientHeight = 410
+  ClientHeight = 412
   ClientWidth = 704
   Position = MainFormCenter
   StyleBook = StyleBook1
@@ -16,28 +16,28 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
   object tabGraph: TTabControl
     Align = Client
     Size.Width = 704.000000000000000000
-    Size.Height = 360.000000000000000000
+    Size.Height = 362.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 0
     TabOrder = 1
     TabPosition = Top
     Sizes = (
       700s
-      333s
+      335s
       700s
-      333s
+      335s
       700s
-      333s
+      335s
       700s
-      333s
+      335s
       700s
-      333s)
+      335s)
     object tbGraph: TTabItem
       CustomIcon = <
         item
         end>
       IsSelected = True
-      Size.Width = 63.000000000000000000
+      Size.Width = 62.000000000000000000
       Size.Height = 23.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
@@ -227,16 +227,16 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
       object TabControl2: TTabControl
         Align = Client
         Size.Width = 700.000000000000000000
-        Size.Height = 333.000000000000000000
+        Size.Height = 335.000000000000000000
         Size.PlatformDefault = False
         TabIndex = 0
         TabOrder = 0
         TabPosition = Top
         Sizes = (
           696s
-          306s
+          308s
           696s
-          306s)
+          308s)
         object tbXAxis: TTabItem
           CustomIcon = <
             item
@@ -309,13 +309,13 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
             object CheckBox1: TCheckBox
               Position.X = 16.000000000000000000
               Position.Y = 31.000000000000000000
-              TabOrder = 55
+              TabOrder = 54
               Text = 'Show Major Ticks'
             end
             object CheckBox2: TCheckBox
               Position.X = 16.000000000000000000
               Position.Y = 58.000000000000000000
-              TabOrder = 54
+              TabOrder = 53
               Text = 'Show Minor Ticks'
             end
             object Label2: TLabel
@@ -325,7 +325,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
               Size.Height = 17.000000000000000000
               Size.PlatformDefault = False
               Text = 'X Axis Color:'
-              TabOrder = 50
+              TabOrder = 49
             end
             object cboXAxisColor: TComboColorBox
               Color = claWhite
@@ -334,7 +334,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
               Size.Width = 60.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 34
+              TabOrder = 33
               OnChange = cboXAxisColorChange
             end
             object Label3: TLabel
@@ -344,7 +344,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
               Size.Height = 17.000000000000000000
               Size.PlatformDefault = False
               Text = 'X Minimum:'
-              TabOrder = 49
+              TabOrder = 48
             end
             object edtXMinimum: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
@@ -364,7 +364,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
               Size.Height = 17.000000000000000000
               Size.PlatformDefault = False
               Text = 'X Maximum:'
-              TabOrder = 48
+              TabOrder = 47
             end
             object edtXMaximum: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
@@ -393,7 +393,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
               Size.Width = 120.000000000000000000
               Size.Height = 19.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 43
+              TabOrder = 42
               Text = 'Log Axes'
               OnChange = chkLogXAxesChange
             end
@@ -472,13 +472,13 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
             object CheckBox3: TCheckBox
               Position.X = 16.000000000000000000
               Position.Y = 31.000000000000000000
-              TabOrder = 29
+              TabOrder = 28
               Text = 'Show Major Ticks'
             end
             object CheckBox4: TCheckBox
               Position.X = 16.000000000000000000
               Position.Y = 58.000000000000000000
-              TabOrder = 30
+              TabOrder = 29
               Text = 'Show Minor Ticks'
             end
             object Label8: TLabel
@@ -664,7 +664,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'X Minor Grid Color'
-          TabOrder = 38
+          TabOrder = 37
         end
         object cboYMinorColor: TComboColorBox
           Color = claWhite
@@ -683,7 +683,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Width = 60.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 29
+          TabOrder = 28
           OnChange = cboXMinorColorChange
         end
         object Label29: TLabel
@@ -693,7 +693,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Y Minor Grid Color'
-          TabOrder = 37
+          TabOrder = 36
         end
         object Label17: TLabel
           Position.X = 17.000000000000000000
@@ -702,7 +702,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'X Minor Grid Thickness'
-          TabOrder = 43
+          TabOrder = 42
         end
         object Label18: TLabel
           Position.X = 17.000000000000000000
@@ -711,11 +711,11 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Y Minor Grid Thickness'
-          TabOrder = 42
+          TabOrder = 41
         end
         object SpinXMinorGridWidth: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 46
+          TabOrder = 45
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -726,7 +726,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
         end
         object SpinYMinorGridWidth: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 48
+          TabOrder = 47
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -742,11 +742,11 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Number of X Minor Ticks: '
-          TabOrder = 41
+          TabOrder = 40
         end
         object SpinNumberOfXMinorTicks: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 47
+          TabOrder = 46
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -762,11 +762,11 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Number of Y Minor Ticks: '
-          TabOrder = 40
+          TabOrder = 39
         end
         object SpinNumberOfYMinorTicks: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 45
+          TabOrder = 44
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -863,7 +863,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'X Major Grid Color'
-          TabOrder = 50
+          TabOrder = 49
         end
         object cboXMajorColor: TComboColorBox
           Color = claWhite
@@ -872,7 +872,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Width = 60.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 29
+          TabOrder = 28
           OnChange = cboXMajorColorChange
         end
         object Label34: TLabel
@@ -882,7 +882,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Y Major Grid Color'
-          TabOrder = 49
+          TabOrder = 48
         end
         object cboYMajorColor: TComboColorBox
           Color = claWhite
@@ -901,7 +901,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'X Major Grid Thickness'
-          TabOrder = 46
+          TabOrder = 45
         end
         object Label36: TLabel
           Position.X = 17.000000000000000000
@@ -910,11 +910,11 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Y Major Grid Thickness'
-          TabOrder = 44
+          TabOrder = 43
         end
         object spinYMajorGridThickness: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 51
+          TabOrder = 50
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -925,7 +925,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
         end
         object SpinXMajorGridThickness: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 52
+          TabOrder = 51
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -944,7 +944,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Number of X Minor Ticks: '
-          TabOrder = 41
+          TabOrder = 40
         end
         object Label40: TLabel
           Position.X = 16.000000000000000000
@@ -953,11 +953,11 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Number of Y Minor Ticks: '
-          TabOrder = 40
+          TabOrder = 39
         end
         object SpinNumberOfXMajorTicks: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 48
+          TabOrder = 47
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -971,7 +971,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
         end
         object SpinNumberOfYMajorTicks: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 45
+          TabOrder = 44
           Cursor = crIBeam
           Min = 1.000000000000000000
           Value = 1.000000000000000000
@@ -1142,7 +1142,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
       object Layout2: TLayout
         Align = Left
         Size.Width = 104.000000000000000000
-        Size.Height = 333.000000000000000000
+        Size.Height = 335.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         object Layout3: TLayout
@@ -1163,7 +1163,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
         object lbSeries: TListBox
           Align = Client
           Size.Width = 104.000000000000000000
-          Size.Height = 303.000000000000000000
+          Size.Height = 305.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
           DisableFocusEffect = True
@@ -1172,14 +1172,14 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           DefaultItemStyles.GroupFooterStyle = ''
           OnChange = lbSeriesChange
           Viewport.Width = 100.000000000000000000
-          Viewport.Height = 299.000000000000000000
+          Viewport.Height = 301.000000000000000000
         end
       end
       object Layout4: TLayout
         Align = Left
         Position.X = 104.000000000000000000
         Size.Width = 140.000000000000000000
-        Size.Height = 333.000000000000000000
+        Size.Height = 335.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 2
         object Layout5: TLayout
@@ -1200,7 +1200,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
         object lbYColumns: TListBox
           Align = Client
           Size.Width = 140.000000000000000000
-          Size.Height = 303.000000000000000000
+          Size.Height = 305.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 1
           DisableFocusEffect = True
@@ -1209,7 +1209,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
           DefaultItemStyles.GroupFooterStyle = ''
           OnChange = lbYColumnsChange
           Viewport.Width = 136.000000000000000000
-          Viewport.Height = 299.000000000000000000
+          Viewport.Height = 301.000000000000000000
         end
       end
       object GroupBox2: TGroupBox
@@ -1420,7 +1420,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
   end
   object Layout1: TLayout
     Align = Bottom
-    Position.Y = 360.000000000000000000
+    Position.Y = 362.000000000000000000
     Size.Width = 704.000000000000000000
     Size.Height = 50.000000000000000000
     Size.PlatformDefault = False

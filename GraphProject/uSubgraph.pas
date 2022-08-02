@@ -2,81 +2,23 @@ unit uSubgraph;
 
 interface
 
-Uses SysUtils, System.Classes, Generics.Collections, FMX.Graphics, uRRCommon, Math,
-  uRRDataSeries, uSymbolDetails, uLineDetails, uGObject, System.UIConsts, System.UITypes,
-  System.Types, System.Math.Vectors, skia, skia.FMX, skia.FMX.Graphics;
+Uses SysUtils, System.Classes,
+  Generics.Collections, FMX.Graphics,
+  uRRCommon, Math,
+  uRRDataSeries,
+  uSymbolDetails,
+  uLineDetails,
+  uGObject,
+  System.UIConsts,
+  System.UITypes,
+  System.Types,
+  System.Math.Vectors,
+  skia,
+  skia.FMX,
+  skia.FMX.Graphics,
+  uProperties;
 
 type
-  TSubGraphProperties = class(TPersistent)
-  private
-    FXGridLines: boolean;
-    FYGridLines: boolean;
-  public
-    graphObjects: TObjectList<TGraphObject>;
-    dataBlocks: TDataBlocks;
-
-    Legend: TLegend;
-
-    GraphBorder: boolean;
-    GraphBackgroundColor: TAlphaColor;
-    GraphBorderThicknessInSkiaUnits: double;
-    GraphBorderColor: TAlphaColor;
-
-    XMajorGridColor: TAlphaColor;
-    YMajorGridColor: TAlphaColor;
-
-    XMinorGridColor: TAlphaColor;
-    YMinorGridColor: TAlphaColor;
-
-    XMinorGridLines: boolean;
-    YMinorGridLines: boolean;
-
-    NumXMinorTicks, NumYMinorTicks: integer;
-    NumberOfXTicks, NumberOfYTicks: integer;
-
-    // XMajorTickColor: TAlphaColor;
-    // YMajorTickColor: TAlphaColor;
-
-    // XMinorTickColor: TAlphaColor;
-    // YMinorTickColor: TAlphaColor;
-
-    XAxisColor: TAlphaColor; // Does not include the major grid colors
-    YAxisColor: TAlphaColor;
-
-    bDrawMainTitle: boolean;
-    bDrawXAxisTitle: boolean;
-    bDrawYAxisTitle: boolean;
-
-    MainTitleObject: TMainTitle;
-    XAxisTitleObject: TXAxisTitle;
-    YAxisTitleObject: TGraphObject;
-
-    LogXAxis, LogYAxis: boolean;
-
-    FAutoXScaling, FAutoYScaling: boolean;
-
-    XMajorGridThicknessInSkiaUnits : double;
-    YMajorGridThicknessInSkiaUnits : double;
-
-    XMinorGridThicknessInSkiaUnits: double;
-    YMinorGridThicknessInSkiaUnits: double;
-
-    XMajorTickWidthInSkiaUnits : double;
-    YMajorTickWidthInSkiaUnits : double;
-
-    FWorldXmax, FWorldXmin, FWorldYmax, FWorldYmin: double;
-
-    // These are the values the user specifies, can be overridden by autoscaling
-    UserScale_Xmin, UserScale_Xmax, UserScale_Ymin, UserScale_Ymax: double;
-
-    destructor Destroy; override;
-  published
-    property XGridLines: boolean read FXGridLines write FXGridLines;
-    property YGridLines: boolean read FYGridLines write FYGridLines;
-    property AutoXScaling: boolean read FAutoXScaling write FAutoXScaling;
-    property AutoYScaling: boolean read FAutoYScaling write FAutoYScaling;
-  end;
-
   TSubgraph = class(TPersistent)
 
   private
@@ -110,10 +52,10 @@ type
     function labelXString(d: double): string;
     function labelYString(d: double): string;
 
+    procedure drawAxesLines(ACanvas: ISkCanvas; DrawXAxis, DrawYAxis: boolean);
+    procedure drawXAxisTicks(ACanvas: ISkCanvas);
 
-    procedure drawAxesLines(ACanvas: ISkCanvas; DrawXAxis, DrawYAxis: boolean);    procedure drawXAxisTicks(ACanvas: ISkCanvas);
-
-    procedure drawXAxisMajorTick(ACanvas: ISkCanvas; Origin, MajorVal: Extended; LPaint : ISkPaint);
+    procedure drawXAxisMajorTick(ACanvas: ISkCanvas; Origin, MajorVal: Extended; LPaint: ISkPaint);
     procedure drawXMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double; nticks, direction: integer);
     procedure drawXAxisLogTicks(ACanvas: ISkCanvas);
     procedure drawLogXMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double; nticks, direction: integer);
@@ -126,7 +68,7 @@ type
     procedure drawAllMajorYGridLines(ACanvas: ISkCanvas);
     procedure drawYMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double; nticks, direction: integer);
     procedure drawLogYMinorTicks(canvas: TCanvas; startvalue, stepValue, Origin, min, max: double; nticks, direction: integer);
-    procedure drawYGridLine(ACanvas: ISkCanvas; y, xmin, xmax: double; LPaint : ISkPaint);
+    procedure drawYGridLine(ACanvas: ISkCanvas; y, xmin, xmax: double; LPaint: ISkPaint);
 
     procedure drawYAxisTitle(ACanvas: ISkCanvas);
 
@@ -134,11 +76,15 @@ type
     procedure drawYLabel(ACanvas: ISkCanvas; value: double; x, y: single);
     procedure drawLegend(ACanvas: ISkCanvas);
 
-    procedure drawXErrorBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dx: single; Style: TErrorBarStyle; CapStyle: TErrorBarCapStyle);
-    procedure drawXErrorHalfBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dx: single; Style: TErrorBarStyle; CapStyle: TErrorBarCapStyle);
+    procedure drawXErrorBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dx: single; Style: TErrorBarStyle;
+      CapStyle: TErrorBarCapStyle);
+    procedure drawXErrorHalfBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dx: single; Style: TErrorBarStyle;
+      CapStyle: TErrorBarCapStyle);
 
-    procedure drawYErrorBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dy: single; Style: TErrorBarStyle; CapStyle: TErrorBarCapStyle);
-    procedure drawYErrorHalfBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dy: single; Style: TErrorBarStyle; CapStyle: TErrorBarCapStyle);
+    procedure drawYErrorBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dy: single; Style: TErrorBarStyle;
+      CapStyle: TErrorBarCapStyle);
+    procedure drawYErrorHalfBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dy: single; Style: TErrorBarStyle;
+      CapStyle: TErrorBarCapStyle);
 
     procedure plotSymbols(ACanvas: ISkCanvas);
     procedure plotLines(ACanvas: ISkCanvas);
@@ -153,7 +99,7 @@ type
     procedure drawEllipse(ACanvas: ISkCanvas; x1, y1, x2, y2: single; symbol: TSymbol);
     procedure drawCircle(ACanvas: ISkCanvas; x, y, diameter: single; symbol: TSymbol; filled: boolean);
 
-    procedure drawLegendFrame(ACanvas: ISkCanvas; r: TRectF; legend: TLegend);
+    procedure drawLegendFrame(ACanvas: ISkCanvas; r: TRectF; Legend: TLegend);
 
     procedure drawGraphBorder(ACanvas: ISkCanvas);
     procedure drawSolidLine(ACanvas: ISkCanvas; x1, y1, x2, y2: single; color: TAlphaColor; lineThickness: single);
@@ -175,12 +121,10 @@ type
 
     nXLogMinorTicks, nYLogMinorTicks: integer;
 
-    MajorTickLengthInSkiaUnits : single;
+    MajorTickLengthInSkiaUnits: single;
     MinorTickLengthInSkiaUnits: single;
 
     AxisThicknessInCms: double;
-
-    XLabelPrecision, YLabelPrecision: integer;
 
     // Fractional distances follow, measured relative to the width or height of the ObjRoot
     // Vertical fractional distance from x axis for x axis label
@@ -236,7 +180,7 @@ type
     function deviceToWorld(x, y: single): TPointF;
     function deltaDeviceToDeltaWorld(x, y: single): TPointF;
     function legend_relativeToDevice: TBox;
-    //function relativeToDevice(graphObject: TGraphObject): TBox;
+    // function relativeToDevice(graphObject: TGraphObject): TBox;
     function relativeToDevice2(graphObject: TGraphBase): TBox;
 
     procedure unselectAllObjects;
@@ -252,26 +196,26 @@ type
 
     procedure setId(str: string);
     procedure setMainTitle(str: string);
-    function  getMainTitle: string;
+    function getMainTitle: string;
 
     function getDataBlocks: TDataBlocks;
 
     procedure setXAxisTitle(str: string);
-    function  getXAxisTitle: string;
+    function getXAxisTitle: string;
     procedure setYAxisTitle(str: string);
-    function  getYAxisTitle: string;
+    function getYAxisTitle: string;
 
     procedure setGraphBorder(value: boolean);
-    function  getGraphBorder: boolean;
+    function getGraphBorder: boolean;
 
     procedure setWorldXMin(value: double);
-    function  getWorldXMin: double;
+    function getWorldXMin: double;
     procedure setWorldXMax(value: double);
-    function  getWorldXMax: double;
+    function getWorldXMax: double;
     procedure setWorldYMin(value: double);
-    function  getWorldYMin: double;
+    function getWorldYMin: double;
     procedure setWorldYMax(value: double);
-    function  getWorldYMax: double;
+    function getWorldYMax: double;
 
     procedure setRx(value: double);
     function getRx: double;
@@ -305,16 +249,10 @@ implementation
 
 Uses FMX.Dialogs, uPlottingPanel, uClipping, FMX.TextLayout, uRRUtilities, FMX.Types;
 
-destructor TSubGraphProperties.Destroy;
-begin
-  dataBlocks.Free;
-  inherited;
-end;
-
 constructor TSubgraph.Create(panel: TObject);
 begin
   inherited Create;
-  FSubGraphProperties := TSubGraphProperties.Create;
+  properties := TSubGraphProperties.Create;
   parentGraph := panel;
   FId := 'SG' + inttostr(random(10000));
 
@@ -329,11 +267,13 @@ begin
   selectedObjectType := coNone;
 end;
 
+
 destructor TSubgraph.Destroy;
 begin
-  inherited Destroy;
   properties.Free;
+  inherited Destroy;
 end;
+
 
 procedure TSubgraph.setWorldXMin(value: double);
 begin
@@ -457,47 +397,11 @@ begin
   // The Y axis itself - to be done
   yaxisId := graphObjects.Add(TGraphObject.Create(coYAxis));
 
-  properties.legend := TLegend.Create(coLegend);
+  properties.Legend := TLegend.Create(coLegend);
 end;
-
 
 procedure TSubgraph.initializeDefaults();
 begin
-  properties.UserScale_Xmin := 0.0;
-  properties.UserScale_Xmax := 10.0;
-  properties.UserScale_Ymin := 0.0;
-  properties.UserScale_Ymax := 10.0;
-
-  // These are properties which set the FWorldXMin etc values
-  properties.FWorldXmin := properties.UserScale_Xmin;
-  properties.FWorldXmax := properties.UserScale_Xmax;
-  properties.FWorldYmin := properties.UserScale_Ymin;
-  properties.FWorldYmax := properties.UserScale_Ymax;
-
-  properties.XMajorGridThicknessInSkiaUnits := 1;
-  properties.YMajorGridThicknessInSkiaUnits := 1;
-  properties.YMajorGridThicknessInSkiaUnits := 1;
-
-  properties.XMinorGridThicknessInSkiaUnits := 1;
-  properties.YMinorGridThicknessInSkiaUnits := 1;
-
-  properties.XMajorTickWidthInSkiaUnits := 1;
-  properties.YMajorTickWidthInSkiaUnits := 1;
-
-  properties.GraphBorderColor := claBlack;
-  properties.GraphBorderThicknessInSkiaUnits := 1;
-  properties.GraphBackgroundColor := claGhostwhite;
-
-  properties.XAxisColor := claBlack; // Does not include the major grid colors
-  properties.YAxisColor := claBlack;
-
-  properties.XMajorGridColor := claBlack;
-  properties.YMajorGridColor := claBlack;
-
-  // Color of the minor grid lines
-  properties.XMinorGridColor := claLightGray; //$FFDAC4C4;
-  properties.YMinorGridColor := claLightGray; //$FFDAC4C4;
-
   XminComputedLimit := 0;
   XmaxComputedLimit := 1.0;
   YminComputedLimit := 0;
@@ -511,9 +415,6 @@ begin
   drawYAxisLine := True;
   drawXLabelsOnAxes := True; // Labels next to the axis
   drawYLabelsOnAxes := True;
-
-  properties.LogXAxis := false;
-  properties.LogYAxis := false;
 
   MajorTickLengthInSkiaUnits := 7;
   MinorTickLengthInSkiaUnits := 5;
@@ -548,21 +449,9 @@ begin
   XLblVertOffSet := 0.04;
   YLblHorizOffSet := 0.04;
 
-  properties.bDrawMainTitle := True;
-  properties.bDrawXAxisTitle := True;
-  properties.bDrawYAxisTitle := True;
-
-  properties.NumXMinorTicks := 5;
-  properties.NumYMinorTicks := 5;
-
-  properties.NumberOfXTicks := 5;
-  properties.NumberOfYTicks := 5;
-
   nXLogMinorTicks := 10;
   nYLogMinorTicks := 10;
-  properties.LogXAxis := false;
-  properties.LogYAxis := false;
-  properties.AutoXScaling := false;
+
   // properties.AutoYScaling := false;
   MajorXTicks := True;
   MinorXTicks := True;
@@ -572,11 +461,7 @@ begin
   MinorYTicks := True;
   MajorYTicksStyle := tsIn;
   MinorYTicksStyle := tsIn;
-  FSubGraphProperties.GraphBorder := True;
-  FSubGraphProperties.XGridLines := false;
-  FSubGraphProperties.YGridLines := false;
-  FSubGraphProperties.XMinorGridLines := false;
-  FSubGraphProperties.YMinorGridLines := false;
+
   Magnification := DEFAULT_MAGNIFICATION;
   drawXLabelsOnAxes := True;
   drawYLabelsOnAxes := True;
@@ -644,7 +529,7 @@ var
 begin
   panel := parentGraph as TRRGraph;
   rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
-  rBox := properties.legend.logicalBox;
+  rBox := properties.Legend.logicalBox;
 
   w0 := panel.Width;
   w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
@@ -665,42 +550,42 @@ begin
   result.h := h1 * rBox.h;
 end;
 
-//function TSubgraph.relativeToDevice(graphObject: TGraphObject): TBox;
-//var
-//  rBox: TLogicalBox;
-//  rBoxGraphingArea: TLogicalBox;
-//  panel: TRRGraph;
-//  w0, w1, w2, w3: single;
-//  h0, h1, h2, h3, h4, h5: single;
-//begin
-//  if graphObject.ObjType = coGraphingArea then
-//    begin
-//      result := rectToBox(getGraphDeviceDrawingArea);
-//      exit;
-//    end;
+// function TSubgraph.relativeToDevice(graphObject: TGraphObject): TBox;
+// var
+// rBox: TLogicalBox;
+// rBoxGraphingArea: TLogicalBox;
+// panel: TRRGraph;
+// w0, w1, w2, w3: single;
+// h0, h1, h2, h3, h4, h5: single;
+// begin
+// if graphObject.ObjType = coGraphingArea then
+// begin
+// result := rectToBox(getGraphDeviceDrawingArea);
+// exit;
+// end;
 //
-//  panel := parentGraph as TRRGraph;
-//  rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
-//  rBox := graphObject.logicalBox;
+// panel := parentGraph as TRRGraph;
+// rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
+// rBox := graphObject.logicalBox;
 //
-//  w0 := panel.Width;
-//  w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
+// w0 := panel.Width;
+// w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
 //
-//  w2 := w1 * rBox.left; // Width in pixels of distance of Id object to edge of graphing area
-//  w3 := w0 * rBoxGraphingArea.left; // Distance from edge to graphing are
+// w2 := w1 * rBox.left; // Width in pixels of distance of Id object to edge of graphing area
+// w3 := w0 * rBoxGraphingArea.left; // Distance from edge to graphing are
 //
-//  result.left := w2 + w3; // Correct
-//  result.w := w1 * rBox.w;
+// result.left := w2 + w3; // Correct
+// result.w := w1 * rBox.w;
 //
-//  h0 := panel.Height;
-//  h1 := rBoxGraphingArea.h * h0; // Height in pixels of graphing area
+// h0 := panel.Height;
+// h1 := rBoxGraphingArea.h * h0; // Height in pixels of graphing area
 //
-//  h2 := h1 * rBox.top; // Height in pixels of distance of Id object to edge of graphing area
-//  h3 := h0 * (1 - rBoxGraphingArea.top); // Distance from edge to graphing area
+// h2 := h1 * rBox.top; // Height in pixels of distance of Id object to edge of graphing area
+// h3 := h0 * (1 - rBoxGraphingArea.top); // Distance from edge to graphing area
 //
-//  result.top := (h2 + h3);
-//  result.h := h1 * rBox.h;
-//end;
+// result.top := (h2 + h3);
+// result.h := h1 * rBox.h;
+// end;
 
 procedure TSubgraph.unselectAllObjects;
 var
@@ -730,8 +615,8 @@ begin
   if XData = nil then
     raise Exception.Create('X axis not specified in data block: ' + properties.dataBlocks[0].xaxisColumn);
 
-  if length (XData.data) = 0 then
-     exit;
+  if length(XData.data) = 0 then
+    exit;
 
   XmaxComputedLimit := XData.data[0];
   XminComputedLimit := XData.data[0];
@@ -958,7 +843,7 @@ begin
 
   panel := parentGraph as TRRGraph;
   rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
-  rBox := properties.legend.logicalBox;
+  rBox := properties.Legend.logicalBox;
 
   w0 := panel.Width;
   w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
@@ -1006,7 +891,7 @@ begin
 
   if IsOnLegend(ACanvas, x, y) then
     begin
-      graphObject := properties.legend;
+      graphObject := properties.Legend;
       exit(True);
     end;
 
@@ -1035,13 +920,12 @@ begin
     end;
 end;
 
-
 // Converts a size in cms to pixels units according to the current device
 function TSubgraph.computePhysicalSize(sizeCm: double): single;
 begin
   result := Magnification * sizeCm / CmsInOneInch * CurrentXPixelsPerInch;
   if (result < 1) and (result > 0.1) then
-     result := 0; // avoid antialiasing artifacts
+    result := 0; // avoid antialiasing artifacts
 end;
 
 procedure TSubgraph.computeScalingFactors(rect: TRectF);
@@ -1180,19 +1064,19 @@ var
   r: TRectF;
   pt: TPointF;
   box: TBox;
-  gdArea : TRectF;
-  gdHeight : single;
+  gdArea: TRectF;
+  gdHeight: single;
 begin
   textProperties := properties.YAxisTitleObject.textProperties;
   if textProperties.value = '' then
-     exit;
+    exit;
 
   twidth := textProperties.computeDimensions(LPaint).x;
 
   // Update the logical dimensions based on the current Y axis text
   gdArea := getGraphDeviceDrawingArea;
-  gdHeight := gdArea.Bottom - gdArea.Top;
-  properties.YAxisTitleObject.logicalBox.top := ((gdHeight/2) - twidth/2)/gdHeight;
+  gdHeight := gdArea.Bottom - gdArea.top;
+  properties.YAxisTitleObject.logicalBox.top := ((gdHeight / 2) - twidth / 2) / gdHeight;
 
   box := relativeToDevice2(properties.YAxisTitleObject);
 
@@ -1233,18 +1117,18 @@ var
   typeface: ISkTypeface;
   r: TRectF;
   pt: TPointF;
-  ds : TDataColumns;
-  index : integer;
-  gdArea : TRectF;
-  gdWidth : single;
+  ds: TDataColumns;
+  index: integer;
+  gdArea: TRectF;
+  gdWidth: single;
 begin
   panel := parentGraph as TRRGraph;
 
   ds := properties.dataBlocks[0].columns;
   // If there is nothing to plot then don't try to find the data limits
   if ds.find(properties.dataBlocks[0].xaxisColumn, index) <> nil then
-     if properties.AutoXScaling or properties.AutoYScaling then
-        findDataLimits;
+    if properties.AutoXScaling or properties.AutoYScaling then
+      findDataLimits;
 
   setAxesLimits;
   determineOrigin;
@@ -1252,8 +1136,8 @@ begin
 
   r := getGraphDeviceDrawingArea;
 
-  //MajorTickLength := computePhysicalSize(MajorTickInCms);
-  //MinorTickLength := computePhysicalSize(MinorTickInCms);
+  // MajorTickLength := computePhysicalSize(MajorTickInCms);
+  // MinorTickLength := computePhysicalSize(MinorTickInCms);
   XAxisLengthInPixels := computePhysicalSize(XAxisLengthInCms);
   YAxisLengthInPixels := computePhysicalSize(YAxisLengthInCms);
 
@@ -1269,21 +1153,21 @@ begin
     begin
       textProperties := properties.MainTitleObject.textProperties; // graphObjects[mainTitleId].textProperties;
       if textProperties.value <> '' then
-         begin
-         LPaint.color := textProperties.fontColor;
-         LPaint.Style := TSkPaintStyle.Fill;
+        begin
+          LPaint.color := textProperties.fontColor;
+          LPaint.Style := TSkPaintStyle.Fill;
 
-         pt := textProperties.computeDimensions(LPaint);
+          pt := textProperties.computeDimensions(LPaint);
 
-         box := relativeToDevice2(properties.MainTitleObject);
+          box := relativeToDevice2(properties.MainTitleObject);
 
-         x := box.left;
-         y := box.top;
-         LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
-         ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
-         textProperties.box.left := x;
-         textProperties.box.top := y - pt.y; // pt.y is the height of the text
-         end;
+          x := box.left;
+          y := box.top;
+          LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
+          ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
+          textProperties.box.left := x;
+          textProperties.box.top := y - pt.y; // pt.y is the height of the text
+        end;
       // if SelectedObjectType = coMainTitle then
       // drawMainTitleSelected(canvas);
     end;
@@ -1292,28 +1176,28 @@ begin
     begin
       textProperties := properties.XAxisTitleObject.textProperties;
       if textProperties.value <> '' then
-         begin
-         LPaint.color := textProperties.fontColor;
-         LPaint.Style := TSkPaintStyle.Fill;
+        begin
+          LPaint.color := textProperties.fontColor;
+          LPaint.Style := TSkPaintStyle.Fill;
 
-         twidth := textProperties.computeDimensions(LPaint).x;
+          twidth := textProperties.computeDimensions(LPaint).x;
 
-         // Update the logical dimensions based on the current X axis text
-         // Doing this means a user can't move the text left or right, only up and down.
-         gdArea := getGraphDeviceDrawingArea;
-         gdWidth := gdArea.Right - gdArea.Left;
-         properties.XAxisTitleObject.logicalBox.left := ((gdWidth/2) - twidth/2)/gdwidth;
-         box := relativeToDevice2(properties.XAxisTitleObject);
+          // Update the logical dimensions based on the current X axis text
+          // Doing this means a user can't move the text left or right, only up and down.
+          gdArea := getGraphDeviceDrawingArea;
+          gdWidth := gdArea.Right - gdArea.left;
+          properties.XAxisTitleObject.logicalBox.left := ((gdWidth / 2) - twidth / 2) / gdWidth;
+          box := relativeToDevice2(properties.XAxisTitleObject);
 
-         x := box.left;
-         y := box.top;
+          x := box.left;
+          y := box.top;
 
-         LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
-         ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
+          LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
+          ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
 
-         textProperties.box.left := x;
-         textProperties.box.top := y - pt.y; // pt.y is the height of the text
-         end;
+          textProperties.box.left := x;
+          textProperties.box.top := y - pt.y; // pt.y is the height of the text
+        end;
 
       // if SelectedObjectType = coXAxisTitle then
       // drawXAxisTitleSelected(ACanvas);
@@ -1352,7 +1236,6 @@ begin
     end
   else
     drawSelectedGraphingArea(ACanvas);
-
 
   ACanvas.Save;
   try
@@ -1510,8 +1393,8 @@ begin
       xaxisColumn := XData.name;
     end;
 
-  if length (XData.data) = 0 then
-     exit;
+  if length(XData.data) = 0 then
+    exit;
 
   for i := 0 to columns.Count - 1 do
     begin
@@ -1733,10 +1616,10 @@ begin
   xaxisColumn := properties.dataBlocks[0].xaxisColumn;
   XData := ds.columns.find(xaxisColumn, index);
   if XData = nil then
-     exit;
+    exit;
 
-  if length (XData.data) = 0 then
-     exit;
+  if length(XData.data) = 0 then
+    exit;
 
   LPaint.PathEffect := nil;
   rectf := getGraphDeviceDrawingArea;
@@ -1928,7 +1811,6 @@ begin
   // end;
   // end;
 end;
-
 
 { Draw a symbol at the indicated device coordinates, x, y }
 procedure TSubgraph.drawSymbolAtDeviceCoords(ACanvas: ISkCanvas; x, y: single; symbol: TSymbol);
@@ -2124,7 +2006,6 @@ begin
   end;
 end;
 
-
 procedure TSubgraph.drawGraphBorder(ACanvas: ISkCanvas);
 begin
   LPaint.color := properties.GraphBorderColor;
@@ -2152,17 +2033,16 @@ begin
   LPaint.AntiAlias := True;
 end;
 
-
 // Also draws minor grid lines if required
 procedure TSubgraph.drawXAxisTicks(ACanvas: ISkCanvas);
 var
   MajorVal, MinorVal, MajorStep, MinorStep, XLabelLoc, XAxisOrigin: Extended;
   i, j: integer;
-  LPaint : ISkPaint;
+  LPaint: ISkPaint;
 begin
   LPaint := TSkPaint.Create;
   LPaint.AntiAlias := True;
-  LPaint.Color := properties.XMajorGridColor;
+  LPaint.color := properties.XMajorGridColor;
   LPaint.StrokeWidth := properties.XMajorGridThicknessInSkiaUnits;
   LPaint.StrokeCap := TSkStrokeCap.Square;
 
@@ -2193,7 +2073,8 @@ begin
               MinorStep := (MajorVal + MajorStep - MajorVal) / properties.NumXMinorTicks;
               MinorVal := MajorVal + MinorStep;
               if MinorVal < properties.FWorldXmax then
-                drawXMinorTicks(ACanvas, MinorVal, MinorStep, XAxisOrigin, properties.FWorldXmin, properties.FWorldXmax, properties.NumXMinorTicks, +1);
+                drawXMinorTicks(ACanvas, MinorVal, MinorStep, XAxisOrigin, properties.FWorldXmin, properties.FWorldXmax,
+                  properties.NumXMinorTicks, +1);
             end;
 
           MajorVal := MajorVal + MajorStep;
@@ -2211,7 +2092,8 @@ begin
               MinorStep := (MajorVal + MajorStep - MajorVal) / properties.NumXMinorTicks;
               MinorVal := MajorVal - MinorStep;
               if MinorVal > properties.FWorldXmin - MinorStep then
-                drawXMinorTicks(ACanvas, MinorVal, MinorStep, XAxisOrigin, properties.FWorldXmin, properties.FWorldXmax, properties.NumXMinorTicks, -1);
+                drawXMinorTicks(ACanvas, MinorVal, MinorStep, XAxisOrigin, properties.FWorldXmin, properties.FWorldXmax,
+                  properties.NumXMinorTicks, -1);
             end;
 
           MajorVal := MajorVal - MajorStep;
@@ -2233,7 +2115,8 @@ begin
               MinorStep := (MajorVal + MajorStep - MajorVal) / properties.NumXMinorTicks;
               MinorVal := MajorVal + MinorStep;
               if MinorVal < properties.FWorldXmax then
-                drawXMinorTicks(ACanvas, MinorVal, MinorStep, XAxisOrigin, properties.FWorldXmin, properties.FWorldXmax, properties.NumXMinorTicks, +1);
+                drawXMinorTicks(ACanvas, MinorVal, MinorStep, XAxisOrigin, properties.FWorldXmin, properties.FWorldXmax,
+                  properties.NumXMinorTicks, +1);
             end;
 
           MajorVal := MajorVal + MajorStep;
@@ -2243,7 +2126,6 @@ begin
       drawXLabel(ACanvas, MajorVal, fx(MajorVal), fy(XLabelLoc));
     end;
 end;
-
 
 procedure TSubgraph.drawXAxisLogTicks(ACanvas: ISkCanvas);
 var
@@ -2304,7 +2186,6 @@ begin
   drawXLabel(ACanvas, MajorVal, fx(MajorVal), fy(XLabelLoc));
 end;
 
-
 // Draw tick marks and optional minor grid lines
 procedure TSubgraph.drawXMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double;
   nticks, direction: integer);
@@ -2312,7 +2193,7 @@ var
   i: integer;
   gridThickness: single;
   x: double;
-  LPaint : ISkPaint;
+  LPaint: ISkPaint;
 begin
   LPaint := TSkPaint.Create;
   gridThickness := properties.XMinorGridThicknessInSkiaUnits;
@@ -2374,13 +2255,13 @@ begin
               LPaint.StrokeWidth := gridThickness;
               LPaint.color := properties.XMinorGridColor;
               // HMS LPaint.Stroke.Dash := GridLineStyle;
-              ACanvas.drawLine(pointf(fx(startvalue), fy(properties.FWorldYmin)), pointf(fx(startvalue), fy(properties.FWorldYmax)), LPaint);
+              ACanvas.drawLine(pointf(fx(startvalue), fy(properties.FWorldYmin)), pointf(fx(startvalue), fy(properties.FWorldYmax)
+                ), LPaint);
             end;
         end;
       startvalue := startvalue + direction * stepValue;
     end;
 end;
-
 
 // Draw tick marks and optional minor grid lines
 procedure TSubgraph.drawLogXMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double;
@@ -2493,8 +2374,7 @@ begin
     end;
 end;
 
-
-procedure TSubgraph.drawXAxisMajorTick(ACanvas: ISkCanvas; Origin, MajorVal: Extended; LPaint : ISkPaint);
+procedure TSubgraph.drawXAxisMajorTick(ACanvas: ISkCanvas; Origin, MajorVal: Extended; LPaint: ISkPaint);
 begin
   if drawXAxisLine then
     begin
@@ -2504,7 +2384,8 @@ begin
             tsIn:
               begin
                 // Was Y_Origin
-                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)), pointf(fx(MajorVal), fy(Origin) - MajorTickLengthInSkiaUnits), LPaint);
+                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)),
+                  pointf(fx(MajorVal), fy(Origin) - MajorTickLengthInSkiaUnits), LPaint);
                 if FSubGraphProperties.GraphBorder then
                   begin
                     ACanvas.drawLine(pointf(fx(MajorVal), fy(properties.FWorldYmax)),
@@ -2513,7 +2394,8 @@ begin
               end;
             tsOut:
               begin
-                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)), pointf(fx(MajorVal), fy(Origin) + MajorTickLengthInSkiaUnits), LPaint);
+                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)),
+                  pointf(fx(MajorVal), fy(Origin) + MajorTickLengthInSkiaUnits), LPaint);
                 if FSubGraphProperties.GraphBorder then
                   begin
                     ACanvas.drawLine(pointf(fx(MajorVal), fy(properties.FWorldYmax)),
@@ -2523,8 +2405,10 @@ begin
             tsInOut:
               begin
                 // Was Y_Origin
-                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)), pointf(fx(MajorVal), fy(Origin) - MajorTickLengthInSkiaUnits), LPaint);
-                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)), pointf(fx(MajorVal), fy(Origin) + MajorTickLengthInSkiaUnits), LPaint);
+                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)),
+                  pointf(fx(MajorVal), fy(Origin) - MajorTickLengthInSkiaUnits), LPaint);
+                ACanvas.drawLine(pointf(fx(MajorVal), fy(Origin)),
+                  pointf(fx(MajorVal), fy(Origin) + MajorTickLengthInSkiaUnits), LPaint);
                 if FSubGraphProperties.GraphBorder then
                   begin
                     ACanvas.drawLine(pointf(fx(MajorVal), fy(properties.FWorldYmax)),
@@ -2616,7 +2500,8 @@ begin
             case MinorYTicksStyle of
               tsIn:
                 begin
-                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits, fy(startvalue)), 1.0);
+                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits,
+                    fy(startvalue)), 1.0);
                   if FSubGraphProperties.GraphBorder then
                     begin
                       canvas.drawLine(pointf(fx(properties.FWorldXmax), fy(startvalue)),
@@ -2625,7 +2510,8 @@ begin
                 end;
               tsOut:
                 begin
-                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits, fy(startvalue)), 1.0);
+                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits,
+                    fy(startvalue)), 1.0);
                   if FSubGraphProperties.GraphBorder then
                     begin
                       canvas.drawLine(pointf(fx(properties.FWorldXmax), fy(startvalue)),
@@ -2634,8 +2520,10 @@ begin
                 end;
               tsInOut:
                 begin
-                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits, fy(startvalue)), 1.0);
-                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits, fy(startvalue)), 1.0);
+                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits,
+                    fy(startvalue)), 1.0);
+                  canvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits,
+                    fy(startvalue)), 1.0);
                   if FSubGraphProperties.GraphBorder then
                     begin
                       canvas.drawLine(pointf(fx(properties.FWorldXmax), fy(startvalue)),
@@ -2663,13 +2551,13 @@ procedure TSubgraph.drawYAxisTicks(ACanvas: ISkCanvas);
 var
   MajorVal, MajorStep, MinorVal, MinorStep, YLabelLoc, YAxisOrigin: Extended;
   i, j: integer;
-  LPaint : ISkPaint;
+  LPaint: ISkPaint;
 begin
   LPaint := TSkPaint.Create;
   LPaint := TSkPaint.Create;
   LPaint.AntiAlias := True;
-  LPaint.Color := properties.YMajorGridColor;
-  LPaint.StrokeWidth := properties.YMajorGridThicknessInSkiaUnits; //computePhysicalSize(properties.YMajorGridThicknessInCms);
+  LPaint.color := properties.YMajorGridColor;
+  LPaint.StrokeWidth := properties.YMajorGridThicknessInSkiaUnits; // computePhysicalSize(properties.YMajorGridThicknessInCms);
   LPaint.StrokeCap := TSkStrokeCap.Square;
 
   if YLabelNearAxis then
@@ -2699,7 +2587,8 @@ begin
               MinorStep := (MajorVal + MajorStep - MajorVal) / properties.NumYMinorTicks;
               MinorVal := MajorVal + MinorStep;
               if MinorVal < properties.FWorldYmax then
-                drawYMinorTicks(ACanvas, MinorVal, MinorStep, YAxisOrigin, properties.FWorldYmin, properties.FWorldYmax, properties.NumYMinorTicks, +1);
+                drawYMinorTicks(ACanvas, MinorVal, MinorStep, YAxisOrigin, properties.FWorldYmin, properties.FWorldYmax,
+                  properties.NumYMinorTicks, +1);
             end;
 
           MajorVal := MajorVal + MajorStep;
@@ -2716,7 +2605,8 @@ begin
             begin
               MinorVal := MajorVal - MinorStep;
               if MinorVal > properties.FWorldYmin then
-                drawYMinorTicks(ACanvas, MinorVal, MinorStep, YAxisOrigin, properties.FWorldYmin, properties.FWorldYmax, properties.NumYMinorTicks, -1);
+                drawYMinorTicks(ACanvas, MinorVal, MinorStep, YAxisOrigin, properties.FWorldYmin, properties.FWorldYmax,
+                  properties.NumYMinorTicks, -1);
             end;
 
           MajorVal := MajorVal - MajorStep;
@@ -2739,7 +2629,8 @@ begin
               MinorVal := MajorVal + MinorStep;
 
               if MinorVal < properties.FWorldYmax then
-                drawYMinorTicks(ACanvas, MinorVal, MinorStep, YAxisOrigin, properties.FWorldYmin, properties.FWorldYmax, properties.NumYMinorTicks, +1);
+                drawYMinorTicks(ACanvas, MinorVal, MinorStep, YAxisOrigin, properties.FWorldYmin, properties.FWorldYmax,
+                  properties.NumYMinorTicks, +1);
             end;
 
           MajorVal := MajorVal + MajorStep;
@@ -2750,14 +2641,13 @@ begin
     end;
 end;
 
-
 procedure TSubgraph.drawYAxisMajorTick(ACanvas: ISkCanvas; Origin, MajorVal: Extended);
 var
   LPaint: ISkPaint;
 begin
   LPaint := TSkPaint.Create;
   LPaint.color := properties.YMajorGridColor;
-  LPaint.StrokeWidth := properties.YMajorTickWidthInSkiaUnits;  //computePhysicalSize(properties.YMajorTickWidthInCms);
+  LPaint.StrokeWidth := properties.YMajorTickWidthInSkiaUnits; // computePhysicalSize(properties.YMajorTickWidthInCms);
   if drawYAxisLine then
     begin
       if MajorYTicks then
@@ -2765,7 +2655,8 @@ begin
           case MajorYTicksStyle of
             tsIn:
               begin
-                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) + MajorTickLengthInSkiaUnits, fy(MajorVal)), LPaint);
+                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) + MajorTickLengthInSkiaUnits, fy(MajorVal)
+                  ), LPaint);
                 if FSubGraphProperties.GraphBorder then
                   begin
                     ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(MajorVal)),
@@ -2774,7 +2665,8 @@ begin
               end;
             tsOut:
               begin
-                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) - MajorTickLengthInSkiaUnits, fy(MajorVal)), LPaint);
+                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) - MajorTickLengthInSkiaUnits, fy(MajorVal)
+                  ), LPaint);
                 if FSubGraphProperties.GraphBorder then
                   begin
                     ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(MajorVal)),
@@ -2783,8 +2675,10 @@ begin
               end;
             tsInOut:
               begin
-                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) + MajorTickLengthInSkiaUnits, fy(MajorVal)), LPaint);
-                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) - MajorTickLengthInSkiaUnits, fy(MajorVal)), LPaint);
+                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) + MajorTickLengthInSkiaUnits, fy(MajorVal)
+                  ), LPaint);
+                ACanvas.drawLine(pointf(fx(Origin), fy(MajorVal)), pointf(fx(Origin) - MajorTickLengthInSkiaUnits, fy(MajorVal)
+                  ), LPaint);
                 if FSubGraphProperties.GraphBorder then
                   begin
                     ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(MajorVal)),
@@ -2798,13 +2692,13 @@ begin
     end;
 end;
 
-
-procedure TSubgraph.drawYMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double; nticks, direction: integer);
+procedure TSubgraph.drawYMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double;
+  nticks, direction: integer);
 var
   i: integer;
   oldcolor: TAlphaColor;
   gridThickness: single;
-  LPaint : ISkPaint;
+  LPaint: ISkPaint;
 begin
   LPaint := TSkPaint.Create;
   gridThickness := properties.YMinorGridThicknessInSkiaUnits;
@@ -2824,8 +2718,8 @@ begin
                     // For some reason drawing the ticks and grid line makes the tick darker??
                     if not FSubGraphProperties.YMinorGridLines then
                       begin
-                        ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits, fy(startvalue)
-                          ), LPaint);
+                        ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits,
+                          fy(startvalue)), LPaint);
                         if FSubGraphProperties.GraphBorder then
                           ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(startvalue)),
                             pointf(fx(properties.FWorldXmax) - MinorTickLengthInSkiaUnits, fy(startvalue)), LPaint);
@@ -2833,18 +2727,18 @@ begin
                   end;
                 tsOut:
                   begin
-                    ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits, fy(startvalue)
-                      ), LPaint);
+                    ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits,
+                      fy(startvalue)), LPaint);
                     if FSubGraphProperties.GraphBorder then
                       ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(startvalue)),
                         pointf(fx(properties.FWorldXmax) + MinorTickLengthInSkiaUnits, fy(startvalue)), LPaint);
                   end;
                 tsInOut:
                   begin
-                    ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits, fy(startvalue)
-                      ), LPaint);
-                    ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits, fy(startvalue)
-                      ), LPaint);
+                    ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) + MinorTickLengthInSkiaUnits,
+                      fy(startvalue)), LPaint);
+                    ACanvas.drawLine(pointf(fx(Origin), fy(startvalue)), pointf(fx(Origin) - MinorTickLengthInSkiaUnits,
+                      fy(startvalue)), LPaint);
                     if FSubGraphProperties.GraphBorder then
                       begin
                         ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(startvalue)),
@@ -2868,7 +2762,6 @@ begin
     end;
 end;
 
-
 procedure TSubgraph.drawAllMajorYGridLines(ACanvas: ISkCanvas);
 var
   MajorVal, MajorStep, MinorVal, MinorStep: Extended;
@@ -2878,7 +2771,7 @@ var
 begin
   LPaint := TSkPaint.Create;
   LPaint.color := properties.YMajorGridColor; // The Y grids are the horizontal ones
-  AxisPixelThickness := properties.YMajorGridThicknessInSkiaUnits;//computePhysicalSize(properties.YMajorGridThicknessInCms);
+  AxisPixelThickness := properties.YMajorGridThicknessInSkiaUnits; // computePhysicalSize(properties.YMajorGridThicknessInCms);
   LPaint.StrokeWidth := AxisPixelThickness;
   if (properties.FWorldYmin < 0) and (properties.FWorldYmax > 0) then
     begin
@@ -2889,8 +2782,8 @@ begin
       // Draw tick marks above the origin first, starting at the origin
       while MajorVal <= properties.FWorldYmax do
         begin
-          if not (Math.SameValue(MajorVal, properties.FWorldXmin)) then
-             drawYGridLine(ACanvas, MajorVal, properties.FWorldXmin, properties.FWorldXmax, LPaint);
+          if not(Math.SameValue(MajorVal, properties.FWorldXmin)) then
+            drawYGridLine(ACanvas, MajorVal, properties.FWorldXmin, properties.FWorldXmax, LPaint);
           MajorVal := MajorVal + MajorStep;
         end;
       // Next draw tick marks below the origin, starting at tick closest to origin
@@ -2910,15 +2803,14 @@ begin
       // Don't include last tick, otherwise you'll have moinor tick marks beyond axis
       for i := 1 to properties.NumberOfYTicks - 1 do
         begin
-          if not (Math.SameValue(MajorVal, properties.FWorldXmin)) then
-             drawYGridLine(ACanvas, MajorVal, properties.FWorldXmin, properties.FWorldXmax, LPaint);
+          if not(Math.SameValue(MajorVal, properties.FWorldXmin)) then
+            drawYGridLine(ACanvas, MajorVal, properties.FWorldXmin, properties.FWorldXmax, LPaint);
           MajorVal := MajorVal + MajorStep;
         end;
       // ... and finally add the last major line
       drawYGridLine(ACanvas, MajorVal, properties.FWorldXmin, properties.FWorldXmax, LPaint);
     end;
 end;
-
 
 procedure TSubgraph.drawXGridLine(ACanvas: ISkCanvas; x, ymin, ymax: double; LPaint: ISkPaint);
 begin
@@ -2931,8 +2823,7 @@ begin
     end;
 end;
 
-
-procedure TSubgraph.drawYGridLine(ACanvas: ISkCanvas; y, xmin, xmax: double; LPaint : ISkPaint);
+procedure TSubgraph.drawYGridLine(ACanvas: ISkCanvas; y, xmin, xmax: double; LPaint: ISkPaint);
 begin
   if (y <> YOrigin) and (y <> properties.FWorldYmax) then
     begin
@@ -3147,7 +3038,7 @@ begin
       if round(d) = d then
         result := floattostrF(d, ffFixed, 5, 0)
       else
-        result := floattostrF(d, ffGeneral, XLabelPrecision, 2)
+        result := floattostrF(d, ffGeneral, properties.XLabelPrecision, 3)
         { result := floattostrF (d, ffFixed, XLabelPrecision, 2) }
     end
   else
@@ -3166,7 +3057,7 @@ begin
       if round(d) = d then
         result := floattostrF(d, ffFixed, 5, 0)
       else
-        result := floattostrF(d, ffGeneral, YLabelPrecision, 2)
+        result := floattostrF(d, ffGeneral, properties.YLabelPrecision, 2)
         { result := floattostrF (d, ffFixed, XLabelPrecision, 2) }
     end
   else
@@ -3221,14 +3112,14 @@ begin
   LPaint.StrokeWidth := oldThick;
 end;
 
-procedure TSubgraph.drawLegendFrame(ACanvas: ISkCanvas; r: TRectF; legend: TLegend);
+procedure TSubgraph.drawLegendFrame(ACanvas: ISkCanvas; r: TRectF; Legend: TLegend);
 var
   LPaint: ISkPaint;
 begin
   LPaint := TSkPaint.Create;
-  LPaint.color := legend.outlineColor;
+  LPaint.color := Legend.outlineColor;
   LPaint.Style := TSkPaintStyle.Stroke;
-  LPaint.StrokeWidth := legend.frameBorderThickness;
+  LPaint.StrokeWidth := Legend.frameBorderThickness;
   ACanvas.DrawRect(r, LPaint);
 end;
 
@@ -3264,19 +3155,19 @@ var
 
   PathEffect: ISkPathEffect;
   widthOfLegend: single;
-  legend: TLegend;
+  Legend: TLegend;
 begin
   if properties.dataBlocks.Count = 0 then
     exit;
 
-  if not properties.legend.visible then
+  if not properties.Legend.visible then
     exit;
 
-  legend := properties.legend;
+  Legend := properties.Legend;
   panel := parentGraph as TRRGraph;
 
   hspace := 0.3 / 2.54 * CurrentXPixelsPerInch; // Leave space of 3mm between text and symbol
-  lineLength := computePhysicalSize(legend.lineLengthInCms);
+  lineLength := computePhysicalSize(Legend.lineLengthInCms);
   // 1.2/2.54 * CurrentXPixelsPerInch; // Length of line sample segment on either side of symbol
   HosizontalGapDistance := 1.1;
 
@@ -3335,14 +3226,14 @@ begin
   if legendHeight = 0 then
     exit;
 
-  hspace := computePhysicalSize(legend.frameGapInCms);
+  hspace := computePhysicalSize(Legend.frameGapInCms);
   r := rectf(aBox.left - hspace, topLeftcorner - hspace / 2, aBox.left + widthOfLegend + hspace,
     topLeftcorner + legendHeight + hspace);
 
-  if legend.frameVisible then
-    drawLegendFrame(ACanvas, r, legend);
+  if Legend.frameVisible then
+    drawLegendFrame(ACanvas, r, Legend);
 
-  FillLegendRectangle(ACanvas, r, legend.InteriorColor);
+  FillLegendRectangle(ACanvas, r, Legend.InteriorColor);
 
   // Now draw the legend contents
   legendHeight := 0;
@@ -3409,8 +3300,8 @@ begin
   // Now that we know the actual size of the legend box,
   // update the relative width and height of the legend box
   // This allows us to to a pt in legend mouse detect
-  legend.logicalBox.w := widthOfLegend / (rBoxGraphingArea.w * panel.Width);
-  legend.logicalBox.h := aBox.top / (rBoxGraphingArea.h * panel.Height);
+  Legend.logicalBox.w := widthOfLegend / (rBoxGraphingArea.w * panel.Width);
+  Legend.logicalBox.h := aBox.top / (rBoxGraphingArea.h * panel.Height);
 end;
 
 end.

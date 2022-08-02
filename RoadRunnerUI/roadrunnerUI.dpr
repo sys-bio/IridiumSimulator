@@ -81,7 +81,9 @@ uses
   ufMainConfig in 'ufMainConfig.pas',
   ufFrameViewerBase in 'ufFrameViewerBase.pas' {FrameViewerBase: TFrame},
   uTableFrameViewer in 'uTableFrameViewer.pas' {TableFrameViewer: TFrame},
-  uPlotFrameViewer in 'uPlotFrameViewer.pas' {PlotFrameViewer: TFrame};
+  uPlotFrameViewer in 'uPlotFrameViewer.pas' {PlotFrameViewer: TFrame},
+  uTimeCourseConfig in 'uTimeCourseConfig.pas',
+  uProperties in 'uProperties.pas';
 
 {$R *.res}
 

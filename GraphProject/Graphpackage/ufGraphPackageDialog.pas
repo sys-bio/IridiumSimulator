@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Layouts, FMX.TabControl, FMX.Edit, FMX.Memo, uSubgraph, FMX.Colors,
-  FMX.ListBox, FMX.Controls.Presentation, FMX.EditBox, FMX.SpinBox;
+  FMX.ListBox, FMX.Controls.Presentation, FMX.EditBox, FMX.SpinBox,
+  uProperties;
 
 type
   TfrmGraphPackageDlg = class(TForm)

@@ -2,7 +2,11 @@ unit uConfiguration;
 
 interface
 
-Uses SysUtils, REST.Json, FMX.Dialogs, uTableFrameViewer, ufMainConfig, uModelInputManager;
+Uses SysUtils, REST.Json, FMX.Dialogs,
+     uTableFrameViewer,
+     ufMainConfig,
+     uTimeCourseConfig,
+     uModelInputManager;
 
 const
    CONFIG_FILE_NAME = 'iridium.json';
@@ -12,11 +16,13 @@ type
     private
      FMainConfig : TfrmMainConfig;
      FModelInputManagerConfig : TModelInputManagerConfig;
+     FTimeCourseConfig : TTimeCourseConfig;
      FTextFormViewer : TTableFormViewerConfig;
      FUIStyle : string;
     published
       property UIStyle : string read FUIStyle write FUIStyle;
       property mainConfig : TfrmMainConfig read FMainConfig write FMainConfig;
+      property timeCourceConfig : TTimeCourseConfig read FTimeCourseConfig write FTimeCourseConfig;
       property modelInputManagerConfig : TModelInputManagerConfig read FModelInputManagerConfig write FModelInputManagerConfig;
       property textFormViewer : TTableFormViewerConfig read FTextFormViewer write FTextFormViewer;
     public
@@ -63,7 +69,6 @@ begin
     if FileExists (path) then
        begin
        configOpts.readFromJson(getConfigPath + fileName);
-       //cJson := TFile.ReadAllText(path);
        end;
   except
     on e: Exception do
@@ -86,9 +91,10 @@ begin
    topObj.AddPair(SIGNATURE, VERSION);
    topObj.AddPair ('config', mainObj);
    mainObj.AddPair ('style', FUIStyle);
-   mainObj.AddPair ('mainForm', FMainConfig.saveToJson);
-   mainObj.AddPair ('modelInputManager', FModelInputManagerConfig.saveToJson);
-   mainObj.AddPair ('textFormViewer', FTextFormViewer.saveToJson);
+   mainObj.AddPair (TfrmMainConfig.configName, FMainConfig.saveToJson);
+   mainObj.AddPair (TTimeCourseConfig.configName, FTimeCourseConfig.saveToJson);
+   mainObj.AddPair (TModelInputManagerConfig.configName, FModelInputManagerConfig.saveToJson);
+   mainObj.AddPair (TTableFormViewerConfig.configName, FTextFormViewer.saveToJson);
 
   // ar := TJSONArray.Create();
    //JsonObj.AddPair('subgraphs', ar);
@@ -101,14 +107,18 @@ begin
   end;
 end;
 
+
 procedure TConfigOptions.readFromJson (const fileName : string);
 var obj,
+    tmp,
     configObj,
-    mainObj,
+    mainFormObj,
     modelManagerObj,
+    timeCourseObj,
     tableViewerObj : TJSONObject;
     astr : string;
     version : string;
+    pair : TJSONPair;
 begin
   astr := TFile.ReadAllText(fileName);
   obj := TJSONObject.ParseJSONValue(astr) as TJSONObject;
@@ -125,14 +135,10 @@ begin
   if UIStyle = '' then
      UIStyle := 'MineShaft_Win_Style';
 
-  mainObj := configObj.Get('mainForm').JsonValue as TJSONObject;
-  FMainConfig := TfrmMainConfig.readFromJson(mainObj);
-
-  modelManagerObj := configObj.Get('modelInputManager').JsonValue as TJSONObject;
-  FModelInputManagerConfig := TModelInputManagerConfig.readFromJson(modelManagerObj);
-
-  tableViewerObj := configObj.Get('textFormViewer').JsonValue as TJSONObject;
-  FTextFormViewer := TTableFormViewerConfig.readFromJson(tableViewerObj);
+  FMainConfig := TfrmMainConfig.readSection (configObj);
+  FTimeCourseConfig := TTimeCourseConfig.readSection (configObj);
+  FModelInputManagerConfig := TModelInputManagerConfig.readSection (configObj);
+  FTextFormViewer := TTableFormViewerConfig.readSection (configObj);
 end;
 
 
@@ -142,7 +148,6 @@ begin
   path := getConfigPath;
   if DirectoryExists(path) then
      begin
-     //TFile.WriteAllText(path + fileName, TJson.ObjectToJsonString(configOpts));
      configOpts.saveToJson(path + fileName);
      end
   else
@@ -152,14 +157,4 @@ end;
 
 initialization
   configOpts := TConfigOptions.Create;
-//  configOpts.fontSize := 16;
-//  configOpts.outputPanelWidth := 480;
-//  configOpts.upperOutputPanelHeight := 50.0;  // 50 %
-//  configOpts.IsGraphPanelOpen := True;
-//  configOpts.IsTabularPanelOpen := True;
-//  configOpts.formTop := 245;
-//  configOpts.formLeft := 452;
-//  configOpts.formWidth := 1290;
-//  configOpts.formHeight := 840;
-//  configOpts.FTextFormViewer := TTableFormViewerConfig.Create;
 end.

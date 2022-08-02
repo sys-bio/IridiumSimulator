@@ -74,7 +74,7 @@ implementation
 {$R *.fmx}
 
 
-Uses ufMain, ufConfigSlider, uCoyoteCommon;
+Uses FMX.Platform, ufMain, ufConfigSlider, uCoyoteCommon;
 
 const UPPER_ROW_POSITION = 12;
       SLIDER_VERTICAL_DISTANCE = 48;//26;
@@ -106,8 +106,21 @@ end;
 
 
 procedure TfrmSliders.btnClearAllClick(Sender: TObject);
+var  CS: IFMXCursorService;
 begin
-  freeSliders;
+  if TPlatformServices.Current.SupportsPlatformService(IFMXCursorService) then
+     CS := TPlatformServices.Current.GetPlatformService(IFMXCursorService) as IFMXCursorService;
+  if Assigned(CS) then
+     begin
+     Cursor := CS.GetCursor;
+     CS.SetCursor(crHourGlass);
+     end;
+
+  try
+    freeSliders;
+  finally
+    CS.SetCursor(Cursor);
+  end;
 end;
 
 procedure TfrmSliders.btnCloseClick(Sender: TObject);
@@ -117,22 +130,35 @@ end;
 
 procedure TfrmSliders.btnMakeAllSlidersClick(Sender: TObject);
 var si : TSliderInitialValue;
+    CS: IFMXCursorService;
 begin
-  if lstParameters.Count > 150 then
+  if TPlatformServices.Current.SupportsPlatformService(IFMXCursorService) then
+     CS := TPlatformServices.Current.GetPlatformService(IFMXCursorService) as IFMXCursorService;
+  if Assigned(CS) then
      begin
-     showmessage ('More than 15 sliders is a big excessive');
-     exit;
+     Cursor := CS.GetCursor;
+     CS.SetCursor(crHourGlass);
      end;
 
-  freeSliders;
-  for var i := 0 to lstParameters.Count - 1 do
-      begin
-      si := lstParameters.Items.Objects[i] as TSliderInitialValue;
-      addSlider (lstParameters.Items[i],
-            si.lowRange,
-            si.highRange,
-            si.value);
-      end;
+  try
+    if lstParameters.Count > 150 then
+       begin
+       showmessage ('More than 15 sliders is a big excessive');
+       exit;
+       end;
+
+    freeSliders;
+    for var i := 0 to lstParameters.Count - 1 do
+        begin
+        si := lstParameters.Items.Objects[i] as TSliderInitialValue;
+        addSlider (lstParameters.Items[i],
+              si.lowRange,
+              si.highRange,
+              si.value);
+        end;
+  finally
+    CS.SetCursor(Cursor);
+  end;
 end;
 
 procedure TfrmSliders.updateRangeLabel (index : integer);
