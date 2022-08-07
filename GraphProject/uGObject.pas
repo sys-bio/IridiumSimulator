@@ -108,22 +108,22 @@ begin
   top  := aBox.top;  bottom := aBox.top + aBox.h;
 
   // Check each handle in turn
-  if PtInRect (rectf (left, top, left+5, top+5), p) then {NW}
+  if PtInRect (rectf (left, top, left+8, top+8), p) then {NW}
      begin
      result := true; direction := NW;
      exit;
      end;
-  if PtInRect (rectf (right-5, top, right, top+5), p) then {NE}
+  if PtInRect (rectf (right-8, top, right, top+8), p) then {NE}
      begin
      result := true; direction := NE;
      exit;
      end;
-  if PtInRect (rectf (right-5, bottom-5, right, bottom), p) then {SE}
+  if PtInRect (rectf (right-8, bottom-8, right, bottom), p) then {SE}
      begin
      result := true; direction := SE;
      exit;
      end;
-  if PtInRect (rectf (left, bottom-5, left+5, bottom), p) then {SW}
+  if PtInRect (rectf (left, bottom-8, left+8, bottom), p) then {SW}
      begin
      result := true; direction := SW;
      exit;

@@ -626,16 +626,16 @@ begin
   startX := x; startY := y;
   if onSubGraph (LCanvas, x, y, graphObject, currentSubGraph) then
      case graphObject.objType of
+         coXAxisTitle :
+           begin
+           FSubgraphs[currentSubGraph].SelectedObjectType := coXAxisTitle;
+           result := true;
+           end;
+
          coGraphingArea :
            begin
            subgraphs[currentSubGraph].SelectedObjectType := coGraphingArea;
            rectStart := FSubgraphs[currentSubGraph].getGraphDeviceDrawingArea;
-           result := true;
-           end;
-
-         coXAxisTitle :
-           begin
-           FSubgraphs[currentSubGraph].SelectedObjectType := coXAxisTitle;
            result := true;
            end;
 
@@ -839,7 +839,7 @@ begin
      case dragDirection of
           NW : begin
                { Don't allow user to drag below rectangle }
-               if y < abottom-4 then
+               if y < abottom-6 then
                   begin
                   dy := y - oldCorner_y;
                   currentlySelectedObject.dBox.top := currentlySelectedObject.dBox.top + dy; // y is inverted
@@ -854,7 +854,7 @@ begin
                end;
           NE : begin
                { Don't allow user to drag below rectangle }
-               if (y < abottom-3) and (x > aleft+3) then
+               if (y < abottom-6) and (x > aleft+6) then
                   begin
                   dx := oldCorner_x - x; dy := y - oldCorner_y;
                   currentlySelectedObject.dBox.top := currentlySelectedObject.dBox.top + dy; // y is inverted

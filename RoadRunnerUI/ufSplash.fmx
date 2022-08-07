@@ -2,7 +2,7 @@ object frmSplash: TfrmSplash
   Left = 0
   Top = 0
   BorderIcons = []
-  BorderStyle = Single
+  BorderStyle = None
   Caption = 'Iridium'
   ClientHeight = 72
   ClientWidth = 324

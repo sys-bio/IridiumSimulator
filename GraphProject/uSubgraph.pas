@@ -823,8 +823,8 @@ var
 begin
   result := false;
   box := properties.YAxisTitleObject.textProperties.box;
-  if (x > box.left) and (x < box.left + box.w) then
-    if (y > box.top) and (y < box.top + box.h) then
+  if (x > box.left) and (x < box.left + box.h) then  // h and w are swapped because the y axis
+    if (y > box.top) and (y < box.top + box.w) then  // title is positioned vertically
       result := True;
 end;
 
@@ -889,6 +889,25 @@ begin
 
   result := false;
 
+  if IsOnXAxisTitle(ACanvas, x, y) then
+    begin
+      graphObject := properties.XAxisTitleObject;
+      exit(True);
+    end;
+
+  if IsOnMainTitle(ACanvas, x, y) then
+    begin
+      graphObject := properties.MainTitleObject;
+      exit(True);
+    end;
+
+  if IsOnYAxisTitle(ACanvas, x, y) then
+    begin
+      result := True;
+      graphObject := properties.YAxisTitleObject;
+      exit (True);
+    end;
+
   if IsOnLegend(ACanvas, x, y) then
     begin
       graphObject := properties.Legend;
@@ -901,23 +920,6 @@ begin
       exit(True);
     end;
 
-  if IsOnMainTitle(ACanvas, x, y) then
-    begin
-      graphObject := properties.MainTitleObject;
-      exit(True);
-    end;
-
-  if IsOnXAxisTitle(ACanvas, x, y) then
-    begin
-      graphObject := properties.XAxisTitleObject;
-      exit(True);
-    end;
-
-  if IsOnYAxisTitle(ACanvas, x, y) then
-    begin
-      result := True;
-      graphObject := properties.YAxisTitleObject;
-    end;
 end;
 
 // Converts a size in cms to pixels units according to the current device
@@ -1141,13 +1143,10 @@ begin
   XAxisLengthInPixels := computePhysicalSize(XAxisLengthInCms);
   YAxisLengthInPixels := computePhysicalSize(YAxisLengthInCms);
 
-  if not properties.graphObjects[graphingAreaId].selected then
-    begin
-      box := relativeToDevice2(properties.graphObjects[graphingAreaId]);
-      LPaint.color := properties.GraphBackgroundColor;
-      LPaint.Style := TSkPaintStyle.Fill;
-      ACanvas.DrawRect(TRectF.Create(box.left, box.top, box.left + box.w, box.top + box.h), LPaint);
-    end;
+  box := relativeToDevice2(properties.graphObjects[graphingAreaId]);
+  LPaint.color := properties.GraphBackgroundColor;
+  LPaint.Style := TSkPaintStyle.Fill;
+  ACanvas.DrawRect(TRectF.Create(box.left, box.top, box.left + box.w, box.top + box.h), LPaint);
 
   if properties.bDrawMainTitle then
     begin
@@ -2837,6 +2836,7 @@ end;
 procedure TSubgraph.drawSelectedGraphingArea(ACanvas: ISkCanvas);
 var
   aleft, atop, aRight, aBottom: single;
+  pathEffect : ISkPathEffect;
 begin
   if properties.graphObjects[graphingAreaId].selected then
     begin
@@ -2845,14 +2845,50 @@ begin
       aBottom := fy(properties.FWorldYmin);
       atop := fy(properties.FWorldYmax);
 
-      // HMS
-      // canvas.Fill.Color := claBlack;
-      // canvas.Stroke.Color := claBlack;
-      // canvas.Stroke.Dash := TStrokeDash.Dot;
+      PathEffect := TSkPathEffect.MakeDash([15, 5, 15, 5], 1);
+      LPaint.PathEffect := PathEffect;
+
+      LPaint.color := properties.GraphBorderColor;
+      LPaint.StrokeWidth := properties.GraphBorderThicknessInSkiaUnits;
+      LPaint.AntiAlias := false;
+      LPaint.StrokeCap := TSkStrokeCap.Square;
+      LPaint.Style := TSkPaintStyle.Stroke;
+
+      // Lower
+      ACanvas.drawLine(pointf(fx(properties.FWorldXmin), fy(properties.FWorldYmin)),
+        pointf(fx(properties.FWorldXmax), fy(properties.FWorldYmin)), LPaint);
+
+      // Upper
+      ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(properties.FWorldYmax)),
+        pointf(fx(properties.FWorldXmin), fy(properties.FWorldYmax)), LPaint);
+
+      // Left
+      ACanvas.drawLine(pointf(fx(properties.FWorldXmin), fy(properties.FWorldYmax)),
+        pointf(fx(properties.FWorldXmin), fy(properties.FWorldYmin)), LPaint);
+
+      // Right
+      ACanvas.drawLine(pointf(fx(properties.FWorldXmax), fy(properties.FWorldYmin)),
+        pointf(fx(properties.FWorldXmax), fy(properties.FWorldYmax)), LPaint);
+
+      LPaint.AntiAlias := True;
+      LPaint.PathEffect := nil;
+
+      LPaint.color := claBlack;
+      LPaint.StrokeWidth := properties.GraphBorderThicknessInSkiaUnits;
+      LPaint.AntiAlias := false;
+      LPaint.StrokeCap := TSkStrokeCap.Square;
+      LPaint.Style := TSkPaintStyle.Stroke;
+      LPaint.Style := TSkPaintStyle.Fill;
+      ACanvas.DrawRect(TRectF.Create(aleft, atop, aleft+8, atop+8), LPaint);
+      ACanvas.DrawRect(TRectF.Create(aright, atop, aright-8, atop+8), LPaint);
+      ACanvas.DrawRect(TRectF.Create(aright, abottom, aright-8, abottom-8), LPaint);
+      ACanvas.DrawRect(TRectF.Create(aleft, abottom, aleft+8, abottom-8), LPaint);
+
       // // Don't use DrawRect, its too slow
       // drawDottedBox (canvas, aleft, atop, aRight, aBottom);
       // canvas.FillRect (rectf (aleft, atop, aleft+5, atop+5), 0, 0, [], 1.0);
       // canvas.FillRect (rectf (aright-5, atop, aright, atop+5), 0, 0, [], 1.0);
+
       // canvas.FillRect (rectf (aright-5, abottom, aright, abottom-5), 0, 0, [], 1.0);
       // canvas.FillRect (rectf (aleft, abottom, aleft+5, abottom-5), 0, 0, [], 1.0);
       // exit;
