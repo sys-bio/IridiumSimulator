@@ -8,7 +8,7 @@
    </tr>
 </table> 
 
-### Coming soon for summer 2022
+### Coming soon for summer 2022 - Beta has Arrived
  
  
 Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
