@@ -5,11 +5,11 @@
     <td><img alt="Licence", src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen"></td>
     <td><img alt="Funding", src="https://img.shields.io/badge/Funding-NIH%20(GM123032)-blue"></td>
    <td><img alt="Language", src="https://img.shields.io/badge/Delphi-11-blue.svg"></td>
+   <td> <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/sys-bio/IridiumSimulator/total?color=red&style=plastic"> </td>
    </tr>
 </table> 
 
-https://img.shields.io/github/downloads/sys-bio/IridiumSimulator/total?color=red&style=plastic
-    
+   
 ### Coming soon for summer 2022 - Beta has Arrived
  
  
