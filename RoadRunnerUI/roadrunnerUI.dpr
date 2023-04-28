@@ -77,13 +77,13 @@ uses
   uConfiguration in 'uConfiguration.pas',
   ufSplash in 'ufSplash.pas' {frmSplash},
   ufTextViewer in 'ufTextViewer.pas' {frmTextViewer},
-  ufFrameSplitPanel in 'ufFrameSplitPanel.pas' {frameSplitPanels: TFrame},
   ufMainConfig in 'ufMainConfig.pas',
   ufFrameViewerBase in 'ufFrameViewerBase.pas' {FrameViewerBase: TFrame},
   uTableFrameViewer in 'uTableFrameViewer.pas' {TableFrameViewer: TFrame},
   uPlotFrameViewer in 'uPlotFrameViewer.pas' {PlotFrameViewer: TFrame},
   uTimeCourseConfig in 'uTimeCourseConfig.pas',
-  uProperties in 'uProperties.pas';
+  uProperties in 'uProperties.pas',
+  ufFrameSplitPanel in 'ufFrameSplitPanel.pas' {frameSplitPanels: TFrame};
 
 {$R *.res}
 
@@ -116,9 +116,17 @@ begin
        end;
   end;
 
+  try
   sleep(1000);
   frmSplash.Close;
   frmSplash.Free;
+  except
+    on e: Exception do
+       begin
+       showmessage ('frmSplash: ' + e.Message);
+       Halt;
+       end;
+  end;
 
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmGraphPackageDlg, frmGraphPackageDlg);

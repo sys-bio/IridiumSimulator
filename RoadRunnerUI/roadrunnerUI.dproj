@@ -5,7 +5,7 @@
         <FrameworkType>FMX</FrameworkType>
         <MainSource>roadrunnerUI.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>135171</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -347,11 +347,6 @@
             <Form>frmTextViewer</Form>
             <FormType>fmx</FormType>
         </DCCReference>
-        <DCCReference Include="ufFrameSplitPanel.pas">
-            <Form>frameSplitPanels</Form>
-            <FormType>fmx</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="ufMainConfig.pas"/>
         <DCCReference Include="ufFrameViewerBase.pas">
             <Form>FrameViewerBase</Form>
@@ -370,6 +365,11 @@
         </DCCReference>
         <DCCReference Include="uTimeCourseConfig.pas"/>
         <DCCReference Include="uProperties.pas"/>
+        <DCCReference Include="ufFrameSplitPanel.pas">
+            <Form>frameSplitPanels</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -646,12 +646,6 @@
                 <DeployFile LocalName="Win64\Debug\roadrunnerUI.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>roadrunnerUI.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\roadrunnerUI.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>roadrunnerUI.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

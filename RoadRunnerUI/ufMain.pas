@@ -11,26 +11,42 @@ uses
   System.UIConsts, ufGraphPackageDialog, FMX.ListBox, FMX.Objects,
   System.Rtti, FMX.Grid, FMX.TreeView,
   FMX.Menus,
-  FMX.Edit, uCoyoteCommon, strutils,
-  FMX.Grid.Style, FMX.ScrollBox, FMX.Controls.Presentation, FMX.Memo.Types,
-  Skia.FMX, Skia, FMX.Colors, uRRList, uSetup, ufStructuralAnalysis,
-  uNewMatrix, uColorList, ufScrollChart, uController, uViewer,
+  FMX.EditBox,
+  FMX.Edit,
+  uCoyoteCommon,
+  strutils,
+  FMX.Grid.Style,
+  FMX.ScrollBox,
+  FMX.SpinBox,
+  FMX.Controls.Presentation,
+  FMX.Memo.Types,
+  Skia.FMX,
+  Skia,
+  FMX.Colors,
+  uRRList,
+  uSetup, ufStructuralAnalysis,
+  uNewMatrix,
+  uColorList,
+  ufScrollChart,
+  uController,
+  uViewer,
   uPlotFrameViewer,
   uTableFrameViewer,
   uFrameFunctionPlotter,
   uFrameScanControl,
   uFrameSteadyStateControl,
+  ufFrameSplitPanel,
   uConfiguration,
   ufMainConfig
 {$IFDEF MSWINDOWS}
-    , Winapi.Windows, Winapi.ShellAPI, ufFrameSplitPanel
+    , Winapi.Windows, Winapi.ShellAPI
 {$ENDIF}
 {$IFDEF POSIX}
     , Posix.Stdlib
 {$ENDIF POSIX};
 
 const
-  VERSION = '0.953 Beta';
+  VERSION = '0.955 Beta';
 
 type
   TfrmMain = class(TForm)
@@ -145,6 +161,8 @@ type
     Calypso_Win_Style: TStyleBook;
     cboStyleList: TComboBox;
     chkAlwaysReset: TCheckBox;
+    lblFontSize: TLabel;
+    spFontSize: TSpinBox;
     procedure FormCreate(Sender: TObject);
     procedure btnSimulateClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
@@ -185,6 +203,7 @@ type
     procedure btnOpenTabularClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cboStyleListChange(Sender: TObject);
+    procedure spFontSizeChange(Sender: TObject);
   private
     { Private declarations }
 
@@ -214,6 +233,7 @@ type
     procedure loadBuiltInModel(index: integer); overload;
     procedure loadTemplateModel;
     procedure loadModelFromMemo;
+    procedure AppException(Sender: TObject; E: Exception);
 
     procedure ViewerModelHasChanged;
     procedure OnTimeCourseSliderNotify(parameter: string; value: double);
@@ -259,7 +279,9 @@ Uses uRoadRunner.API, Math, uSymbolDetails, uRRCommon, ufSelectionChoices,
   uBuiltInModels, ufSliders, uComplex,
   ufIntegratorOptions, ufSteadyStateOptions, FMX.Styles.Objects,
   ufMoreSteadyState, uParameterScan, ufFloatingPlotViewer,
-  IOUtils, uRoadRunner, ufExamples, ufAbout, uSimulator, uViewerTypes,
+  IOUtils, uRoadRunner, ufExamples, ufAbout,
+  uSimulator,
+  uViewerTypes,
   uScanArguments,
   uTimeCourseConfig,
   ufPreferences;
@@ -600,7 +622,7 @@ begin
   try
     frmPreferences.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
     frmPreferences.ShowModal;
-    controller.modelInputManager.modelMemo.Font.Size := configOpts.modelInputManagerConfig.fontSize;
+    controller.modelInputManager.setMemoFontSize (configOpts.modelInputManagerConfig.fontSize);
   finally
     frmPreferences.Free;
   end;
@@ -1237,12 +1259,21 @@ begin
 end;
 
 
+procedure TfrmMain.AppException(Sender: TObject; E: Exception);
+begin
+  Application.ShowException(E);
+  Application.Terminate;
+end;
+
+
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
   mu, smu: TMenuItem;
   f : TextFile;
   configOk : boolean;
 begin
+  Application.OnException := AppException;
+  try
   fireEvent := false;
 
   cboStyleList.Items.Add(MineShaft_Win_Style.StyleName);
@@ -1267,10 +1298,23 @@ begin
   controller.viewerPackage.showLegend := True;
 
   configOk := readConfigurationFile (CONFIG_FILE_NAME);
-  frmMain.Width := configOpts.mainConfig.formWidth;
-  frmMain.Height := configOpts.mainConfig.formHeight;
-  pnlOutputPanel.width := configOpts.mainConfig.outputPanelWidth;
-  chkAlwaysReset.IsChecked := configOpts.timeCourceConfig.alwaysResetAfterSimulation;
+
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage A');
+  end;
+
+  try
+    frmMain.Width := configOpts.mainConfig.formWidth;
+    frmMain.Height := configOpts.mainConfig.formHeight;
+    pnlOutputPanel.width := configOpts.mainConfig.outputPanelWidth;
+    chkAlwaysReset.IsChecked := configOpts.timeCourceConfig.alwaysResetAfterSimulation;
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage B');
+  end;
+
+  try
   // pick up the UI style and apply it.
   var found := False;
   for var i := 0 to cboStyleList.Count - 1 do
@@ -1280,26 +1324,64 @@ begin
          found := True;
          break;
          end;
+
   if not found then
      cboStyleList.ItemIndex := 0;
 
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage C');
+  end;
+
+  try
+    controller.modelInputManager.setMemoFontSize(configOpts.modelInputManagerConfig.fontSize);
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage D');
+  end;
+
+  try
   plotViewer := TPlotFrameViewer.Create(self);
   plotViewer.Parent := frameSplitPanel.pnlUpper;
   plotViewer.Align := TAlignLayout.Client;
   plotViewer.Setup(controller);
 
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage E');
+  end;
+
+  try
   tableViewer := TTableFrameViewer.Create (self);
   tableViewer.Parent := frameSplitPanel.pnlLower;
   tableViewer.Align := TAlignLayout.Client;
   tableViewer.Setup(controller, configOpts.textFormViewer);
 
-  plotViewer.plt.Width := configOpts.mainConfig.outputPanelWidth;
-  controller.modelInputManager.modelMemo.Font.Size := configOpts.modelInputManagerConfig.fontSize;
-  //controller.modelInputManager.config.fontSize := configOpts.modelInputManagerConfig.fontSize;
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage F');
+  end;
 
+  try
+  plotViewer.plt.Width := configOpts.mainConfig.outputPanelWidth;
+  controller.modelInputManager.setMemoFontSize (configOpts.modelInputManagerConfig.fontSize);
+  spFontSize.Value := configOpts.modelInputManagerConfig.fontSize;
+
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage G');
+  end;
+
+  try
   tableViewer.config.dataMemoBackgroundColor := configOpts.textFormViewer.dataMemoBackgroundColor;
   tableViewer.config.dataMemoFontColor := configOpts.textFormViewer.dataMemoFontColor;
 
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage H');
+  end;
+
+  try
   currentAntimonyFileName := '';
   launchPath := ExtractFileDir(ParamStr(0));
   selectedPalette := 'Default';
@@ -1366,6 +1448,11 @@ begin
       mu.AddObject(smu);
     end;
 
+  except
+    on e: Exception do
+       raise Exception.Create('Exception in formcreate Stage I');
+  end;
+
   fireEvent := True;
   lblVersion.text := 'RoadRunner Version: ' + controller.simulator.roadrunner.getVersionStr;
 end;
@@ -1395,6 +1482,11 @@ begin
     end;
   controller.clearViewers;
   controller.ViewerModelHasChanged(self);
+end;
+
+procedure TfrmMain.spFontSizeChange(Sender: TObject);
+begin
+    controller.modelInputManager.setMemoFontSize(trunc (spFontSize.Value));
 end;
 
 

@@ -4,9 +4,6 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup/>
-    <PropertyGroup>
-        <OSX64_OutputDir Condition="'$(Platform)'=='OSXARM64'">OSX64\Release\</OSX64_OutputDir>
-    </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='Win64'">
         <DeployFile Include="roadrunnerUI_Icns.icns">
             <RemoteDir>roadrunnerUI\</RemoteDir>
@@ -46,7 +43,7 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Release'">
             <RemoteDir>roadrunnerUI\</RemoteDir>
             <RemoteName>sk4d.dll</RemoteName>
             <DeployClass>Skia</DeployClass>
@@ -56,7 +53,7 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Release'">
+        <DeployFile Include="$(SKIADIR)\Binary\Win64\Release\sk4d.dll" Condition="'$(Config)'=='Debug'">
             <RemoteDir>roadrunnerUI\</RemoteDir>
             <RemoteName>sk4d.dll</RemoteName>
             <DeployClass>Skia</DeployClass>

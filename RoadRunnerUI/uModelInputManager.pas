@@ -31,8 +31,6 @@ type
 
       antimonyStr : string;
 
-      config : TModelInputManagerConfig;
-
       modelMemo : TMemo;
       antimonyLoaded : boolean;
       currentAntimonyFileName : string;
@@ -43,6 +41,7 @@ type
 
       procedure loadAntimonyLibrary;
       procedure setInputMemo (memo : TMemo);
+      procedure setMemoFontSize (fontSize : integer);
       procedure exportSBML;
       function  importSBML (var path : string) : string;
       constructor Create;
@@ -51,7 +50,7 @@ type
 
 implementation
 
-Uses IOUtils;
+Uses IOUtils, uConfiguration;
 
 class function TModelInputManagerConfig.readSection (obj : TJSONObject) : TModelInputManagerConfig;
 var mainObj : TJSONObject;
@@ -97,8 +96,6 @@ begin
   antimonyLoaded := False;
   currentAntimonyFileName := '';
 
-  config := TModelInputManagerConfig.Create;
-
   loadAntimonyLibrary;
   saveSBMLDialog := TSaveDialog.Create (nil);
   saveSBMLDialog.DefaultExt := '.xml';
@@ -122,6 +119,12 @@ end;
 procedure TModelInputManager.setInputMemo (memo : TMemo);
 begin
   modelMemo := memo;
+end;
+
+procedure TModelInputManager.setMemoFontSize (fontSize : integer);
+begin
+  modelMemo.Font.Size := fontSize;
+  configOpts.modelInputManagerConfig.FFontSize := fontSize;
 end;
 
 function TModelInputManager.getSBMLFromAntimony (antStr : string) : string;

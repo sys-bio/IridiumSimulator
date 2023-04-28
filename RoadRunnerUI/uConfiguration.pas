@@ -59,6 +59,7 @@ begin
 {$ENDIF}
 end;
 
+
 function readConfigurationFile (fileName : string): boolean;
 var cjson : string;
     path : string;
@@ -69,6 +70,14 @@ begin
     if FileExists (path) then
        begin
        configOpts.readFromJson(getConfigPath + fileName);
+       end
+    else
+       begin
+       configOpts.FMainConfig := TfrmMainConfig.CreateDefault;
+       configOpts.FModelInputManagerConfig := TModelInputManagerConfig.CreateDefault;
+       configOpts.FTextFormViewer := TTableFormViewerConfig.CreateDefault;
+       configOpts.FTimeCourseConfig := TTimeCourseConfig.createDefault;
+       configOpts.UIStyle := 'MineShaft_Win_Style';
        end;
   except
     on e: Exception do
@@ -127,7 +136,9 @@ begin
      FMainConfig := TfrmMainConfig.CreateDefault;
      FModelInputManagerConfig := TModelInputManagerConfig.CreateDefault;
      FTextFormViewer := TTableFormViewerConfig.CreateDefault;
-     raise Exception.Create('There is no valid configuration file for this application');
+     FTimeCourseConfig := TTimeCourseConfig.createDefault;
+     UIStyle := 'MineShaft_Win_Style';
+     exit;
      end;
 
   Obj.TryGetValue ('config', configObj);
