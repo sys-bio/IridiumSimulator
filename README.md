@@ -8,6 +8,8 @@
    </tr>
 </table> 
 
+https://img.shields.io/github/downloads/sys-bio/IridiumSimulator/total?color=red&style=plastic
+    
 ### Coming soon for summer 2022 - Beta has Arrived
  
  
