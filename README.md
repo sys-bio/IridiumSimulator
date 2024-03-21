@@ -23,6 +23,8 @@ Supports: Time course simulation, steady-state, real-time interactive simulation
 
 **Update** (April, 28th, 2023): Update to v0.955, Windows 64, Apple Intel and Apple M1. Fixed an issue when ut you try to run the code on a machine that had bnever seen the app before it would crash. This is how fixed in this version. Source code updated. 
 
+**Update** (March, 21st, 2024): Update to v0.98. Changed the graph and text UI on the right of the screen. Easier to use and more logical I think.
+
 I would like to thank Guillermo Canedo Ramirez who did an excellent job in making the real-time scrolling chart.
 
 Here are some screenshots to show you what it looks like:
