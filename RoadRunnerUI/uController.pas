@@ -29,6 +29,7 @@ type
 
       viewerPackage : TViewerPackage;          // Gets passed to viewers
 
+      function  getTimeStart : double;
       procedure setTimeStart (timeStart : double);
       procedure setTimeEnd (timeEnd : double);
       procedure setNumberOfPoints (numberOfPoints : integer);
@@ -48,7 +49,7 @@ type
       procedure clearViewers;
       procedure ViewerSetProperty (name : string; value : TValue);
 
-      procedure runTimeCourseSimulation;
+      function  runTimeCourseSimulation : TModelErrorState;
       procedure runTimeCourseScan (selectionList : TStringList; scanArguments : TScanArguments);
       procedure runSteadyStateScan (selectionList : TStringList; scanArguments : TScanArguments);
       procedure modelChanged;
@@ -91,6 +92,12 @@ end;
 procedure TController.RegisterFormViewer (viewer: TFormViewer);
 begin
   listOfFormViewers.Add(viewer);
+end;
+
+
+function TController.getTimeStart : double;
+begin
+  result := simulator.timeStart;
 end;
 
 
@@ -194,10 +201,18 @@ begin
 end;
 
 
-procedure TController.runTimeCourseSimulation;
-var i : integer;
+function TController.runTimeCourseSimulation : TModelErrorState;
 begin
-  simulator.simulate();
+  try
+    simulator.simulate();
+  except
+    on e: exception do
+       begin
+       result.ok := False;
+       result.errMsg := e.Message;
+       exit;
+       end;
+  end;
   updateViewers;
 end;
 

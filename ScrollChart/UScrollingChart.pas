@@ -3,7 +3,7 @@ unit UScrollingChart;
 interface
 
 uses SysUtils, Classes, System.Types, System.UIConsts, System.UITypes,
-     skia, skia.FMX, FMX.Graphics, System.Contnrs, FMX.Dialogs, FMX.StdCtrls, FMX.Types,
+     skia, FMX.skia, FMX.Graphics, System.Contnrs, FMX.Dialogs, FMX.StdCtrls, FMX.Types,
      System.Generics.Defaults, UDataSource, UStage, UGlobalData;
 type
 

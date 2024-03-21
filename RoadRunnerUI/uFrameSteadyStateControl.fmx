@@ -18,7 +18,7 @@ object FrameSteadyStateControl: TFrameSteadyStateControl
       TextSettings.Font.Size = 16.000000000000000000
       TextSettings.FontColor = claCornsilk
       Text = 'Compute Steady State'
-      TabOrder = 6
+      TabOrder = 5
     end
     object btnConfigureSteadyStateSolver: TButton
       Position.X = 200.000000000000000000
@@ -162,7 +162,7 @@ object FrameSteadyStateControl: TFrameSteadyStateControl
     Size.Width = 320.000000000000000000
     Size.Height = 169.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 4
+    TabOrder = 3
     object Label4: TLabel
       Align = Top
       Margins.Left = 10.000000000000000000

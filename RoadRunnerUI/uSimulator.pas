@@ -8,6 +8,7 @@ Uses SysUtils,
      uRRTypes,
      Generics.Collections,
      uScanArguments,
+     uModelInputManager,
      uParameterScan;
 
 type
@@ -31,7 +32,7 @@ type
      procedure runTimeCourseScan (selectionList : TStringList; scanArguments : TScanArguments);
      procedure runSteadyStateScan (selectionList : TStringList; scanArguments : TScanArguments);
      function  loadSBMLFromString (sbmlStr : string) : boolean;
-     function  loadAntModelFromString (antimonyStr : string) : boolean;
+     function  loadAntModelFromString (antimonyStr : string) : TModelErrorState;
      procedure updateModel (astr : string);
 
      constructor Create;
@@ -41,7 +42,7 @@ type
 
 implementation
 
-Uses IOUtils, uAntimonyAPI;
+Uses IOUtils, uAntimonyAPI, FMX.Dialogs;
 
 constructor TSimulator.Create;
 begin
@@ -71,11 +72,11 @@ end;
 
 
 function TSimulator.simulate : T2DMatrix;
-var i : integer;
 begin
   result := roadrunner.simulateEx(timeStart, timeEnd, numberOfPoints);
   simulationData := result;
 end;
+
 
 procedure TSimulator.runTimeCourseScan (selectionList : TStringList; scanArguments : TScanArguments);
 begin
@@ -153,17 +154,24 @@ begin
 end;
 
 
-function TSimulator.loadAntModelFromString (antimonyStr : string) : boolean;
+function TSimulator.loadAntModelFromString (antimonyStr : string) : TModelErrorState;
 var antStr, sbmlStr, errMsg : string;
+    modelErrorState : TModelErrorState;
 begin
-  sbmlStr := uAntimonyAPI.getSBMLFromAntimony(antimonyStr);
-  if not roadrunner.loadSBMLFromString(sbmlStr) then
+  modelErrorState := uAntimonyAPI.getSBMLFromAntimony(antimonyStr);
+  if not modelErrorState.ok then
      begin
-     errMsg := roadrunner.getLastError();
-     exit (False);
+     exit (modelErrorState);
+     end;
+
+  if not roadrunner.loadSBMLFromString(modelErrorState.sbmlStr) then
+     begin
+     modelErrorState.errMsg := roadrunner.getLastError();
+     modelErrorState.ok := False;
+     result := modelErrorState;
      end
   else
-    exit (True);
+    result := modelErrorState;
 end;
 
 //

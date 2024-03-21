@@ -2,7 +2,7 @@ program roadrunnerUI;
 
 uses
   skia,
-  skia.FMX,
+  FMX.skia,
   FMX.Forms,
   FMX.Types,
   FMX.Dialogs,
@@ -82,8 +82,11 @@ uses
   uTableFrameViewer in 'uTableFrameViewer.pas' {TableFrameViewer: TFrame},
   uPlotFrameViewer in 'uPlotFrameViewer.pas' {PlotFrameViewer: TFrame},
   uTimeCourseConfig in 'uTimeCourseConfig.pas',
-  uProperties in 'uProperties.pas',
-  ufFrameSplitPanel in 'ufFrameSplitPanel.pas' {frameSplitPanels: TFrame};
+  ufFrameSplitPanel in 'ufFrameSplitPanel.pas' {frameSplitPanels: TFrame},
+  uRRProperties in '..\GraphProject\uRRProperties.pas',
+  uMakePython in 'uMakePython.pas',
+  uCombineArchive in 'uCombineArchive.pas',
+  uPhrasedMLAPI in '..\..\..\CommonCode\libPhrasedML\uPhrasedMLAPI.pas';
 
 {$R *.res}
 

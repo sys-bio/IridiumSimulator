@@ -3,7 +3,7 @@ unit UDataSource;
 interface
 uses
   System.Classes, System.UITypes, System.UIConsts, System.Types,
-  System.SysUtils, Skia, Skia.FMX, math;
+  System.SysUtils, Skia, FMX.Skia, math;
 
 const
     MAX_VALUE_AXIS_Y = 1E10;

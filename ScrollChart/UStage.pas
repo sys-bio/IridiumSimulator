@@ -3,7 +3,7 @@ unit UStage;
 interface
   uses
    Math, System.Types, System.UITypes, System.UIConsts, System.Contnrs,
-   Skia, Skia.FMX, System.SysUtils, UContainer, UComps, UDataSource,
+   Skia, FMX.skia, System.SysUtils, UContainer, UComps, UDataSource,
    FMX.Dialogs, FMX.StdCtrls, UGlobalData;
 
 type

@@ -3,7 +3,7 @@ unit UComps;
 interface
   uses
     Math, System.Types, System.UITypes, System.UIConsts, System.Contnrs,
-    Skia, Skia.FMX, System.SysUtils, UContainer, UDataSource,
+    Skia, FMX.skia, System.SysUtils, UContainer, UDataSource,
     System.Classes, UGlobalData, FMX.Dialogs;
 
   type

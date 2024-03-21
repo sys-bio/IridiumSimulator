@@ -4,7 +4,7 @@ object frmSplash: TfrmSplash
   BorderIcons = []
   BorderStyle = None
   Caption = 'Iridium'
-  ClientHeight = 72
+  ClientHeight = 74
   ClientWidth = 324
   Position = ScreenCenter
   StyleBook = StyleBook1
@@ -12,20 +12,6 @@ object frmSplash: TfrmSplash
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
-  object SkLabel1: TSkLabel
-    Position.X = 20.000000000000000000
-    Position.Y = 21.000000000000000000
-    Size.Width = 119.428573608398400000
-    Size.Height = 27.428571701049800000
-    Size.PlatformDefault = False
-    StyledSettings = [Family, Style]
-    TextSettings.Font.Size = 20.000000000000000000
-    TextSettings.FontColor = claBlanchedalmond
-    Words = <
-      item
-        Text = 'Starting up.....'
-      end>
-  end
   object StyleBook1: TStyleBook
     Styles = <
       item
@@ -45289,5 +45275,17 @@ object frmSplash: TfrmSplash
       end>
     Left = 264
     Top = 24
+  end
+  object Label1: TLabel
+    StyledSettings = [Family, Style]
+    Position.X = 24.000000000000000000
+    Position.Y = 24.000000000000000000
+    Size.Width = 120.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 16.000000000000000000
+    TextSettings.FontColor = claBlanchedalmond
+    Text = 'Starting up....'
+    TabOrder = 2
   end
 end

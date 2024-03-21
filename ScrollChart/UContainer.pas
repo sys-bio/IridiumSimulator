@@ -3,7 +3,7 @@ unit UContainer;
 interface
 uses
   System.Classes, System.UITypes, System.UIConsts, System.SysUtils,
-  System.Types, Skia, Skia.FMX, UGlobalData;
+  System.Types, Skia, FMX.skia, UGlobalData;
 
   type
     TOrientation = (horizontal, vertical);

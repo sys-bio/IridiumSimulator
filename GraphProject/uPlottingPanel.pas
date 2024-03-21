@@ -5,7 +5,7 @@ interface
 Uses FMX.Dialogs, Classes, SysUtils, FMX.Types, FMX.Graphics, FMX.Controls,
      Generics.Collections, uSubgraph, uRRCommon, FMX.StdCtrls, FMX.ExtCtrls,
      IOUtils, uRRDataSeries, System.UITypes, System.Types, ufGraphPackageDialog,
-     uGObject, Json, skia, skia.FMX;
+     uGObject, Json, skia, FMX.skia;
 
 const
    //defaultWidth = 400;

@@ -37,7 +37,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
         item
         end>
       IsSelected = True
-      Size.Width = 62.000000000000000000
+      Size.Width = 63.000000000000000000
       Size.Height = 23.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
@@ -233,17 +233,17 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
         TabOrder = 0
         TabPosition = Top
         Sizes = (
-          696s
-          308s
-          696s
-          308s)
+          700s
+          309s
+          700s
+          309s)
         object tbXAxis: TTabItem
           CustomIcon = <
             item
             end>
           IsSelected = True
           Size.Width = 62.000000000000000000
-          Size.Height = 23.000000000000000000
+          Size.Height = 26.000000000000000000
           Size.PlatformDefault = False
           StyleLookup = ''
           TabOrder = 0
@@ -405,7 +405,7 @@ object frmGraphPackageDlg: TfrmGraphPackageDlg
             end>
           IsSelected = False
           Size.Width = 61.000000000000000000
-          Size.Height = 23.000000000000000000
+          Size.Height = 26.000000000000000000
           Size.PlatformDefault = False
           StyleLookup = ''
           TabOrder = 0

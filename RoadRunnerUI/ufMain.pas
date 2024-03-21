@@ -20,7 +20,7 @@ uses
   FMX.SpinBox,
   FMX.Controls.Presentation,
   FMX.Memo.Types,
-  Skia.FMX,
+  FMX.Skia,
   Skia,
   FMX.Colors,
   uRRList,
@@ -37,6 +37,8 @@ uses
   uFrameSteadyStateControl,
   ufFrameSplitPanel,
   uConfiguration,
+  uModelInputManager,
+  ufFrameViewerBase,
   ufMainConfig
 {$IFDEF MSWINDOWS}
     , Winapi.Windows, Winapi.ShellAPI
@@ -46,7 +48,7 @@ uses
 {$ENDIF POSIX};
 
 const
-  VERSION = '0.955 Beta';
+  VERSION = '0.98 Beta';
 
 type
   TfrmMain = class(TForm)
@@ -127,8 +129,6 @@ type
     moModel: TMemo;
     Layout7: TLayout;
     Splitter1: TSplitter;
-    frameSplitPanel: TframeSplitPanels;
-    Rectangle3: TRectangle;
     Rectangle6: TRectangle;
     pnlBottomPanel: TLayout;
     GroupBox3: TGroupBox;
@@ -163,6 +163,12 @@ type
     chkAlwaysReset: TCheckBox;
     lblFontSize: TLabel;
     spFontSize: TSpinBox;
+    MenuItem1: TMenuItem;
+    mnuExportPython: TMenuItem;
+    SaveCombineArchive: TSaveDialog;
+    TabControl_Viewers: TTabControl;
+    TabItem_PlotView: TTabItem;
+    TabItem_TextView: TTabItem;
     procedure FormCreate(Sender: TObject);
     procedure btnSimulateClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
@@ -177,7 +183,6 @@ type
     procedure btnScanClick(Sender: TObject);
     procedure btnConfigIntegratorClick(Sender: TObject);
     procedure mnuSaveGraphasPdfClick(Sender: TObject);
-    procedure btnOpenGraphClick(Sender: TObject);
     procedure btnStructAnalysisClick(Sender: TObject);
     procedure mnuExamplesClick(Sender: TObject);
     procedure mnuLoadAntimonyModelClick(Sender: TObject);
@@ -200,10 +205,12 @@ type
     procedure mnuConfigClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure Button1Click(Sender: TObject);
-    procedure btnOpenTabularClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cboStyleListChange(Sender: TObject);
+    procedure MenuItem1Click(Sender: TObject);
+    procedure mnuExportPythonClick(Sender: TObject);
     procedure spFontSizeChange(Sender: TObject);
+    procedure TabControl_ViewersChange(Sender: TObject);
   private
     { Private declarations }
 
@@ -229,10 +236,10 @@ type
     procedure OnModelChange;
     procedure ClearAll;
     procedure loadModelIntoMemo(antStr: string);
-    procedure loadBuiltInModel(name: string); overload;
-    procedure loadBuiltInModel(index: integer); overload;
+    function  loadBuiltInModel(name: string) : TModelErrorState; overload;
+    function  loadBuiltInModel(index: integer) : TModelErrorState; overload;
     procedure loadTemplateModel;
-    procedure loadModelFromMemo;
+    function  loadModelFromMemo : TModelErrorState;
     procedure AppException(Sender: TObject; E: Exception);
 
     procedure ViewerModelHasChanged;
@@ -275,16 +282,32 @@ implementation
 
 {$R *.fmx}
 
-Uses uRoadRunner.API, Math, uSymbolDetails, uRRCommon, ufSelectionChoices,
-  uBuiltInModels, ufSliders, uComplex,
-  ufIntegratorOptions, ufSteadyStateOptions, FMX.Styles.Objects,
-  ufMoreSteadyState, uParameterScan, ufFloatingPlotViewer,
-  IOUtils, uRoadRunner, ufExamples, ufAbout,
+Uses uRoadRunner.API,
+  Math,
+  uSymbolDetails,
+  uRRCommon,
+  ufSelectionChoices,
+  uBuiltInModels,
+  ufSliders,
+  uComplex,
+  ufIntegratorOptions,
+  ufSteadyStateOptions,
+  FMX.Styles.Objects,
+  FMX.DialogService,
+  ufMoreSteadyState,
+  uParameterScan,
+  ufFloatingPlotViewer,
+  IOUtils,
+  uRoadRunner,
+  ufExamples,
+  ufAbout,
   uSimulator,
   uViewerTypes,
   uScanArguments,
   uTimeCourseConfig,
-  ufPreferences;
+  ufPreferences,
+  uMakePython,
+  uCombineArchive;
 
 const
    TIMECOURSE_FUNCTION = 0;
@@ -298,7 +321,9 @@ var
   sl: TStringList;
   currentName: string;
 begin
-  raise exception.Create('Config panel not yet ready');
+  TDialogService.ShowMessage('Configuration panel is not yet implemented');
+  exit;
+
   if frmIntegratorOptions = nil then
     begin
       frmIntegratorOptions := TfrmIntegratorOptions.Create(nil);
@@ -339,52 +364,63 @@ begin
 end;
 
 
-procedure TfrmMain.loadBuiltInModel(index: integer);
+function TfrmMain.loadBuiltInModel(index: integer) : TModelErrorState;
 var
   model: TBuiltInModel;
-  sbmlStr: AnsiString;
+  errMsg : string;
+  modelErrorState : TModelErrorState;
 begin
   model := builtInModels[index];
 
-  sbmlStr := controller.modelInputManager.getSBMLFromAntimony (model.modelStr);
-  controller.loadSBMLModel(sbmlStr, true);
+  modelErrorState := controller.modelInputManager.getSBMLFromAntimony (model.modelStr);
+  if modelErrorState.ok then
+     begin
+     controller.loadSBMLModel(modelErrorState.sbmlStr, true);
 
-  loadModelIntoMemo(model.modelStr);
+     loadModelIntoMemo(model.modelStr);
 
-  controller.ViewerSetProperty('UserScale_Xmin', model.Xmin);
-  controller.ViewerSetProperty('UserScale_Xmax', model.Xmax);
-  controller.ViewerSetProperty('UserScale_Ymin', model.Ymin);
-  controller.ViewerSetProperty('UserScale_Ymax', model.Ymax);
+     controller.ViewerSetProperty('UserScale_Xmin', model.Xmin);
+     controller.ViewerSetProperty('UserScale_Xmax', model.Xmax);
+     controller.ViewerSetProperty('UserScale_Ymin', model.Ymin);
+     controller.ViewerSetProperty('UserScale_Ymax', model.Ymax);
 
-  edtTimeEnd.Text := model.timeEnd;
-  edtNumberOfPoints.Text := inttostr(model.numberOfPoints);
-  controller.setTimeEnd(strtofloat (model.timeEnd));
-  controller.setNumberOfPoints(model.numberOfPoints);
+     edtTimeEnd.Text := model.timeEnd;
+     edtNumberOfPoints.Text := inttostr(model.numberOfPoints);
+     controller.setTimeEnd(strtofloat (model.timeEnd));
+     controller.setNumberOfPoints(model.numberOfPoints);
+     end;
+  result := modelErrorState;
 end;
 
 
-procedure TfrmMain.loadBuiltInModel(name: string);
+function TfrmMain.loadBuiltInModel(name: string) : TModelErrorState;
 var
   model: TBuiltInModel;
   sbmlStr: AnsiString;
+  modelErrorState : TModelErrorState;
 begin
   OnModelChange;
   model := builtInModels.getBuiltInModel(name);
 
-  sbmlStr := controller.modelInputManager.getSBMLFromAntimony (model.modelStr);
-  controller.loadSBMLModel(sbmlStr, true);
+  modelErrorState := controller.modelInputManager.getSBMLFromAntimony (model.modelStr);
+  if modelErrorState.ok then
+     begin
+     controller.loadSBMLModel(sbmlStr, true);
 
-  loadModelIntoMemo(model.modelStr);
+     loadModelIntoMemo(model.modelStr);
 
-  controller.ViewerSetProperty('UserScale_Xmin', model.Xmin);
-  controller.ViewerSetProperty('UserScale_Xmax', model.Xmax);
-  controller.ViewerSetProperty('UserScale_Ymin', model.Ymin);
-  controller.ViewerSetProperty('UserScale_Ymax', model.Ymax);
+     controller.ViewerSetProperty('UserScale_Xmin', model.Xmin);
+     controller.ViewerSetProperty('UserScale_Xmax', model.Xmax);
+     controller.ViewerSetProperty('UserScale_Ymin', model.Ymin);
+     controller.ViewerSetProperty('UserScale_Ymax', model.Ymax);
 
-  edtTimeEnd.Text := model.timeEnd;
-  edtNumberOfPoints.Text := inttostr(model.numberOfPoints);
-  controller.setTimeEnd(strtofloat (model.timeEnd));
-  controller.setNumberOfPoints(model.numberOfPoints);
+     edtTimeEnd.Text := model.timeEnd;
+     edtNumberOfPoints.Text := inttostr(model.numberOfPoints);
+     controller.setTimeEnd(strtofloat (model.timeEnd));
+     controller.setNumberOfPoints(model.numberOfPoints);
+     end;
+  result := modelErrorState;
+
 end;
 
 
@@ -484,7 +520,7 @@ begin
   frmAbout.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
   frmAbout.lblRoadRunner.Text := 'Using libroadRunner version: ' + str;
   frmAbout.lbllibSBML.Text := 'Using libSBML vesion: ' + controller.simulator.roadrunner.getlibSBMLVersion();
-  frmAbout.lbSkia.Text := 'Using skia: ' + Skia.SkVersion + ', Milestone: ' + inttostr(TSkVersion.LibraryMajor);
+  frmAbout.lbSkia.Text := 'Using skia: ' + Skia.SkVersion + ', Milestone: ' + SkVersion;
 
   frmAbout.lblWho.Text := 'Developed at the Sauro Lab, University of Washington, Seattle';
   frmAbout.lbVersion.Text := 'Iridium version: ' + VERSION;
@@ -533,6 +569,7 @@ var
   sbmlStr: string;
   path : string;
 begin
+// ###
   sbmlStr := controller.modelInputManager.importSBML (path);
   if sbmlStr = '' then
      exit;
@@ -544,6 +581,9 @@ begin
 
   currentAntimonyFileName := ChangeFileExt(path, '.ant');
   frmMain.Caption := 'Iridium: ' + currentAntimonyFileName;
+
+  if loadModelFromMemo.ok then
+     populateXYSelectors;  // required to update viewerpackage in controller
 end;
 
 
@@ -570,8 +610,8 @@ end;
 procedure TfrmMain.OnPickExample(index: integer);
 begin
   loadBuiltInModel(index);
-  loadModelFromMemo;
-  populateXYSelectors;  // required to update viewerpackage in controller
+  if loadModelFromMemo.ok then
+     populateXYSelectors;  // required to update viewerpackage in controller
 end;
 
 
@@ -604,7 +644,8 @@ end;
 
 procedure TfrmMain.loadTemplateModel;
 begin
-  moModel.Lines.LoadFromFile(launchPath + '\\template.txt');
+  if FileExists (launchPath + '\\template.txt') then
+     moModel.Lines.LoadFromFile(launchPath + '\\template.txt');
 end;
 
 
@@ -740,78 +781,53 @@ end;
 
 procedure TfrmMain.openGraphPanel;
 begin
-  frameSplitPanel.toggleUpper;
 end;
 
 
 procedure TfrmMain.closeGraphPanel;
 begin
-  //pnlPlotBase.visible := false;
-  //Splitter1.visible := false;
 end;
 
 
 procedure TfrmMain.openTabularPanel;
 begin
-  //Splitter1.visible := true;
-  //Splitter1.position.x := plotViewer.plt.position.x;
-  //pnlPlotBase.Align := TAlignLayout.Top;
-  //pnlTabularBase.visible := true;
-  //pnlTabularBase.Height := 200;
-  //pnlOutputPanel.Width := configOpts.graphPanelWidth;
-  //pnlPlotBase.Height := 300;
 end;
 
 
 procedure TfrmMain.closeTabularPanel;
 begin
-  //pnlPlotBase.height := pnlOutputPanel.Height;
-  //pnlTabularBase.height := 25;
-  //pnlTabularBase.Align := TAlignLayout.Bottom;
-  //pnlPlotBase.Align := TAlignLayout.Client;
-  //Splitter1.visible := false;
 end;
-
-procedure TfrmMain.btnOpenGraphClick(Sender: TObject);
-begin
-  configOpts.mainConfig.IsGraphPanelOpen := frameSplitPanel.toggleUpper;
-end;
-
-
-procedure TfrmMain.btnOpenTabularClick(Sender: TObject);
-begin
-  configOpts.mainConfig.IsTabularPanelOpen := frameSplitPanel.toggleLower;
-
-  //if configOpts.IsTabularPanelOpen then
-  //   closeTabularPanel
-  //else
-  //   openTabularPanel;
-  //configOpts.IsTabularPanelOpen := not configOpts.IsTabularPanelOpen;
-end;
-
 
 procedure TfrmMain.btnRealTimeToolClick(Sender: TObject);
 var
   list: TStringList;
   sbmlStr : string;
+  modelErrorState : TModelErrorState;
 begin
-  if frmScrollChart = nil then
-    frmScrollChart := TfrmScrollChart.Create(nil, controller);
-
-  frmScrollChart.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
-
-  list := controller.simulator.roadrunner.getFloatingSpeciesIds();
   try
-    sbmlStr := controller.modelInputManager.getSBMLFromAntimony(moModel.Lines.Text);
-    controller.loadSBMLModel(sbmlStr, true);
+    if frmScrollChart = nil then
+      frmScrollChart := TfrmScrollChart.Create(nil, controller);
 
-    collectModelSymbols;
-    ViewerModelHasChanged;
+    frmScrollChart.StyleBook := cboStyleList.ListItems[cboStyleList.ItemIndex].Data as TStyleBook;
 
-    frmScrollChart.Show;
+    list := controller.simulator.roadrunner.getFloatingSpeciesIds();
+    try
+      modelErrorState := controller.modelInputManager.getSBMLFromAntimony(moModel.Lines.Text);
+      if modelErrorState.ok then
+         begin
+         controller.loadSBMLModel(modelErrorState.sbmlStr, true);
 
-  finally
-    list.Free;
+         collectModelSymbols;
+         ViewerModelHasChanged;
+
+         frmScrollChart.Show;
+         end;
+    finally
+      list.Free;
+    end;
+  except
+    on e: Exception do
+       TDialogService.ShowMessage(e.message);
   end;
 end;
 
@@ -823,20 +839,47 @@ end;
 
 
 procedure TfrmMain.edtNumberOfPointsChange(Sender: TObject);
+var value : integer;
 begin
-  controller.setNumberOfPoints(strtoint (edtNumberOfPoints.text));
+  if TryStrToInt (edtNumberOfPoints.Text, value) then
+     begin
+     if value <= 0 then
+        showmessage ('The number of points must be a positive non-zero integer, try again')
+     else
+        begin
+        if value < 500000 then
+           controller.setNumberOfPoints(strtoint (edtNumberOfPoints.text))
+        else
+           showmessage ('Generating more than half a million points migth cause problems, try a smaller number');
+        end;
+     end
+  else
+     showmessage ('The number of points must be an integer, try again');
 end;
 
 
 procedure TfrmMain.edtTimeEndChange(Sender: TObject);
+var value : double;
 begin
-  controller.setTimeEnd(strtofloat (edtTimeEnd.Text));
+  if TryStrToFloat (edtTimeEnd.Text, value) then
+     begin
+     if value < controller.getTimeStart then
+        showmessage ('The time end cannnot be smaller than the time start, try again')
+     else
+        controller.setTimeEnd(value);
+     end
+  else
+     showmessage ('The simulation time end must be a floating point number, try again');
 end;
 
 
 procedure TfrmMain.edtTimeStartChange(Sender: TObject);
+var value : double;
 begin
-  controller.setTimeStart(strtofloat (edtTimeStart.Text));
+  if TryStrToFloat (edtTimeStart.Text, value) then
+     controller.setTimeStart(value)
+  else
+     showmessage ('The simulation time start must be a floating point number, try again');
 end;
 
 
@@ -898,42 +941,78 @@ begin
 end;
 
 
-procedure TfrmMain.loadModelFromMemo;
-var sbmlStr: string;
-    r : TRoadRunner;
+function TfrmMain.loadModelFromMemo : TModelErrorState;
+var r : TRoadRunner;
     structureIsTheSame : boolean;
+    modelErrorState : TModelErrorState;
 begin
   if controller.outOfDate then
      begin
-     sbmlStr := controller.modelInputManager.getSBMLFromAntimony(moModel.Lines.Text);
-     r := TRoadRunner.Create;
-     r.setComputeAndAssignConservationLaws(true);
      try
-       r.loadSBMLFromString(sbmlStr);
-       structureIsTheSame := compareModels (controller.simulator.roadrunner, r);
+       modelErrorState := controller.modelInputManager.getSBMLFromAntimony(moModel.Lines.Text);
+       if modelErrorState.ok then
+          begin
+          r := TRoadRunner.Create;
+          try
+            r.setComputeAndAssignConservationLaws(true);
 
-       controller.loadSBMLModel(sbmlStr, true);
+            r.loadSBMLFromString(modelErrorState.sbmlStr);
+            structureIsTheSame := compareModels (controller.simulator.roadrunner, r);
 
-       collectModelSymbols;
-       ViewerModelHasChanged;
-       controller.outOfDate := false;
+            controller.loadSBMLModel(modelErrorState.sbmlStr, true);
 
-       if not structureIsTheSame then
-          populateXYSelectors;  // required to update viewerpackage in controller
-     finally
-       r.Free;
+            collectModelSymbols;
+            ViewerModelHasChanged;
+            controller.outOfDate := false;
+
+            if not structureIsTheSame then
+               populateXYSelectors;  // required to update viewerpackage in controller
+          finally
+           r.Free;
+          end;
+          end
+       else
+          exit (modelErrorState);
+     except
+       on e: exception do
+          begin
+          showmessage (e.Message);
+          modelErrorState.ok := False;
+          modelErrorState.errMsg := '';
+          exit (modelErrorState);
+          end;
      end;
      end;
+  modelErrorState.ok := True;
+  result := modelErrorState;
 end;
 
 
 procedure TfrmMain.btnSimulateClick(Sender: TObject);
+var modelErrorState : TModelErrorState;
 begin
-  loadModelFromMemo;
+  try
+    modelErrorState := loadModelFromMemo();
+    if modelErrorState.ok then
+       begin
+       modelErrorState := controller.runTimeCourseSimulation;
+       if not modelErrorState.ok then
+          begin
+          showmessage (modelErrorState.errMsg);
+          exit;
+          end;
 
-  controller.runTimeCourseSimulation;
-  if chkAlwaysReset.IsChecked then
-     controller.simulator.roadrunner.reset();
+       if chkAlwaysReset.IsChecked then
+          controller.simulator.roadrunner.reset();
+       end
+    else
+       begin
+       if modelErrorState.errMsg <> '' then
+          showmessage (modelErrorState.errMsg);
+       end;
+  finally
+    btnSimulate.SetFocus;
+  end;
 end;
 
 
@@ -964,15 +1043,20 @@ end;
 
 
 procedure TfrmMain.btnStructAnalysisClick(Sender: TObject);
+var modelErrorState : TModelErrorState;
 begin
-  loadModelFromMemo;
+  modelErrorState := loadModelFromMemo;
+  if modelErrorState.ok then
+     begin
+     if not Assigned(frmStructuralAnalysis) then
+       frmStructuralAnalysis := TfrmStructuralAnalysis.Create(frmMain);
 
-  if not Assigned(frmStructuralAnalysis) then
-    frmStructuralAnalysis := TfrmStructuralAnalysis.Create(frmMain);
-
-  frmStructuralAnalysis.controller := controller;
-  frmStructuralAnalysis.Show;
-  frmStructuralAnalysis.BringToFront;
+     frmStructuralAnalysis.controller := controller;
+     frmStructuralAnalysis.Show;
+     frmStructuralAnalysis.BringToFront;
+     end
+  else
+     showmessage (modelErrorState.errMsg);
 end;
 
 
@@ -1197,21 +1281,32 @@ procedure TfrmMain.btnSetTimeCourseSelectionClick(Sender: TObject);
 var
   i: integer;
   selectionList: TStringList;
+  modelErrorState : TModelErrorState;
 begin
-  loadModelFromMemo;
+  if controller.outOfDate then
+     begin
+     TDialogService.showmessage ('Run the simulation before selecting outputs');
+     exit;
+     end;
 
-  // Include time as a choice
-  bringUpSelectionForm(TStringList(lstYAxis.Items), true);
+  modelErrorState := loadModelFromMemo;
+  if modelErrorState.ok then
+     begin
+     // Include time as a choice
+     bringUpSelectionForm(TStringList(lstYAxis.Items), true);
 
-  selectionList := TStringList.Create;
-  try
-    for i := 0 to frmSelectionChoices.lstSelectedItems.Count - 1 do
-        selectionList.Add(frmSelectionChoices.lstSelectedItems.Items[i]);
-    controller.setSelectionList (selectionList);
-  finally
-    selectionList.Free;
-  end;
-  populateXYSelectors;
+     selectionList := TStringList.Create;
+     try
+       for i := 0 to frmSelectionChoices.lstSelectedItems.Count - 1 do
+           selectionList.Add(frmSelectionChoices.lstSelectedItems.Items[i]);
+       controller.setSelectionList (selectionList);
+     finally
+       selectionList.Free;
+     end;
+     populateXYSelectors;
+     end
+  else
+    ShowMessage(modelErrorState.errMsg);
 end;
 
 
@@ -1239,7 +1334,7 @@ begin
   configOpts.mainConfig.formHeight := frmMain.Height;
   configOpts.mainConfig.formTop := frmMain.Top;
   configOpts.mainConfig.outputPanelWidth := pnlOutputPanel.Width;
-  configOpts.mainConfig.upperOutputPanelHeight := 100*frameSplitPanel.currentUpperHeight/frameSplitPanel.Height;
+  // HMS configOpts.mainConfig.upperOutputPanelHeightPercentage := 100*frameSplitPanel.currentUpperHeight/frameSplitPanel.Height;
 
 
   configOpts.textFormViewer.dataMemoBackgroundColor := tableViewer.config.dataMemoBackgroundColor;
@@ -1274,13 +1369,13 @@ var
 begin
   Application.OnException := AppException;
   try
-  fireEvent := false;
+    fireEvent := false;
 
-  cboStyleList.Items.Add(MineShaft_Win_Style.StyleName);
-  cboStyleList.ListItems[0].Data := MineShaft_Win_Style;
+    cboStyleList.Items.Add(MineShaft_Win_Style.StyleName);
+    cboStyleList.ListItems[0].Data := MineShaft_Win_Style;
 
-  cboStyleList.Items.Add(Calypso_Win_Style.StyleName);
-  cboStyleList.ListItems[1].Data := Calypso_Win_Style;
+    cboStyleList.Items.Add(Calypso_Win_Style.StyleName);
+    cboStyleList.ListItems[1].Data := Calypso_Win_Style;
 
 
 //  AssignFile (f, '~/Library/Logs/iridium.log');
@@ -1298,6 +1393,13 @@ begin
   controller.viewerPackage.showLegend := True;
 
   configOk := readConfigurationFile (CONFIG_FILE_NAME);
+
+  // These two line are used to prevent the isutation where a user
+  // starts up the apps but htnimmeidately closes the app. Without these
+  // lines the program will ask if they want to change the model even
+  // though it hasn't changed.
+  loadModelFromMemo();  // This is to ensure that at startup there is a model preloaded
+  controller.outOfDate := False;
 
   except
     on e: Exception do
@@ -1342,8 +1444,10 @@ begin
 
   try
   plotViewer := TPlotFrameViewer.Create(self);
-  plotViewer.Parent := frameSplitPanel.pnlUpper;
+  plotViewer.IsViewerVisible := False;
+  plotViewer.Parent := TabControl_Viewers.Tabs[0];
   plotViewer.Align := TAlignLayout.Client;
+  TabControl_Viewers.Tabs[0].TagObject := plotViewer;
   plotViewer.Setup(controller);
 
   except
@@ -1353,8 +1457,11 @@ begin
 
   try
   tableViewer := TTableFrameViewer.Create (self);
-  tableViewer.Parent := frameSplitPanel.pnlLower;
+  tableViewer.IsViewerVisible := False;
+  tableViewer.Parent := TabControl_Viewers.Tabs[1];
   tableViewer.Align := TAlignLayout.Client;
+  // We need to know the viewer that is in the tab control
+  TabControl_Viewers.Tabs[1].TagObject := tableViewer;
   tableViewer.Setup(controller, configOpts.textFormViewer);
 
   except
@@ -1373,8 +1480,8 @@ begin
   end;
 
   try
-  tableViewer.config.dataMemoBackgroundColor := configOpts.textFormViewer.dataMemoBackgroundColor;
-  tableViewer.config.dataMemoFontColor := configOpts.textFormViewer.dataMemoFontColor;
+  // HMS tableViewer.config.dataMemoBackgroundColor := configOpts.textFormViewer.dataMemoBackgroundColor;
+  //HMS tableViewer.config.dataMemoFontColor := configOpts.textFormViewer.dataMemoFontColor;
 
   except
     on e: Exception do
@@ -1460,15 +1567,40 @@ end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
-  frameSplitPanel.setPercentageUpperHeight (configOpts.mainConfig.upperOutputPanelHeight);
+  // HMS frameSplitPanel.setPercentageUpperHeight (configOpts.mainConfig.upperOutputPanelHeightPercentage);
 
-  if configOpts.mainConfig.IsGraphPanelOpen then
-     frameSplitPanel.setUpperVisible
-  else
-     frameSplitPanel.setUpperInVisible;
+//  if configOpts.mainConfig.IsGraphPanelOpen then
+//     frameSplitPanel.setUpperVisible
+//  else
+//     frameSplitPanel.setUpperInVisible;
 
-  if not configOpts.mainConfig.IsTabularPanelOpen then
-     frameSplitPanel.setLowerInVisible;
+  //if  configOpts.mainConfig.IsTabularPanelOpen then
+  //   frameSplitPanel.setLowerVisible
+  //else
+  //   frameSplitPanel.setLowerInVisible;
+end;
+
+procedure TfrmMain.MenuItem1Click(Sender: TObject);
+var fileName : string;
+begin
+  if SaveCombineArchive.Execute then
+     begin
+     createCombineArchive (SaveCombineArchive.FileName, controller);
+     end;
+
+end;
+
+procedure TfrmMain.mnuExportPythonClick(Sender: TObject);
+var astr : string;
+    clp: IFMXClipboardService;
+begin
+  astr := makePythonScript (controller);
+  if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService) then
+     begin
+     clp := IFMXClipboardService(TPlatformServices.Current.GetPlatformService(IFMXClipboardService));
+     clp.SetClipboard(astr);
+     end;
+  TDialogService.ShowMessage('Python copied to clipboard');
 end;
 
 
@@ -1489,6 +1621,18 @@ begin
     controller.modelInputManager.setMemoFontSize(trunc (spFontSize.Value));
 end;
 
+procedure TfrmMain.TabControl_ViewersChange(Sender: TObject);
+begin
+  if TabControl_Viewers.ActiveTab.Name = 'TabItem_TextView' then
+     (TabControl_Viewers.ActiveTab.TagObject as TFrameViewerBase).IsViewerVisible := True
+  else
+     (TabControl_Viewers.ActiveTab.TagObject as TFrameViewerBase).IsViewerVisible := False;
+
+  //if TabControl_Viewers.ActiveTab.Name = 'TabItem_PlotView' then
+  //   (TabControl_Viewers.ActiveTab.TagObject as TFrameViewerBase).IsViewerVisible := True
+  //else
+  //   (TabControl_Viewers.ActiveTab.TagObject as TFrameViewerBase).IsViewerVisible := False;
+end;
 
 end.
 

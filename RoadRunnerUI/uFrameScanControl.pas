@@ -89,7 +89,7 @@ type
 
     procedure scanTimeCourse;
     procedure scanSteadyState;
-    procedure loadModelFromMemo;
+    function  loadModelFromMemo : boolean;
     procedure collectModelSymbols;
     procedure bringUpSelectionForm(selectionList: TStringList; includeTime: boolean);
   public
@@ -110,21 +110,31 @@ uses StrUtils,
      uScanArguments,
      ufSelectionChoices,
      ufFloatingPlotViewer,
+     uModelInputManager,
      ufTextViewer;
 
 
-procedure TFrameScanControl.loadModelFromMemo;
+function TFrameScanControl.loadModelFromMemo : boolean;
 var
-  sbmlStr: string;
+  sbmlStr, errMsg: string;
+  modelErrorState : TModelErrorState;
 begin
-  sbmlStr := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
-  controller.loadSBMLModel(sbmlStr, true);
+  modelErrorState := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
+  if not modelErrorState.ok then
+     begin
+     showmessage (modelErrorState.errMsg);
+     exit (False);
+     end;
+
+  controller.loadSBMLModel(modelErrorState.sbmlStr, true);
 
   collectModelSymbols;
   //if Assigned(frmFloatingPlotViewer) then
   //   frmFloatingPlotViewer.initializeFloatingGraph;
   controller.outOfDate := false;
+  result := True;
 end;
+
 
 
 procedure TFrameScanControl.lstScanSelectionListChange(Sender: TObject);

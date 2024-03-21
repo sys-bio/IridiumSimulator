@@ -2,8 +2,8 @@ object frmSelectionChoices: TfrmSelectionChoices
   Left = 0
   Top = 0
   Caption = '  Selection Choices'
-  ClientHeight = 490
-  ClientWidth = 574
+  ClientHeight = 492
+  ClientWidth = 576
   Position = MainFormCenter
   StyleBook = StyleBook1
   FormFactor.Width = 320
@@ -12,14 +12,14 @@ object frmSelectionChoices: TfrmSelectionChoices
   DesignerMasterStyle = 0
   object Layout1: TLayout
     Align = Bottom
-    Position.Y = 425.000000000000000000
-    Size.Width = 574.000000000000000000
+    Position.Y = 427.000000000000000000
+    Size.Width = 576.000000000000000000
     Size.Height = 65.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
     object btnClose: TButton
       Anchors = [akTop, akRight]
-      Position.X = 476.000000000000000000
+      Position.X = 482.000000000000000000
       Position.Y = 22.000000000000000000
       Size.Width = 80.000000000000000000
       Size.Height = 24.000000000000000000
@@ -30,26 +30,26 @@ object frmSelectionChoices: TfrmSelectionChoices
     end
     object Rectangle1: TRectangle
       Align = Top
-      Size.Width = 574.000000000000000000
+      Size.Width = 576.000000000000000000
       Size.Height = 1.000000000000000000
       Size.PlatformDefault = False
     end
   end
   object Layout2: TLayout
     Align = Client
-    Size.Width = 574.000000000000000000
-    Size.Height = 425.000000000000000000
+    Size.Width = 576.000000000000000000
+    Size.Height = 427.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
     object Layout3: TLayout
       Align = Client
-      Size.Width = 278.000000000000000000
-      Size.Height = 425.000000000000000000
+      Size.Width = 280.000000000000000000
+      Size.Height = 427.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 4
       object Layout5: TLayout
         Align = Top
-        Size.Width = 278.000000000000000000
+        Size.Width = 280.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
@@ -77,26 +77,26 @@ object frmSelectionChoices: TfrmSelectionChoices
       end
       object treeSelection: TTreeView
         Align = Client
-        Size.Width = 278.000000000000000000
-        Size.Height = 375.000000000000000000
+        Size.Width = 280.000000000000000000
+        Size.Height = 377.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         OnClick = treeSelectionClick
-        Viewport.Width = 274.000000000000000000
-        Viewport.Height = 371.000000000000000000
+        Viewport.Width = 276.000000000000000000
+        Viewport.Height = 373.000000000000000000
       end
     end
     object Layout6: TLayout
       Align = MostRight
-      Position.X = 383.000000000000000000
+      Position.X = 385.000000000000000000
       Size.Width = 191.000000000000000000
-      Size.Height = 425.000000000000000000
+      Size.Height = 427.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 5
       object lstSelectedItems: TListBox
         Align = Client
         Size.Width = 191.000000000000000000
-        Size.Height = 375.000000000000000000
+        Size.Height = 377.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         OnClick = lstSelectedItemsDblClick
@@ -106,7 +106,7 @@ object frmSelectionChoices: TfrmSelectionChoices
         DefaultItemStyles.GroupHeaderStyle = ''
         DefaultItemStyles.GroupFooterStyle = ''
         Viewport.Width = 187.000000000000000000
-        Viewport.Height = 371.000000000000000000
+        Viewport.Height = 373.000000000000000000
       end
       object Layout7: TLayout
         Align = Top
@@ -139,9 +139,9 @@ object frmSelectionChoices: TfrmSelectionChoices
     end
     object Layout4: TLayout
       Align = Right
-      Position.X = 278.000000000000000000
+      Position.X = 280.000000000000000000
       Size.Width = 105.000000000000000000
-      Size.Height = 425.000000000000000000
+      Size.Height = 427.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 3
       object btnAdd: TButton

@@ -7,7 +7,7 @@ uses
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Layouts, FMX.TabControl, FMX.Edit, FMX.Memo, uSubgraph, FMX.Colors,
   FMX.ListBox, FMX.Controls.Presentation, FMX.EditBox, FMX.SpinBox,
-  uProperties;
+  uRRProperties;
 
 type
   TfrmGraphPackageDlg = class(TForm)

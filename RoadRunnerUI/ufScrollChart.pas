@@ -62,6 +62,7 @@ type
     Label8: TLabel;
     nbPercentageChange: TNumberBox;
     cboParameterNames: TComboBox;
+    nbMaxYValue: TNumberBox;
     procedure FormDestroy(Sender: TObject);
     procedure TimerTimer(Sender: TObject);
     procedure btnPauseRunClick(Sender: TObject);
@@ -77,10 +78,12 @@ type
     procedure nbXAxisMaxExit(Sender: TObject);
     procedure btnUpPulseClick(Sender: TObject);
     procedure btnDownPulseClick(Sender: TObject);
+    procedure nbMaxYValueExit(Sender: TObject);
     procedure nbPercentageChangeChange(Sender: TObject);
   private
     { Private declarations }
     floatingSpeciesIds : TStringList;
+    fluxIds : TStringList;
     parameterIds : TStringList;
     numberOfPoints : integer;
     xMax : double;
@@ -150,6 +153,12 @@ begin
   floatingSpeciesIds.Free;
   floatingSpeciesIds := controller.simulator.roadrunner.getFloatingSpeciesIds();
   lstSelectionBox.Assign(floatingSpeciesIds);
+
+  fluxIds.Free;
+  fluxIds := controller.simulator.roadrunner.getReactionIds();
+  for var i : integer := 0 to fluxIds.Count - 1 do
+      lstSelectionBox.Items.Add(fluxIds[i]);
+
   for var i := 0 to lstSelectionBox.Count - 1 do
     (lstSelectionBox.listitems[i] as Tlistboxitem).IsChecked := true;
 
@@ -256,6 +265,12 @@ begin
         series.color := colorList.NextColor;
         series.lineWidth := 2;
         end;
+    for i := 0 to fluxIds.Count - 1 do
+        begin
+        series := chart.addSerieByName (fluxIds[i]);
+        series.color := colorList.NextColor;
+        series.lineWidth := 2;
+        end;
   finally
     colorList.Free;
   end;
@@ -289,7 +304,7 @@ begin
   chart.yAxis.color := claBlack;
 
   chart.setXAxisRange(0, xMax);
-  chart.setYAxisRange(0, 4);
+  chart.setYAxisRange(0, nbMaxYValue.Value);
 
   chkShowLegend.IsChecked := True;
   PercentageChange := 50;
@@ -300,6 +315,7 @@ begin
   currentTime := 0;
 
   floatingSpeciesIds := controller.simulator.roadRunner.getFloatingSpeciesIds();
+  fluxIds := controller.simulator.roadrunner.getReactionIds();
   //chart.autoScale := true;
 
   OnViewerModelHasChanged := ViewerModelHasChanged;
@@ -334,6 +350,11 @@ procedure TfrmScrollChart.lstSelectionBoxChangeCheck(Sender: TObject);
 begin
   for var i := 0 to lstSelectionBox.Items.Count - 1 do
       chart.series[i].visible := (lstSelectionBox.listitems[i] as Tlistboxitem).IsChecked;
+end;
+
+procedure TfrmScrollChart.nbMaxYValueExit(Sender: TObject);
+begin
+  chart.setYAxisRange(0, nbMaxYValue.Value);
 end;
 
 
@@ -375,6 +396,9 @@ begin
       chart.globaldata.dataSource.addX(currentTime);
       for var i := 0 to floatingSpeciesIds.Count - 1 do
           chart.series[i].addY(controller.simulator.roadrunner.getValue(floatingSpeciesIds[i]));
+      for var i := 0 to fluxIds.Count - 1 do
+          chart.series[i + floatingSpeciesIds.Count].addY(controller.simulator.roadrunner.getValue(fluxIds[i]));
+
     finally
 
     end;

@@ -6,8 +6,7 @@ Uses SysUtils,
      Classes,
      FMX.Dialogs,
      FMX.Memo,
-     Json,
-     uAntimonyAPI;//, uController;
+     Json;//, uController;
 
 type
   TModelInputManagerConfig = class (TObject)
@@ -25,6 +24,12 @@ type
   end;
 
 
+  TModelErrorState = record
+    ok : boolean;
+    errMsg : string;
+    sbmlStr : string;
+  end;
+
   TModelInputManager = class (TObject)
       saveSBMLDialog : TSaveDialog;
       openSBMLDialog : TOpenDialog;
@@ -34,7 +39,7 @@ type
       modelMemo : TMemo;
       antimonyLoaded : boolean;
       currentAntimonyFileName : string;
-      function  getSBMLFromAntimony (antStr : string) : string;
+      function  getSBMLFromAntimony (antStr : string) : TModelErrorState;
       function  getAntimonyFromSBML (sbmlStr : string) : string;
 
       function loadAntimonyFromFile (fileName : string; var errMsg : string) : boolean;
@@ -50,7 +55,7 @@ type
 
 implementation
 
-Uses IOUtils, uConfiguration;
+Uses IOUtils, uConfiguration, uAntimonyAPI;
 
 class function TModelInputManagerConfig.readSection (obj : TJSONObject) : TModelInputManagerConfig;
 var mainObj : TJSONObject;
@@ -127,10 +132,12 @@ begin
   configOpts.modelInputManagerConfig.FFontSize := fontSize;
 end;
 
-function TModelInputManager.getSBMLFromAntimony (antStr : string) : string;
+
+function TModelInputManager.getSBMLFromAntimony (antStr : string) : TModelErrorState;
 begin
   result := uAntimonyAPI.getSBMLFromAntimony(antstr);
 end;
+
 
 function TModelInputManager.getAntimonyFromSBML (sbmlStr : string) : string;
 begin
@@ -168,11 +175,15 @@ end;
 
 procedure TModelInputManager.exportSBML;
 var sbmlStr : string;
+    modelErrorState : TModelErrorState;
 begin
   if SaveSBMLDialog.Execute then
     begin
-      sbmlStr := uAntimonyAPI.getSBMLFromAntimony(modelMemo.Text);
-      TFile.WriteAllText(SaveSBMLDialog.FileName, sbmlStr);
+      modelErrorState := uAntimonyAPI.getSBMLFromAntimony(modelMemo.Text);
+      if modelErrorState.ok then
+         TFile.WriteAllText(SaveSBMLDialog.FileName, modelErrorState.sbmlStr)
+      else
+         showmessage (modelErrorState.errMsg);
     end;
 end;
 

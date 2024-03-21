@@ -14,9 +14,9 @@ Uses SysUtils, System.Classes,
   System.Types,
   System.Math.Vectors,
   skia,
-  skia.FMX,
-  skia.FMX.Graphics,
-  uProperties;
+  FMX.skia,
+  FMX.Skia.Canvas,
+  uRRProperties;
 
 type
   TSubgraph = class(TPersistent)
@@ -3214,7 +3214,7 @@ begin
   longestText := 0; // Stored longest piece of text in the legend
 
   // Find the longest piece of text
-  txt := TTextType.Create('arial');
+  txt := TTextType.Create(legend.textProperties.fontName);
   for i := 0 to properties.dataBlocks.Count - 1 do
     begin
       for j := 0 to properties.dataBlocks[i].columns.Count - 1 do
@@ -3266,10 +3266,10 @@ begin
   r := rectf(aBox.left - hspace, topLeftcorner - hspace / 2, aBox.left + widthOfLegend + hspace,
     topLeftcorner + legendHeight + hspace);
 
+  FillLegendRectangle(ACanvas, r, Legend.InteriorColor);
+
   if Legend.frameVisible then
     drawLegendFrame(ACanvas, r, Legend);
-
-  FillLegendRectangle(ACanvas, r, Legend.InteriorColor);
 
   // Now draw the legend contents
   legendHeight := 0;

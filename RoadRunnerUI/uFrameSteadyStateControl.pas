@@ -13,7 +13,9 @@ uses
   FMX.Grid, FMX.ScrollBox,
   FMX.Objects,
   uRRList,
-  uController, FMX.Layouts;
+  uController,
+  uModelInputManager,
+  FMX.Layouts;
 
 type
   TFrameSteadyStateControl = class(TFrame)
@@ -52,7 +54,7 @@ type
     globalParameters : TStringList;
 
     procedure updateSteadyStateDisplay;
-    procedure loadModelFromMemo;
+    function  loadModelFromMemo : TModelErrorState;
     procedure collectModelSymbols;
     procedure selectSteadyStateSolver;
 
@@ -103,15 +105,20 @@ begin
 end;
 
 
-procedure TFrameSteadyStateControl.loadModelFromMemo;
+function TFrameSteadyStateControl.loadModelFromMemo : TModelErrorState;
 var
   sbmlStr: string;
+  modelErrorState : TModelErrorState;
 begin
-  sbmlStr := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
-  controller.loadSBMLModel(sbmlStr, true);
+  modelErrorState := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
+  if modelErrorState.ok then
+     begin
+     controller.loadSBMLModel(sbmlStr, true);
 
-  collectModelSymbols;
-  controller.outOfDate := false;
+     collectModelSymbols;
+     controller.outOfDate := false;
+     end;
+  result := modelErrorState;
 end;
 
 

@@ -2,7 +2,7 @@ unit uRRCommon;
 
 interface
 
-Uses FMX.Graphics, System.UIConsts, System.UITypes, System.Types, skia, skia.FMX;
+Uses FMX.Graphics, System.UIConsts, System.UITypes, System.Types, skia, FMX.skia;
 
 const
   GRID_DASH_SIZE = 0.1; { in mm }

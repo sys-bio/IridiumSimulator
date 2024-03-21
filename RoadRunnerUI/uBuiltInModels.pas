@@ -27,6 +27,7 @@ var
 implementation
 
 function getMassActionThreeStepPathway : string; forward;
+function getMassActionReversibleThreeStepPathway : string; forward;
 function getassActionTwentyStepPathway : string; forward;
 function getFeedbackModel : string; forward;
 function getThreeStepPathway : string; forward;
@@ -76,6 +77,17 @@ begin
   model.Xmax := 0.0;
   model.Xmax := 20.0;
   model.timeEnd := '20.0';
+  builtInModels.Add(model);
+
+  model := TBuiltInModel.Create;
+  model.id := 'SimpleThreeStepReversiblePathway';
+  model.displayName := 'Three Step Reversible Mass-action Pathway';
+  model.modelStr := getMassActionReversibleThreeStepPathway;
+  model.Ymin := 0;
+  model.Ymax := 8;
+  model.Xmax := 0.0;
+  model.Xmax := 40.0;
+  model.timeEnd := '40.0';
   builtInModels.Add(model);
 
   model := TBuiltInModel.Create;
@@ -264,6 +276,31 @@ begin
   'k1 = 0.1' + sLineBreak +
   'k2 = 0.4' + sLineBreak +
   'k3 = 0.9';
+end;
+
+
+function getMassActionReversibleThreeStepPathway : string;
+begin
+  result := sLineBreak +
+
+  '// A simple three step reversible pathway using' + sLineBreak +
+  '// mass-action kinetics.' + sLineBreak + sLineBreak +
+
+  '// Reactions:' + sLineBreak +
+
+  'J0: $Xo -> S1; e1*(k1*Xo - k2*S1)' + sLineBreak +
+  'J1: S1 -> S2;  e2*(k3*S1 - k4*S2)' + sLineBreak +
+  'J2: S2 -> ;    e3*k5*S2' + sLineBreak + sLineBreak +
+
+  '// Species initializations:' + sLineBreak +
+  'Xo = 5;' + sLineBreak +
+  'S1 = 0;' + sLineBreak +
+  'S2 = 0' + sLineBreak + sLineBreak +
+
+  '// Variable initializations:' + sLineBreak +
+  'e1 = 1; k1 = 0.1; k2 = 0.04' + sLineBreak +
+  'e2 = 1; k3 = 0.14; k4 = 0.09' + sLineBreak +
+  'e3 = 1; k5 = 0.16; Xo = 10';
 end;
 
 

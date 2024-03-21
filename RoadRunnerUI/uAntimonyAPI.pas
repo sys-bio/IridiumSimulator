@@ -2,7 +2,7 @@ unit uAntimonyAPI;
 
 interface
 
-Uses Classes, SysUtils;
+Uses Classes, SysUtils, uModelInputManager;
 
 var
    DLLLoaded : boolean;
@@ -11,7 +11,7 @@ var
 
    function ant_loadSBMLString (str : AnsiString) : integer;
    function ant_loadAntimonyString (str : AnsiString) : integer;
-   function getSBMLFromAntimony (str : AnsiString) : AnsiString;
+   function getSBMLFromAntimony (str : AnsiString) : TModelErrorState;
    function getAntimonyFromSBML (str : AnsiString) : AnsiString;
 
 
@@ -84,7 +84,7 @@ begin
 end;
 
 
-function getSBMLFromAntimony (str : AnsiString) : AnsiString;
+function getSBMLFromAntimony (str : AnsiString) : TModelErrorState;
 var p : PAnsiChar;
     err : integer;
 begin
@@ -92,10 +92,13 @@ begin
   if err = -1 then
      begin
      p := libGetLastError;
-     raise Exception.Create (AnsiString (p));
+     result.errMsg := AnsiString (p);
+     result.ok := false;
+     exit;
      end;
   p := libGetSBMLString (libGetMainModuleName());
-  result := AnsiString (p);
+  result.sbmlStr := AnsiString (p);
+  result.ok := True;
 end;
 
 

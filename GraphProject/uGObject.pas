@@ -67,6 +67,7 @@ type
          interiorColor : TAlphaColor;
          lineThicknessInCms : double;
          gapWidthInCms : double;
+         textProperties : TTextType;
          constructor Create (objType : TSubGraphSelectedObjectType);
    end;
 
@@ -171,15 +172,15 @@ begin
   logicalBox.left := 0.65;
   logicalBox.top  := 0.05;
   visible := true;
-  outlineColor := claBlue;
-  interiorColor := claBeige;
+  outlineColor := claBlack;
+  interiorColor := claGhostwhite;//  claBeige;
   visible := true;
   lineThicknessInCms := 0.02;
 
-  //graphObjects[legendId].textProperties.fontsize := 12;
-  //graphObjects[legendId].textProperties.style := [];
-  //graphObjects[legendId].textProperties.fontcolor := claBlack;
-  //graphObjects[legendId].textProperties.value := 'Legend';
+  textProperties := TTextType.Create('Arial');
+  textProperties.typeface := TSkTypeface.MakeFromName('Arial', TSkFontStyle.Normal);
+  textProperties.font := TSkFont.Create(textProperties.typeface, 12, 1);
+
   frameGapInCms := 0.15;
   lineLengthInCms := 1;
 end;

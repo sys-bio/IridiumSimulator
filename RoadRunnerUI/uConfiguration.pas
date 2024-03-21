@@ -76,7 +76,7 @@ begin
        configOpts.FMainConfig := TfrmMainConfig.CreateDefault;
        configOpts.FModelInputManagerConfig := TModelInputManagerConfig.CreateDefault;
        configOpts.FTextFormViewer := TTableFormViewerConfig.CreateDefault;
-       configOpts.FTimeCourseConfig := TTimeCourseConfig.createDefault;
+       configOpts.FTimeCourseConfig := TTimeCourseConfig.CreateDefault;
        configOpts.UIStyle := 'MineShaft_Win_Style';
        end;
   except
@@ -87,6 +87,7 @@ begin
        end;
   end;
 end;
+
 
 procedure TConfigOptions.saveToJson (const fileName : string);
 var saveJsonFileName : string;
