@@ -9,21 +9,17 @@
    </tr>
 </table> 
 
-   
-### Coming soon for summer 2022 - Beta has Arrived
- 
- 
-Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
+An interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
 
 Supports: Time course simulation, steady-state, real-time interactive simulation, parameter scans, slider control, MCA style sensitivity analysis (https://en.wikipedia.org/wiki/Metabolic_control_analysis), and network structural analysis. It uses the [antimony](https://github.com/sys-bio/antimony) format to describe models and is fully [SBML](https://github.com/sbmlteam/libsbml) compliant.
 
-**Update** (Jul 6th, 2022): (v0.952) I now have a Mac OS version including the M1 version working (thanks to Lucian Smith for generating the M1 roadrunner binaries for me). I hope to release the source code and binaries for windows and Mac during the week of July 11th.
-
-**Update** (Aug, 11th, 2022): Update to v0.954, Windows 64, Apple Intel and Apple M1. Fixed issue with certain models where it wasn't possible to reset back to initial conditions. Added new simualtion option to automatically reset back to iniital conitions or not. Fixed some annoying bugs in the graph plotting (Thanks to Wesely Luk), added a new dark style, accessible from the top-right drop-down list. Enhanced saving of settings, moved the text output panel tp be part of the plotting panel. Moved the basic plotting option to the plotting panel. Source code updated. 
+**Update** (March, 21st, 2024): Update to v0.98. Changed the graph and text UI on the right of the screen. Easier to use and more logical I think.
 
 **Update** (April, 28th, 2023): Update to v0.955, Windows 64, Apple Intel and Apple M1. Fixed an issue when ut you try to run the code on a machine that had bnever seen the app before it would crash. This is how fixed in this version. Source code updated. 
 
-**Update** (March, 21st, 2024): Update to v0.98. Changed the graph and text UI on the right of the screen. Easier to use and more logical I think.
+**Update** (Aug, 11th, 2022): Update to v0.954, Windows 64, Apple Intel and Apple M1. Fixed issue with certain models where it wasn't possible to reset back to initial conditions. Added new simualtion option to automatically reset back to iniital conitions or not. Fixed some annoying bugs in the graph plotting (Thanks to Wesely Luk), added a new dark style, accessible from the top-right drop-down list. Enhanced saving of settings, moved the text output panel tp be part of the plotting panel. Moved the basic plotting option to the plotting panel. Source code updated. 
+
+**Update** (Jul 6th, 2022): (v0.952) I now have a Mac OS version including the M1 version working (thanks to Lucian Smith for generating the M1 roadrunner binaries for me). I hope to release the source code and binaries for windows and Mac during the week of July 11th.
 
 I would like to thank Guillermo Canedo Ramirez who did an excellent job in making the real-time scrolling chart.
 
