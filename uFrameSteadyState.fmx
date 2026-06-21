@@ -1,0 +1,158 @@
+object FrameSteadyState: TFrameSteadyState
+  Size.Width = 320.000000000000000000
+  Size.Height = 350.000000000000000000
+  Size.PlatformDefault = False
+  object Layout1: TLayout
+    Align = Top
+    Size.Width = 320.000000000000000000
+    Size.Height = 40.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object Label1: TLabel
+      StyledSettings = [Family, Style]
+      Position.X = 16.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 200.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 16.000000000000000000
+      TextSettings.FontColor = claCornsilk
+      Text = 'Steady State'
+      TabOrder = 0
+    end
+  end
+  object LayoutToolbar: TLayout
+    Align = Top
+    Position.Y = 40.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 217.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object btnCompute: TButton
+      Position.X = 16.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 110.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Compute'
+      OnClick = btnComputeClick
+    end
+    object cbScaling: TComboBox
+      Items.Strings = (
+        'Scaled'
+        'Unscaled')
+      ItemIndex = 0
+      Position.X = 16.000000000000000000
+      Position.Y = 47.000000000000000000
+      Size.Width = 140.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      OnChange = cbScalingChange
+    end
+    object btnSave: TButton
+      Hint = 'Save results to csv file'
+      Position.X = 16.000000000000000000
+      Position.Y = 115.000000000000000000
+      Size.Width = 110.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'Save Results'
+      OnClick = btnSaveClick
+    end
+    object spnDecimals: TSpinBox
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      TabOrder = 3
+      Cursor = crIBeam
+      Position.X = 160.000000000000000000
+      Position.Y = 121.000000000000000000
+      Hint = 'Number of decimals to save to csv file'
+      OnChange = spnDecimalsChange
+    end
+    object Line1: TLine
+      LineType = Bottom
+      Position.X = 24.000000000000000000
+      Position.Y = 82.000000000000000000
+      Size.Width = 268.000000000000000000
+      Size.Height = 13.000000000000000000
+      Size.PlatformDefault = False
+      Stroke.Color = claCornsilk
+    end
+    object Label2: TLabel
+      Position.X = 160.000000000000000000
+      Position.Y = 100.000000000000000000
+      Size.Width = 73.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Decimals:'
+      TabOrder = 4
+    end
+    object btnCopytoClipboard: TButton
+      Position.X = 16.000000000000000000
+      Position.Y = 160.000000000000000000
+      Size.Width = 110.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 6
+      Text = 'Copy to Clipboard'
+      OnClick = btnCopytoClipboardClick
+    end
+    object btnTimeCourseSliders: TSpeedButton
+      Hint = 'Bring up sliders'
+      Position.X = 227.000000000000000000
+      Position.Y = 3.000000000000000000
+      Size.Width = 42.000000000000000000
+      Size.Height = 37.000000000000000000
+      Size.PlatformDefault = False
+      ParentShowHint = False
+      ShowHint = True
+      StyleLookup = 'btnSlidersStyle1'
+      OnClick = btnSlidersClick
+      object Image1: TImage
+        MultiResBitmap.Height = 50
+        MultiResBitmap.Width = 50
+        MultiResBitmap.TransparentColor = 16711935
+        MultiResBitmap = <
+          item
+            Width = 50
+            Height = 50
+            PNG = {
+              89504E470D0A1A0A0000000D49484452000000320000003208060000001E3F88
+              B10000000473424954080808087C08648800000288494441546881ED99BF6FD4
+              3014C7BF2F8E942A043155EA7CA8DDD95395818D8105DD085BC7DB98AA5627D0
+              8981ED46C61B2B16063696AAF757B46245889B2A455623EC98A109BA1F4E2E8E
+              73C9E9C867742CE73DF9D9EF7DFD808EED82DAF8E9F5501D49C6CF24C9301B63
+              8A4D99F26F91E0F2784837A66B36EEC8F5501D252CFECC9477A2FB2E29BE72A4
+              776AEA4CA38EAC7322A38A335A47BE7EFAF13288F7C7558C2D82293A7055E097
+              992B28E292D4AFE5F1C89B0D5EBD7BFA6D79DCD52D12C4FB632F79DCAB686F2D
+              B82AF05D85551B628C01AC38E23465581EE105517841D621DEBA2375A10D2DA6
+              D814D06CEB0698BE57CA647E6ADB0A7A47A43F520E6EAB1A974742F18B753716
+              D283CE54F031C7B64BDDF8565EBF82F8E4F9F9A3B7266B377A468E8774E348EF
+              54109F08447CF9BBA0880BE21326FD91E9DAAD94284877070EFA0B8315CB938E
+              8E0D62754616E2BCE5F8AEE448A62780E475560426B8BBFFE3383F99625326FD
+              51D34E69136211592E7095BF900B1C3CD9F312F400F404E3006094076CD1EE88
+              F66A4C29939D8B32B3353921ACDD11C9F899ABFC37BA6F4C796BFF9586DB876A
+              961623183FD4EDB636B3CF6BE975D455869725CFB6DD2EE34D302DC33785D691
+              C89B0D5249B9401D9ADB96C89B0D74E346B15DBE0C8F3893C1B3267389D119C9
+              CA7049F155DE1C8188DFEDFDEE379D10AD32BB2419B2840E5C04BEA08803CE97
+              36B23AEAD023FF9267A7253A7693D6DA0A70D097C40F25C9D0B6A5806D6B2BD8
+              DC7C5BF9AE555B5BA1488FD850F6A5119933CAFBBEBA484D7AC486325A666EEE
+              0980D5F0DB941EB1C554CFFC9F7A64A7DA0A82F1DA43CC56CF644F4DBAF93B73
+              FDB6D256C8D333020F6D85ADEFB3672C9728980B9B4E0A74747414F2170ED671
+              AC4841831D0000000049454E44AE426082}
+            FileName = 
+              'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+              '\RoadRunnerUI\Slider _50px_Color.png'
+          end>
+        HitTest = False
+        Position.X = 9.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 25.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+      end
+    end
+  end
+end

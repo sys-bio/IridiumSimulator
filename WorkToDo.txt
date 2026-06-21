@@ -1,0 +1,14 @@
+
+1. Plot histogram of steady state values
+
+2. Add sliders to steady state 
+
+3. Add time dependent paramter scan
+
+4. If you're going to do a steady state scan use continuation
+
+5. Add a plot of end point versus input
+
+6. Add about box
+
+7. 

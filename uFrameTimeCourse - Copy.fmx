@@ -1,0 +1,344 @@
+object FrameTimeCourse: TFrameTimeCourse
+  Size.Width = 302.000000000000000000
+  Size.Height = 808.000000000000000000
+  Size.PlatformDefault = False
+  object Rectangle1: TRectangle
+    Align = Client
+    Fill.Kind = None
+    HitTest = False
+    Size.Width = 302.000000000000000000
+    Size.Height = 808.000000000000000000
+    Size.PlatformDefault = False
+    Stroke.Color = claGray
+    object Layout5: TLayout
+      Align = Top
+      Size.Width = 302.000000000000000000
+      Size.Height = 50.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 6
+      object Label7: TLabel
+        StyledSettings = [Family, Style]
+        Position.X = 17.000000000000000000
+        Position.Y = 17.000000000000000000
+        Size.Width = 209.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Size = 16.000000000000000000
+        TextSettings.FontColor = claCornsilk
+        Text = 'Time Course Simulation'
+        TabOrder = 0
+      end
+    end
+    object GroupBox1: TGroupBox
+      Align = Top
+      StyledSettings = [Family, Size, Style, Other]
+      Margins.Left = 5.000000000000000000
+      Margins.Top = 5.000000000000000000
+      Margins.Right = 5.000000000000000000
+      Margins.Bottom = 5.000000000000000000
+      Position.X = 5.000000000000000000
+      Position.Y = 55.000000000000000000
+      Size.Width = 292.000000000000000000
+      Size.Height = 130.000000000000000000
+      Size.PlatformDefault = False
+      Text = ' Simulation Parameters '
+      TextSettings.FontColor = claCornsilk
+      TabOrder = 5
+      object Label1: TLabel
+        Position.X = 53.000000000000000000
+        Position.Y = 36.000000000000000000
+        Size.Width = 63.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Time Start:'
+        TabOrder = 3
+      end
+      object edtTimeStart: TNumberBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 5
+        Cursor = crIBeam
+        Position.X = 124.000000000000000000
+        Position.Y = 31.000000000000000000
+      end
+      object Label2: TLabel
+        Position.X = 53.000000000000000000
+        Position.Y = 61.000000000000000000
+        Size.Width = 62.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Time End:'
+        TabOrder = 1
+      end
+      object edtTimeEnd: TNumberBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 4
+        Cursor = crIBeam
+        DecimalDigits = 1
+        Max = 100000000.000000000000000000
+        Value = 20.000000000000000000
+        ValueType = Float
+        KeyboardType = NumbersAndPunctuation
+        Position.X = 124.000000000000000000
+        Position.Y = 61.000000000000000000
+      end
+      object edtNumberofPoints: TNumberBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        TabOrder = 2
+        Cursor = crIBeam
+        Max = 50000.000000000000000000
+        Value = 200.000000000000000000
+        Position.X = 124.000000000000000000
+        Position.Y = 91.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object Label3: TLabel
+        Position.X = 13.000000000000000000
+        Position.Y = 92.000000000000000000
+        Size.Width = 105.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Number of Points:'
+        TabOrder = 0
+      end
+    end
+    object Layout1: TLayout
+      Align = Top
+      Position.Y = 190.000000000000000000
+      Size.Width = 302.000000000000000000
+      Size.Height = 83.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 8
+      object btnSimulate: TButton
+        StyledSettings = [Family, Style]
+        Position.X = 17.000000000000000000
+        Position.Y = 15.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Simulate'
+        TextSettings.Font.Size = 14.000000000000000000
+        TextSettings.FontColor = claCoral
+        OnClick = btnSimulateClick
+        OnMouseLeave = btnSimulateMouseLeave
+      end
+      object btnReset: TButton
+        Position.X = 107.000000000000000000
+        Position.Y = 15.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Reset'
+        OnClick = btnResetClick
+      end
+      object btnTimeCourseSliders: TSpeedButton
+        Hint = 'Bring up sliders'
+        Position.X = 230.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 42.000000000000000000
+        Size.Height = 37.000000000000000000
+        Size.PlatformDefault = False
+        ParentShowHint = False
+        ShowHint = True
+        StyleLookup = 'btnSlidersStyle1'
+        OnClick = btnTimeCourseSlidersClick
+        object Image1: TImage
+          MultiResBitmap.Height = 50
+          MultiResBitmap.Width = 50
+          MultiResBitmap.TransparentColor = 16711935
+          MultiResBitmap = <
+            item
+              Width = 50
+              Height = 50
+              PNG = {
+                89504E470D0A1A0A0000000D49484452000000320000003208060000001E3F88
+                B10000000473424954080808087C08648800000288494441546881ED99BF6FD4
+                3014C7BF2F8E942A043155EA7CA8DDD95395818D8105DD085BC7DB98AA5627D0
+                8981ED46C61B2B16063696AAF757B46245889B2A455623EC98A109BA1F4E2E8E
+                73C9E9C867742CE73DF9D9EF7DFD808EED82DAF8E9F5501D49C6CF24C9301B63
+                8A4D99F26F91E0F2784837A66B36EEC8F5501D252CFECC9477A2FB2E29BE72A4
+                776AEA4CA38EAC7322A38A335A47BE7EFAF13288F7C7558C2D82293A7055E097
+                992B28E292D4AFE5F1C89B0D5EBD7BFA6D79DCD52D12C4FB632F79DCAB686F2D
+                B82AF05D85551B628C01AC38E23465581EE105517841D621DEBA2375A10D2DA6
+                D814D06CEB0698BE57CA647E6ADB0A7A47A43F520E6EAB1A974742F18B753716
+                D283CE54F031C7B64BDDF8565EBF82F8E4F9F9A3B7266B377A468E8774E348EF
+                54109F08447CF9BBA0880BE21326FD91E9DAAD94284877070EFA0B8315CB938E
+                8E0D62754616E2BCE5F8AEE448A62780E475560426B8BBFFE3383F99625326FD
+                51D34E69136211592E7095BF900B1C3CD9F312F400F404E3006094076CD1EE88
+                F66A4C29939D8B32B3353921ACDD11C9F899ABFC37BA6F4C796BFF9586DB876A
+                961623183FD4EDB636B3CF6BE975D455869725CFB6DD2EE34D302DC33785D691
+                C89B0D5249B9401D9ADB96C89B0D74E346B15DBE0C8F3893C1B3267389D119C9
+                CA7049F155DE1C8188DFEDFDEE379D10AD32BB2419B2840E5C04BEA08803CE97
+                36B23AEAD023FF9267A7253A7693D6DA0A70D097C40F25C9D0B6A5806D6B2BD8
+                DC7C5BF9AE555B5BA1488FD850F6A5119933CAFBBEBA484D7AC486325A666EEE
+                0980D5F0DB941EB1C554CFFC9F7A64A7DA0A82F1DA43CC56CF644F4DBAF93B73
+                FDB6D256C8D333020F6D85ADEFB3672C9728980B9B4E0A74747414F2170ED671
+                AC4841831D0000000049454E44AE426082}
+              FileName = 
+                'D:\Documents\Embarcadero\Studio\Projects\FMX\OriginalRoadunnerUI' +
+                '\RoadRunnerUI\Slider _50px_Color.png'
+            end>
+          HitTest = False
+          Position.X = 9.000000000000000000
+          Position.Y = 8.000000000000000000
+          Size.Width = 25.000000000000000000
+          Size.Height = 24.000000000000000000
+          Size.PlatformDefault = False
+        end
+      end
+      object chkAlwaysReset: TCheckBox
+        Hint = 'Always reset the initial conditions after a simulation'
+        IsChecked = True
+        Position.X = 20.000000000000000000
+        Position.Y = 49.000000000000000000
+        Size.Width = 252.000000000000000000
+        Size.Height = 21.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Always reset initial conditions '
+        ParentShowHint = False
+        ShowHint = True
+      end
+    end
+    object Layout11: TLayout
+      Align = Top
+      Position.Y = 273.000000000000000000
+      Size.Width = 302.000000000000000000
+      Size.Height = 68.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 9
+      object GroupBox2: TGroupBox
+        StyledSettings = [Family, Size, Style, Other]
+        Position.X = 8.000000000000000000
+        Size.Width = 281.000000000000000000
+        Size.Height = 61.000000000000000000
+        Size.PlatformDefault = False
+        Text = ' X Axis '
+        TextSettings.FontColor = claCornsilk
+        TabOrder = 3
+        object cbXAxis: TComboBox
+          Position.X = 12.000000000000000000
+          Position.Y = 24.000000000000000000
+          Size.Width = 256.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+        end
+      end
+    end
+    object GroupBox3: TGroupBox
+      Align = Client
+      StyledSettings = [Family, Size, Style, Other]
+      Margins.Left = 5.000000000000000000
+      Margins.Right = 5.000000000000000000
+      Margins.Bottom = 12.000000000000000000
+      Size.Width = 292.000000000000000000
+      Size.Height = 418.000000000000000000
+      Size.PlatformDefault = False
+      Text = ' Y Axis '
+      TextSettings.FontColor = claCornsilk
+      TabOrder = 7
+      object lblFilter: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 28.000000000000000000
+        Size.Width = 40.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.FontColor = claCornsilk
+        Text = 'Show:'
+        TabOrder = 0
+      end
+      object cmbFilter: TComboBox
+        Items.Strings = (
+          'All'
+          'Floating Species'
+          'Boundary Species'
+          'Reactions'
+          'Rates of Change'
+          'Global Parameters'
+          'Compartments')
+        ItemIndex = 0
+        Position.X = 56.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 216.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        OnChange = cmbFilterChange
+      end
+      object btnSetTimeCourseSelection: TButton
+        Hint = 'Check every visible item (filtered scope).'
+        Position.X = 29.000000000000000000
+        Position.Y = 60.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Select All'
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnSetTimeCourseSelectionClick
+      end
+      object btnUnSelectAll: TButton
+        Hint = 'Uncheck every visible item (filtered scope).'
+        Position.X = 172.000000000000000000
+        Position.Y = 60.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Unselect All'
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnUnSelectAllClick
+      end
+      object Rectangle4: TRectangle
+        Anchors = [akLeft, akTop, akBottom]
+        Fill.Kind = None
+        Position.X = 8.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 255.000000000000000000
+        Size.Height = 310.000000000000000000
+        Size.PlatformDefault = False
+        Stroke.Color = xFF80CEB5
+      end
+      object lstYAxis: TListBox
+        Anchors = [akLeft, akTop, akBottom]
+        Position.X = 8.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 264.000000000000000000
+        Size.Height = 322.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        DisableFocusEffect = True
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        ShowCheckboxes = True
+        Viewport.Width = 260.000000000000000000
+        Viewport.Height = 318.000000000000000000
+      end
+    end
+    object Layout2: TLayout
+      Align = Bottom
+      Position.Y = 771.000000000000000000
+      Size.Width = 302.000000000000000000
+      Size.Height = 37.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 10
+      object btnCopySliderValuesToModel: TButton
+        Position.X = 107.000000000000000000
+        Position.Y = 2.000000000000000000
+        Size.Width = 169.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Copy Slider Values to Model'
+        OnClick = btnCopySliderValuesToModelClick
+      end
+    end
+  end
+end

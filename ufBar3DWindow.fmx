@@ -1,0 +1,48 @@
+object frmBar3D: TfrmBar3D
+  Left = 0
+  Top = 0
+  Caption = '3D Bar View'
+  ClientHeight = 600
+  ClientWidth = 800
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnClose = FormClose
+  DesignerMasterStyle = 0
+  object LayoutToolbar: TLayout
+    Align = Top
+    Size.Width = 800.000000000000000000
+    Size.Height = 36.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object lblTitle: TLabel
+      Align = Client
+      StyledSettings = [Family]
+      Margins.Left = 8.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Size.Width = 580.000000000000000000
+      Size.Height = 36.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 14.000000000000000000
+      TextSettings.FontColor = claCornsilk
+      Text = '3D Bar View'
+    end
+    object lblScaling: TLabel
+      Align = Right
+      Margins.Right = 12.000000000000000000
+      Position.X = 596.000000000000000000
+      Size.Width = 192.000000000000000000
+      Size.Height = 36.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.HorzAlign = Trailing
+    end
+  end
+  object LayoutHost: TLayout
+    Align = Client
+    Size.Width = 800.000000000000000000
+    Size.Height = 564.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+  end
+end

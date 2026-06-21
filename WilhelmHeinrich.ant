@@ -1,0 +1,27 @@
+
+// Smallest chemical reaction system with Hopf bifurcation
+// Wilhelm T, Heinrich R.
+// Smallest chemical reaction system with Hopf bifurcation.
+// Journal of mathematical chemistry. 1995 Feb;17(1):1-4.
+
+// Species:
+species X, Y, Z
+
+// Reactions
+J0: X + $A -> 2 X; k1*X*A
+J1: X + Y -> $A + Y; k2*X*Y
+J2: X -> Z; k3*X;
+J3: Z -> Y; k4*Z;
+J4: Y ->; k5*Y;
+
+// Species initializations
+X = 2.5
+Y = 2.5
+Z = 2.5
+A = 1
+
+k1 = 3.2
+k2 = 1
+k3 = 1
+k4 = 1
+k5 = 1

@@ -1,0 +1,77 @@
+object FrameSliderContainer: TFrameSliderContainer
+  Size.Width = 446.000000000000000000
+  Size.Height = 602.000000000000000000
+  Size.PlatformDefault = False
+  object VertScrollBox1: TVertScrollBox
+    Align = Client
+    Size.Width = 258.000000000000000000
+    Size.Height = 602.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Viewport.Width = 258.000000000000000000
+    Viewport.Height = 602.000000000000000000
+  end
+  object LayoutLeft: TLayout
+    Align = Left
+    Size.Width = 180.000000000000000000
+    Size.Height = 602.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object EditFilter: TEdit
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      Align = Top
+      TabOrder = 0
+      Size.Width = 180.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object ListBoxParams: TListBox
+      Align = Client
+      Size.Width = 180.000000000000000000
+      Size.Height = 500.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      DisableFocusEffect = True
+      DefaultItemStyles.ItemStyle = ''
+      DefaultItemStyles.GroupHeaderStyle = ''
+      DefaultItemStyles.GroupFooterStyle = ''
+      Viewport.Width = 176.000000000000000000
+      Viewport.Height = 496.000000000000000000
+    end
+    object Layout1: TLayout
+      Align = Bottom
+      Position.Y = 528.000000000000000000
+      Size.Width = 180.000000000000000000
+      Size.Height = 74.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      object btnAddAllParameters: TButton
+        Position.X = 32.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 121.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Add All Parameters'
+      end
+      object btnResetParameters: TButton
+        Position.X = 32.000000000000000000
+        Position.Y = 40.000000000000000000
+        Size.Width = 121.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Reset'
+      end
+    end
+  end
+  object Splitter1: TSplitter
+    Align = Left
+    Cursor = crHSplit
+    MinSize = 20.000000000000000000
+    Position.X = 180.000000000000000000
+    Size.Width = 8.000000000000000000
+    Size.Height = 602.000000000000000000
+    Size.PlatformDefault = False
+  end
+end

@@ -1,0 +1,18 @@
+
+// Example of solving ODEs using
+// using the Lorenz attractor
+// See https://en.wikipedia.org/wiki/Lorenz_system 
+
+-> u; -sigma*(u - v);
+-> v; rho*u - v - u*w;
+-> w; -beta*w + u*v;
+
+// Variable initializations
+u = 0
+v = 1
+w = 1.05
+
+// Parameter initializations
+sigma = 10
+rho = 28
+beta = 2.667
