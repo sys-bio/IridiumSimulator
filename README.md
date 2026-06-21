@@ -22,4 +22,4 @@ I would like to thank Guillermo Canedo Ramirez who did an excellent job in makin
 
 Here are some screenshots to show you what it looks like:
 
-<img src="/Images/iridium1.png" width="60%"></img> <img src="/Images/iridium3.png" width="60%"></img> <img src="/Images/iridium2.png" width="40%"></img> 
+<img src="/Images/iridium1.png" width="80%"></img> <img src="/Images/iridium3.png" width="60%"></img> <img src="/Images/iridium2.png" width="40%"></img> 
