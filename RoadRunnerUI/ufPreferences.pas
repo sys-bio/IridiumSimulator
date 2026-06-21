@@ -20,10 +20,13 @@ type
     Label1: TLabel;
     sbFontSize: TSpinBox;
     btnSavePreferences: TButton;
+    tbPanels: TTabItem;
+    chkMCAFrame: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
     procedure sbFontSizeChange(Sender: TObject);
     procedure btnSavePreferencesClick(Sender: TObject);
+    procedure chkMCAFrameChange(Sender: TObject);
   private
     { Private declarations }
     fireEvent : boolean;
@@ -51,11 +54,17 @@ begin
   saveConfigurationFile (CONFIG_FILE_NAME);
 end;
 
+procedure TfrmPreferences.chkMCAFrameChange(Sender: TObject);
+begin
+  if fireEvent then
+     uConfiguration.configOpts.miscFrameConfig.MCAFrameFloating := chkMCAFrame.IsChecked;
+end;
+
 procedure TfrmPreferences.FormCreate(Sender: TObject);
 begin
-  //stylebook := stylebook1;
   fireEvent := False;
   sbFontSize.Value := uConfiguration.configOpts.modelInputManagerConfig.fontSize;
+  chkMCAFrame.IsChecked := uConfiguration.configOpts.miscFrameConfig.MCAFrameFloating;
   fireEvent := True;
 end;
 

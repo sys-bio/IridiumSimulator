@@ -10,19 +10,14 @@ const
   DEFAULT_SYMBOL_GRADIENT_FILL_START_COLOR = claAntiqueWhite;
   DEFAULT_SYMBOL_GRADIENT_FILL_END_COLOR   = claRed;
   // Units are in cms
-  DEFAULT_SYMBOL_DIAMETER = 0.2;
-  DEFAULT_SYMBOL_THICKNESS = 0.03;
+  DEFAULT_SYMBOL_DIAMETER = 0.1;
+  DEFAULT_SYMBOL_THICKNESS = 0.02;
   DEFAULT_ERRORBAR_THICKNESS = 0.03;
   DEFAULT_ERRORBAR_CAPWIDTH = 0.1;
   DEFAULT_ERRORBAR_COLOR = claBlack;
 
 
 type
-  //TSymbolType = (EmptyCircle, SolidCircle, EmptySquare, SolidSquare,
-  //                 Cross, DiagonalCross, CrossedCircle, DiagCrossedCircle,
-  //                 EmptyDiamond, SolidDiamond, EmptyTriangle, SolidTriangle,
-  //                 SolidDownTriangle, Dots, Empty);
-
   TErrorBarStyle = (ErrBarUp, ErrBarDown, ErrBarBoth, ErrBarNone);
   TErrorBarCapStyle = (WithCap, NoCap);
 

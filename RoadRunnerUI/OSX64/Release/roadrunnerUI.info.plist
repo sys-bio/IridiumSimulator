@@ -18,6 +18,10 @@
 	<string>APPL</string>
 	<key>CFBundleExecutable</key>
 	<string>roadrunnerUI</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>The reason for accessing the Bluetooth interface</string>
 
 	<key>CFBundleIconFile</key>
 	<string>roadrunnerUI.icns</string>
@@ -26,7 +30,7 @@
 		<string>MacOSX</string>
 	</array>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.9</string>
+	<string>10.14</string>
 
 </dict>
 </plist>

@@ -71,9 +71,9 @@ object FrameScanControl: TFrameScanControl
       Viewport.Height = 95.000000000000000000
     end
     object btnStopScan: TButton
-      Position.X = 216.000000000000000000
+      Position.X = 181.000000000000000000
       Position.Y = 145.000000000000000000
-      Size.Width = 65.000000000000000000
+      Size.Width = 100.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 2
@@ -83,7 +83,7 @@ object FrameScanControl: TFrameScanControl
     object btnStartScan: TButton
       Position.X = 16.000000000000000000
       Position.Y = 145.000000000000000000
-      Size.Width = 101.000000000000000000
+      Size.Width = 100.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 1
@@ -102,7 +102,7 @@ object FrameScanControl: TFrameScanControl
       TabOrder = 6
       object rdoScanTimeCourse: TRadioButton
         IsChecked = True
-        Position.X = 8.000000000000000000
+        Position.X = 5.000000000000000000
         Position.Y = 24.000000000000000000
         Size.Width = 105.000000000000000000
         Size.Height = 19.000000000000000000
@@ -112,12 +112,12 @@ object FrameScanControl: TFrameScanControl
         OnChange = rdoScanTimeCourseChange
       end
       object rdoScanSteadyState: TRadioButton
-        Position.X = 126.000000000000000000
+        Position.X = 182.000000000000000000
         Position.Y = 24.000000000000000000
-        Size.Width = 103.000000000000000000
+        Size.Width = 93.000000000000000000
         Size.Height = 19.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 2
+        TabOrder = 3
         Text = 'Steady State'
         OnChange = rdoScanSteadyStateChange
       end
@@ -147,7 +147,7 @@ object FrameScanControl: TFrameScanControl
       end
       object edtTimeStartScan: TEdit
         Touch.InteractiveGestures = [LongTap, DoubleTap]
-        TabOrder = 5
+        TabOrder = 6
         Text = '0.0'
         Position.X = 8.000000000000000000
         Position.Y = 75.000000000000000000
@@ -157,7 +157,7 @@ object FrameScanControl: TFrameScanControl
       end
       object edtTimeEndScan: TEdit
         Touch.InteractiveGestures = [LongTap, DoubleTap]
-        TabOrder = 8
+        TabOrder = 9
         Text = '10.0'
         Position.X = 88.000000000000000000
         Position.Y = 75.000000000000000000
@@ -167,13 +167,23 @@ object FrameScanControl: TFrameScanControl
       end
       object edtTimeCouseNumOfPointsScan: TEdit
         Touch.InteractiveGestures = [LongTap, DoubleTap]
-        TabOrder = 7
+        TabOrder = 8
         Text = '100'
         Position.X = 169.000000000000000000
         Position.Y = 75.000000000000000000
         Size.Width = 73.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
+      end
+      object rdoScanEndPoint: TRadioButton
+        Position.X = 102.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 75.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'End Point'
+        OnChange = rdoScanEndPointChange
       end
     end
     object GroupBox6: TGroupBox
@@ -360,6 +370,16 @@ object FrameScanControl: TFrameScanControl
       TabOrder = 12
       Text = 'Generate Python'
       OnClick = btnScanPythonClick
+    end
+    object btnClearScanVariables: TButton
+      Position.X = 175.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 106.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 13
+      Text = 'Clear Variables'
+      OnClick = btnClearScanVariablesClick
     end
   end
 end

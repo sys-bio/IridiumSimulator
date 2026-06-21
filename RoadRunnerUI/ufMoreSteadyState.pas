@@ -6,9 +6,19 @@ uses
   System.SysUtils, System.Types, System.UITypes,
   System.Classes, System.Variants, System.UIConsts,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, System.Rtti,
-  FMX.Grid.Style, FMX.ScrollBox, FMX.Grid, FMX.TabControl, uRRTypes,
-  FMX.Objects, FMX.ListBox, uController;
+  FMX.Controls.Presentation,
+  FMX.StdCtrls,
+  FMX.Layouts,
+  System.Rtti,
+  FMX.Grid.Style,
+  FMX.ScrollBox,
+  FMX.Grid,
+  FMX.TabControl,
+  uRRTypes,
+  uRR2DSimpleMatrix,
+  FMX.Objects,
+  FMX.ListBox,
+  uController;
 
 type
   TfrmMoreSteadyState = class(TForm)
@@ -437,6 +447,7 @@ begin
   Column.DefaultDrawCell(Canvas, Bounds, Row, Value, State);
   bgBrush.Free;
 end;
+
 
 procedure TfrmMoreSteadyState.GridJacobianDrawColumnCell(Sender: TObject;
   const Canvas: TCanvas; const Column: TColumn; const Bounds: TRectF;

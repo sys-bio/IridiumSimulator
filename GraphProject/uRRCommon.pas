@@ -18,10 +18,27 @@ const
   DEFAULT_SYMBOL_FILL_COLOR = claBlue; // TColor ($000080);
   DEFAULT_SYMBOL_GRADIENT_FILL_START_COLOR = claAntiqueWhite;
   DEFAULT_LINE_COLOR = TColor($000080); // TColor ($0066FF);  // Orange
-  DEFAULT_FRAME_THICKNESS = 0.03;
+
+  DEFAULT_FRAME_THICKNESS = 0.0;//0.8;   // makes hairline border width
+  DEFAULT_FRAME_VISIBLE = True;
   DEFAULT_FRAME_GAP = 0.12;
+  DEFAULT_LEGEND_FONT_SIZE = 12;
+  DEFAULT_LEGEND_OUTLINE_COLOR = claBlack;
   DEFAULT_MinDistanceBetweenLegendItemsCms = 0.2;
+
   DEFAULT_MAGNIFICATION = 1.0;//1.728;
+
+  DEFAULT_XAXIS_LABELS_FONT_SIZE = 16;  // The numbers on the axis
+  DEFAULT_YAXIS_LABELS_FONT_SIZE = 16;  // The numbers on the axis
+  DEFAULT_MAIN_TITLE_FONT_SIZE = 18;
+
+  DEFAULT_XAXIS_TITLE_FONT_SIZE = 14;
+  DEFAULT_YAXIS_TITLE_FONT_SIZE = 14;
+
+  DEFAULT_XAXIS_COLOR = claBlack;
+  DEFAULT_YAXIS_COLOR = claBlack;
+  DEFAULT_MAIN_TITLE_COLOR = claBlack;
+  DEFAULT_LEGEND_TEXT_COLOR = claBlack;
 
 var
   CmsInOneInch    : double = 2.54;
@@ -75,7 +92,7 @@ type
        canvas : TCanvas;
     end;
 
-  var graphingAreaId, {mainTitleId,} {xaxisTitleId,} {yaxisTitleId,} xaxisId, yaxisId{, legendId} : integer;
+  //var {graphingAreaId,} {mainTitleId,} {xaxisTitleId,} {yaxisTitleId,} {xaxisId,} {yaxisId}{, legendId} : integer;
 
 
 procedure getCurrentPixelsPerInch(canvas: TCanvas; Printing: boolean);

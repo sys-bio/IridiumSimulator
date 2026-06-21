@@ -53,16 +53,16 @@ type
       columns : TDataColumns;
 
       procedure   Clear;
-      function    find (name : string) : integer;
-      function    getColumn (name : string) : TDataColumn;
-      function    createDataColumn (name : string; npoints : integer)  : integer;
+      function    Find (name : string) : integer;
+      function    GetColumn (name : string) : TDataColumn;
+      function    CreateDataColumn (name : string; npoints : integer)  : integer;
       constructor Create; overload;
       constructor Create (name : string; nRows, numYColumns : integer); overload;
       destructor  Destroy; override;
   end;
 
   TDataBlocks = class (TObjectList<TDataBlock>)
-      function  find (name : string) : integer;
+      function  Find (name : string) : integer;
       procedure Clear;
       constructor Create;
       destructor Destroy; override;
@@ -153,7 +153,7 @@ end;
 constructor TDataBlock.Create;
 begin
   inherited;
-  columns := TDataColumns.Create;
+  Columns := TDataColumns.Create;
 end;
 
 
@@ -173,12 +173,13 @@ end;
 
 destructor TDataBlock.Destroy;
 begin
-  columns.Clear;
+  Columns.Clear;
+  Columns.Free;
   inherited;
 end;
 
 
-function TDataBlock.createDataColumn (name : string; npoints : integer) : integer;
+function TDataBlock.CreateDataColumn (name : string; npoints : integer) : integer;
 var dataColumn : TDataColumn;
 begin
   dataColumn := TDataColumn.Create (name, npoints);
@@ -186,21 +187,23 @@ begin
 end;
 
 
-function TDataBlock.getColumn (name : string) : TDataColumn;
+function TDataBlock.GetColumn (name : string) : TDataColumn;
 var index : integer;
 begin
-  result := columns.find(name, index);
+  result := Columns.Find(name, index);
   if result = nil then
      raise Exception.Create('Specified column: ' + name + ' does not exist');
 end;
 
 procedure TDataBlock.Clear;
 begin
-  columns.Free;
+  if Assigned (Columns) then
+     Columns.Free;
+  Columns := nil;
 end;
 
 
-function TDataBlock.find (name : string) : integer;
+function TDataBlock.Find (name : string) : integer;
 var i : integer;
 begin
   result := -1;
@@ -227,7 +230,8 @@ procedure TDataBlocks.Clear;
 var i : integer;
 begin
   for i := 0 to Count - 1 do
-      items[i].columns.Clear;
+      items[i].Columns.Clear;
+  inherited;
 end;
 
 
@@ -237,7 +241,7 @@ begin
 end;
 
 
-function TDataBlocks.find (name : string) : integer;
+function TDataBlocks.Find (name : string) : integer;
 var i : integer;
 begin
   result := -1;
@@ -249,7 +253,7 @@ begin
 end;
 
 
-function TDataColumns.find (name : string; var index: integer) : TDataColumn;
+function TDataColumns.Find (name : string; var index: integer) : TDataColumn;
 var i : integer;
 begin
   result := nil;

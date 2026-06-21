@@ -3,11 +3,28 @@ unit ufFloatingPlotViewer;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
-  uRRTypes, uRRDataSeries, uPlottingPanel, uSubgraph, FMX.ListBox, FMX.Objects,
-  FMX.StdCtrls, FMX.Controls.Presentation, uController, uColorList, uFormViewer,
-  uSimulator, uViewerTypes, Rtti;
+  System.SysUtils,
+  System.Types,
+  System.UITypes,
+  System.UIConsts,
+  System.Classes, System.Variants,
+  FMX.Types,
+  FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
+  uRRTypes,
+  uRR2DSimpleMatrix,
+  FMX.ListBox,
+  FMX.Objects,
+  FMX.StdCtrls,
+  FMX.Controls.Presentation,
+  uController,
+  uColorList,
+  uFormViewer,
+  uSimulator,
+  uViewerTypes,
+  Rtti, System.Skia,
+  SkPlotPaintBox,
+  uPlotSeries,
+  FMX.Skia;
 
 type
   TIntArray = array of integer;
@@ -17,7 +34,6 @@ type
   TfrmFloatingPlotViewer = class(TFormViewer)
     Layout1: TLayout;
     Layout2: TLayout;
-    plt: TRRGraph;
     GroupBox2: TGroupBox;
     cbXAxis: TComboBox;
     GroupBox3: TGroupBox;
@@ -25,6 +41,7 @@ type
     Rectangle4: TRectangle;
     lstYAxis: TListBox;
     btnEditGraph: TButton;
+    Plot: TSkPlotPaintBox;
     procedure FormCreate(Sender: TObject);
     procedure lstYAxisChange(Sender: TObject);
     procedure cbXAxisChange(Sender: TObject);
@@ -59,7 +76,7 @@ implementation
 
 {$R *.fmx}
 
-Uses uSymbolDetails;
+Uses uSymbolDetails, uRRCommon;
 
 procedure TfrmFloatingPlotViewer.ViewerModelHasChanged (sender : TObject);
 begin
@@ -80,7 +97,7 @@ end;
 
 procedure TfrmFloatingPlotViewer.btnEditGraphClick(Sender: TObject);
 begin
-  plt.startPropertyEditor(self, 0);
+  //plt.startPropertyEditor(self, 0, TSubGraphSelectedObjectType.coGraphingArea);
 end;
 
 
@@ -139,11 +156,8 @@ end;
 
 
 procedure TfrmFloatingPlotViewer.ViewerClear (Sender : TObject);
-var
-  dbs: TDataBlocks;
 begin
-  dbs := plt.subgraphs[0].properties.dataBlocks;
-  dbs.Clear;
+  Plot.ClearSeries;
 end;
 
 
@@ -151,7 +165,7 @@ procedure TfrmFloatingPlotViewer.ViewerSetProperty (name : string; value : TValu
 begin
   if name = 'legend' then
      begin
-     plt.getSubgraph(0).properties.legend.visible := Value.AsBoolean;
+     Plot.LegendStyle.visible := Value.AsBoolean;
      end;
 end;
 
@@ -218,53 +232,51 @@ end;
 procedure TfrmFloatingPlotViewer.plotSimulationData;
 var
   minv: double;
-  dbs: TDataBlocks;
-  db: TDataBlock;
-  i, j, ns: integer;
+  i, j, NumYColumns: integer;
   YColumnSelectionCount: integer;
   YColumnIndexes: TIntArray;
   numRows: integer;
-  sg: TSubgraph;
+  VariableName : String;
+  Series : TPlotSeries;
 begin
-  sg := plt.getSubgraph(0);
+  if simulationData = nil then
+     exit;
+
+  if not simulationData.valid then
+     exit;
 
   // A data series is a list of data blocks.
   // Each data block is a list of columns
-  dbs := sg.properties.dataBlocks;
-  dbs.Clear;
-  ns := getNumberOfSelectedColumns;
+  Plot.ClearSeries;
 
-  dbs[0].name := 'simData';
+  NumYColumns := GetNumberOfSelectedColumns;
+  YColumnIndexes := ExtractColumnIndexes;
 
-  // Create the columns in the data block
-  dbs[0].createDataColumn('Time', simulationData.r);
+  NumRows :=  simulationData.r;
+  NumYColumns := simulationData.c - 1;
 
-  YColumnIndexes := extractColumnIndexes;
-  for i := 0 to ns - 1 do
-    dbs[0].createDataColumn(viewerPackage.YColumnNames[YColumnIndexes[i]], simulationData.r);
+  masterColorList.SetPalette(viewerPackage.palette, NumYColumns+1);
+  masterColorList.restart;
+  masterColorList.nextColor;
 
-  numRows := dbs[0].columns[0].getNumRows();
-  // Copy over the x column first
-  for i := 0 to numRows - 1 do
-      dbs[0].columns[0].setDataValue(i, getElement (simulationData, i, viewerPackage.XColumnIndex));
-  dbs[0].xaxisColumn := 'Time';
+  for i := 0 to NumYColumns - 1 do
+      begin
+      VariableName := viewerPackage.YColumnNames[YColumnIndexes[i]];
+      Series := TPlotSeries.Create(VariableName, claBlue);
+      Series.LineColor := masterColorList.nextColor;
+      Series.MarkerVisible := False;
+      for j := 0 to NumRows - 1 do
+        begin
+        Series.AddXY (getElement(simulationData, j, viewerPackage.XColumnIndex), getElement(simulationData, j, YColumnIndexes[i]));
+        end;
 
-  // Copy the y columns next
-  for i := 0 to numRows - 1 do
-    begin
-    for j := 1 to dbs[0].columns.Count - 1 do
-      dbs[0].columns[j].setDataValue(i, getElement(simulationData, i, YColumnIndexes[j - 1]));
-    end;
+      Plot.AddSeries(Series);
+      end;
 
-    //masterColorList.SetPalette(selectedPalette, dbs[0].columns.Count);
-  colorList.restart;
-  for j := 0 to sg.properties.dataBlocks[0].columns.Count - 1 do
-    begin
-    dbs[0].columns[j].symbol.symType := TSymbolType.Empty;
-    dbs[0].columns[j].lineDetails.color := colorList.nextColor;
-    end;
+  Plot.XAxisTitle.Text := viewerPackage.XAxisTitle;
 
-  plt.subgraphs[0].XAxisTitle := viewerPackage.XAxisTitle;
+
+  Plot.XAxisTitle.Text := viewerPackage.XAxisTitle;
 
   //plt.subgraphs[0].properties.AutoXScaling := viewerPackage.autoXScale;
   //plt.subgraphs[0].properties.AutoYScaling := viewerPackage.autoYScale;
@@ -280,7 +292,7 @@ begin
 //  else
 //    plt.subgraphs[0].properties.AutoYScaling := false;
 
-  plt.redraw;
+  Plot.Redraw;
 end;
 
 

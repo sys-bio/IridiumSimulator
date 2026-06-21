@@ -45279,9 +45279,9 @@ object frmSplash: TfrmSplash
   object Label1: TLabel
     StyledSettings = [Family, Style]
     Position.X = 24.000000000000000000
-    Position.Y = 24.000000000000000000
+    Position.Y = 13.000000000000000000
     Size.Width = 120.000000000000000000
-    Size.Height = 25.000000000000000000
+    Size.Height = 24.000000000000000000
     Size.PlatformDefault = False
     TextSettings.Font.Size = 16.000000000000000000
     TextSettings.FontColor = claBlanchedalmond

@@ -1,4 +1,4 @@
-unit uCSVReader;
+unit uCSVReaderForPlotter;
 
 {* @file    uCSVReader.pas
    @brief   Generate purpose CSV format reader class
@@ -136,6 +136,7 @@ type
              destructor  destroy; override;
 
              function ReadCSV (filename : string) : TCSVErrorCode;
+             function GetColumnIndex (HeaderString : String) : Integer;
              property rows : integer read getRowCount;
              property cols : integer read getColCount;
              property data[r, c : integer] : TCSVNumber  read getData; default;
@@ -221,7 +222,7 @@ end;
 
 function TCSV.ReadCSV (filename : string) : TCSVErrorCode;
 begin
-  FStream := TFileStream.Create (filename, fmOpenRead);
+  FStream := TFileStream.Create (filename, fmOpenRead or fmShareDenyNone);
   try
     initialise_scanner;
     FRowCount := 0; FColCount := 0; FCollectData := false;
@@ -233,13 +234,23 @@ begin
   { OK now we know the size, lets do it again but this time collect the data }
   FData := TCSVArray.Create (FRowCount, FColCount);
   FRowCount := 0; FColCount := 0; FCollectData := true;
-  FStream := TFileStream.Create (filename, fmOpenRead);
+  FStream := TFileStream.Create (filename, fmOpenRead or fmShareDenyNone);
   try
     LoadFromStream;
   finally
     FStream.free;
   end;
   result := cOK;
+end;
+
+
+function TCSV.GetColumnIndex (HeaderString : String) : Integer;
+var i  : Integer;
+begin
+  for i := 0 to numberOfHeaders - 1 do
+      if header[i].ToLower = HeaderString.ToLower then
+         exit (i);
+  exit (-1);
 end;
 
 
@@ -430,7 +441,7 @@ begin
      ']'  : Ftoken := tCloseSquareBracket;
      CR   : begin nextchar; Ftoken := tEOL; end; // End of line detected
   else
-     raise Exception.Create ('Unrecognized token detected in input: ' + Fch);
+     raise Exception.Create ('Unrecognized token detected in csv file: <' + Fch + ', ' + inttostr (Ord(FCh)) + '> at line: ' + inttostr (FRowCount));
   end;
   nextchar;
 end;

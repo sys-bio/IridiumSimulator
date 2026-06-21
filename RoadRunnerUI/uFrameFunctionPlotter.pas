@@ -13,10 +13,12 @@ uses
   FMX.Edit,
   FMX.Controls.Presentation,
   uRRTypes,
+  uRR2DSimpleMatrix,
   uController,
   uExpressionEvaluator,
   FMX.EditBox,
-  FMX.NumberBox, FMX.Objects;
+  FMX.NumberBox,
+  FMX.Objects;
 
 type
   TframeFunctionPlotter = class(TFrame)
@@ -47,7 +49,7 @@ type
     { Public declarations }
     stylebook1 : TStyleBook;
     controller : TController;
-    procedure   OnFunctionSliderNotify(parameter: string; value: double);
+    procedure   OnFunctionSliderNotify(parameter: string; value: double; runSimulation : boolean);
     constructor Create(AOwner: TComponent) ; override;
   end;
 
@@ -57,7 +59,7 @@ implementation
 
 Uses ufSliders;
 
-procedure TframeFunctionPlotter.OnFunctionSliderNotify(parameter: string; value: double);
+procedure TframeFunctionPlotter.OnFunctionSliderNotify(parameter: string; value: double; runSimulation : boolean);
 begin
   expr.SetVar(parameter, value);
   evalFunction;

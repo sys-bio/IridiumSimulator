@@ -8,7 +8,9 @@ Uses SysUtils,
      System.UIConsts,
      System.UITypes,
      uRRDataSeries,
-     uGObject;
+     uGObject,
+     uRRCommon;
+
 
 type
   TSubGraphProperties = class(TPersistent)
@@ -18,8 +20,6 @@ type
   public
     graphObjects: TObjectList<TGraphObject>;
     dataBlocks: TDataBlocks;
-
-    Legend: TLegend;
 
     GraphBorder: boolean;
     GraphBackgroundColor: TAlphaColor;
@@ -52,9 +52,16 @@ type
     bDrawXAxisTitle: boolean;
     bDrawYAxisTitle: boolean;
 
+    PlottingAreaObject : TGraphObject;
     MainTitleObject: TMainTitle;
     XAxisTitleObject: TXAxisTitle;
-    YAxisTitleObject: TGraphObject;
+    YAxisTitleObject: TYAxisTitle;
+    LegendObject : TLegend;
+    XAxisObject : TXAxisObject;
+    YAxisObject : TYAxisObject;
+
+    XAxisLabels : TTextType;
+    YAxisLabels : TTextType;
 
     LogXAxis, LogYAxis: boolean;
 
@@ -84,6 +91,8 @@ type
   end;
 
 implementation
+
+Uses  skia;
 
 
 constructor TSubGraphProperties.Create;
@@ -147,6 +156,16 @@ begin
   YGridLines := false;
   XMinorGridLines := false;
   YMinorGridLines := false;
+
+  // The numbers on the axes
+  XAxisLabels := TTextType.Create('Arial', DEFAULT_XAXIS_LABELS_FONT_SIZE);
+  //XAxisLabels.typeface := TSkTypeface.MakeFromName('Arial', TSkFontStyle.Normal);
+  //XAxisLabels.font.Size := DEFAULT_XAXIS_LABELS_FONT_SIZE;  // default = 16
+  //XAxisLabels.font := TSkFont.Create(XAxisLabels.typeface, XAxisLabels.font.Size, 1);
+
+  YAxisLabels := TTextType.Create('Arial', DEFAULT_YAXIS_LABELS_FONT_SIZE);
+  //YAxisLabels.typeface := TSkTypeface.MakeFromName('Arial', TSkFontStyle.Normal);
+  //YAxisLabels.font := TSkFont.Create(XAxisLabels.typeface, YAxisLabels.font.Size, 1);
 end;
 
 

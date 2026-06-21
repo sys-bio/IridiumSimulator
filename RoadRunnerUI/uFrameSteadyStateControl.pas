@@ -6,15 +6,22 @@ uses
   System.SysUtils, System.Types,
   System.UITypes, System.Classes,
   System.Variants,
-  FMX.Types, FMX.Graphics,
-  FMX.Controls, FMX.Forms,
-  FMX.Dialogs, FMX.StdCtrls,
-  FMX.Controls.Presentation, System.Rtti, FMX.Grid.Style,
-  FMX.Grid, FMX.ScrollBox,
+  FMX.Types,
+  FMX.Graphics,
+  FMX.Controls,
+  FMX.Forms,
+  FMX.Dialogs,
+  FMX.StdCtrls,
+  FMX.Controls.Presentation,
+  System.Rtti,
+  FMX.Grid.Style,
+  FMX.Grid,
+  FMX.ScrollBox,
   FMX.Objects,
   uRRList,
   uController,
   uModelInputManager,
+  uFrameForMCA,
   FMX.Layouts;
 
 type
@@ -58,18 +65,30 @@ type
     procedure collectModelSymbols;
     procedure selectSteadyStateSolver;
 
-    procedure OnSteadyStateSliderNotify(parameter: string; value: double);
+    procedure OnSteadyStateSliderNotify(parameter: string; value: double; runSimulation : boolean);
   public
     { Public declarations }
     stylebook1 : TStyleBook;
     controller : TController;
+
+    MCAFrame : TMCAFrame;
+    procedure freeMCAFrame;
   end;
 
 implementation
 
 {$R *.fmx}
 
-Uses ufFloatingPlotViewer, uRRTypes, ufMoreSteadyState, ufSliders;
+Uses
+     FMX.DialogService,
+     FMX.TabControl,
+     ufMain,
+     ufFloatingPlotViewer,
+     uRRTypes,
+     uRR2DSimpleMatrix,
+     ufMoreSteadyState,
+     uConfiguration,
+     ufSliders;
 
 // Not yet operational
 procedure TFrameSteadyStateControl.selectSteadyStateSolver;
@@ -78,8 +97,9 @@ var
   sl: TStringList;
   currentName: string;
 begin
-  raise exception.Create('Steady state solver configuration options not yet implemented');
-//  if frmSteadyStateOptions = nil then
+  TDialogService.ShowMessage('Steady state solver configuration options not yet implemented');
+  exit;
+  //  if frmSteadyStateOptions = nil then
 //    begin
 //      frmSteadyStateOptions := TfrmSteadyStateOptions.Create(nil);
 //      frmSteadyStateOptions.StyleBook := StyleBook1;
@@ -110,10 +130,10 @@ var
   sbmlStr: string;
   modelErrorState : TModelErrorState;
 begin
-  modelErrorState := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
+  modelErrorState := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.ModelMemo.Lines.Text);
   if modelErrorState.ok then
      begin
-     controller.loadSBMLModel(sbmlStr, true);
+     controller.loadSBMLModelFromString (sbmlStr, True);
 
      collectModelSymbols;
      controller.outOfDate := false;
@@ -122,20 +142,69 @@ begin
 end;
 
 
+procedure TFrameSteadyStateControl.freeMCAFrame;
+begin
+  if Assigned(MCAFrame) then
+    begin
+      MCAFrame.shutDown;
+      MCAFrame.Free;
+      MCAFrame := nil;
+    end;
+end;
+
 
 procedure TFrameSteadyStateControl.btnMoreSteadyStateClick(Sender: TObject);
+var
+  i : integer;
+  t1 : TTabItem;
 begin
-  if not Assigned (frmMoreSteadyState) then
+  if Assigned(MCAFrame) then
+    begin
+      freeMCAFrame;
+
+      for i := 0 to frmMain.TabOutputControl.TabCount - 1 do
+        if frmMain.TabOutputControl.Tabs[i].Text = 'MCA' then
+          begin
+            frmMain.TabOutputControl.Delete(i);
+            break;
+          end;
+
+      Exit;
+    end;
+
+  if uConfiguration.configOpts.miscFrameConfig.MCAFrameFloating then
      begin
-     frmMoreSteadyState := TfrmMoreSteadyState.Create(nil);
-     frmMoreSteadyState.controller := controller;
-     end;
-  frmMoreSteadyState.Show;
+     if not Assigned (frmMoreSteadyState) then
+        begin
+        frmMoreSteadyState := TfrmMoreSteadyState.Create(nil);
+        frmMoreSteadyState.controller := controller;
+        end;
+     if frmMoreSteadyState.Visible then
+        frmMoreSteadyState.Hide
+     else
+        frmMoreSteadyState.Show;
+     end
+  else
+     begin
+  
+  // Prepare a tab sheet
+  t1 := TTabItem.Create(self);
+  t1.Parent := frmMain.TabOutputControl;
+  t1.Text := 'MCA';
+
+  MCAFrame := TMCAFrame.Create(self);
+  MCAFrame.Parent := t1;
+  MCAFrame.Align := TAlignLayout.Client;
+  MCAFrame.stylebook1 := frmMain.StyleBook;
+  MCAFrame.Setup  (nil, controller);
+  //pnlMiscPanel.Height := configOpts.miscFrameConfig.heigthOfFrame;
+  //MCAFrame.moPython.SetFocus;
+    end;
 end;
 
 
 // This gets called when the slider is moved
-procedure TFrameSteadyStateControl.OnSteadyStateSliderNotify(parameter: string; value: double);
+procedure TFrameSteadyStateControl.OnSteadyStateSliderNotify(parameter: string; value: double; runSimulation : boolean);
 begin
   controller.simulator.roadrunner.setValue(parameter, value);
   controller.simulator.roadrunner.steadyState;
@@ -204,6 +273,8 @@ var
   eigen: T2DMatrix;
   floatValues: TArray<double>;
 begin
+  // Switch on conservation analysis first
+  controller.simulator.roadrunner.setComputeAndAssignConservationLaws(true);
   lblSteadyState.Text := floattostr(controller.simulator.roadrunner.steadyState);
   strList := controller.simulator.roadrunner.getFloatingSpeciesIds;
   try
@@ -227,6 +298,12 @@ begin
   finally
     eigen.Free;
   end;
+
+  if Assigned (MCAFrame) then
+     begin
+     //if frmMoreSteadyState.visible then
+        MCAFrame.btnSolveClick(nil);
+     end;
 
   if Assigned (frmMoreSteadyState) then
      begin

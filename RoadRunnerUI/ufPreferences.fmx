@@ -60,6 +60,8 @@ object frmPreferences: TfrmPreferences
       TabPosition = PlatformDefault
       Sizes = (
         548s
+        270s
+        548s
         270s)
       object TabItem1: TTabItem
         CustomIcon = <
@@ -93,6 +95,28 @@ object frmPreferences: TfrmPreferences
           Position.X = 88.000000000000000000
           Position.Y = 38.000000000000000000
           OnChange = sbFontSizeChange
+        end
+      end
+      object tbPanels: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = False
+        Size.Width = 94.000000000000000000
+        Size.Height = 26.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'Panel Options'
+        object chkMCAFrame: TCheckBox
+          Position.X = 14.000000000000000000
+          Position.Y = 22.000000000000000000
+          Size.Width = 177.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          Text = 'Floating MCA Frame '
+          OnChange = chkMCAFrameChange
         end
       end
     end

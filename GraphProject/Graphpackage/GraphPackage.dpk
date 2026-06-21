@@ -34,17 +34,22 @@ requires
   Skia.Package.RTL;
 
 contains
-  uClipping in '..\uClipping.PAS',
-  uRRCommon in '..\uRRCommon.pas',
-  uRRDataSeries in '..\uRRDataSeries.pas',
-  uGObject in '..\uGObject.pas',
-  uLineDetails in '..\uLineDetails.pas',
-  uPlottingPanel in '..\uPlottingPanel.pas',
-  uSubgraph in '..\uSubgraph.pas',
-  uSubGraphCollectionEditor in '..\uSubGraphCollectionEditor.pas',
-  uSymbolDetails in '..\uSymbolDetails.pas',
-  ufGraphPackageDialog in 'ufGraphPackageDialog.pas' {frmGraphPackageDlg},
-  uRRUtilities in '..\uRRUtilities.pas',
-  uCSVReader in '..\uCSVReader.pas';
+  uClipping in '..\..\..\GraphProjectDelphi13\uClipping.PAS',
+  uCommon in '..\..\..\GraphProjectDelphi13\uCommon.pas',
+  uCSVReader in '..\..\..\GraphProjectDelphi13\uCSVReader.pas',
+  uErrorBars in '..\..\..\GraphProjectDelphi13\uErrorBars.pas',
+  ufMain in '..\..\..\GraphProjectDelphi13\ufMain.pas',
+  uGObject in '..\..\..\GraphProjectDelphi13\uGObject.pas',
+  uLimits in '..\..\..\GraphProjectDelphi13\uLimits.pas',
+  uLineDetails in '..\..\..\GraphProjectDelphi13\uLineDetails.pas',
+  uPlottingPanel in '..\..\..\GraphProjectDelphi13\uPlottingPanel.pas',
+  uRRCommon in '..\..\..\GraphProjectDelphi13\uRRCommon.pas',
+  uRRDataSeries in '..\..\..\GraphProjectDelphi13\uRRDataSeries.pas',
+  uRRProperties in '..\..\..\GraphProjectDelphi13\uRRProperties.pas',
+  uRRUtilities in '..\..\..\GraphProjectDelphi13\uRRUtilities.pas',
+  uSubgraph in '..\..\..\GraphProjectDelphi13\uSubgraph.pas',
+  uSubGraphCollectionEditor in '..\..\..\GraphProjectDelphi13\uSubGraphCollectionEditor.pas',
+  uSymbolDetails in '..\..\..\GraphProjectDelphi13\uSymbolDetails.pas',
+  uCSVUtils in '..\..\..\GraphProjectDelphi13\uCSVUtils.pas';
 
 end.

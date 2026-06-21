@@ -13,6 +13,7 @@ const
 
     SIGNATURE = 'GP146';
     VERSION = '1.0';
+    LEVEL_OF_OPACITY = 0.8;
 
 type
   TRRGraph = class;
@@ -83,8 +84,8 @@ type
 
        LCanvas : ISkCanvas;
 
-       procedure   draw(const ACanvas: ISkCanvas; const ADest: TRectF; const AOpacity: Single); override;
-       procedure   drawToCanvas(ACanvas : ISkCanvas);
+       procedure draw(const ACanvas: ISkCanvas; const ADest: TRectF; const AOpacity: Single); override;
+       procedure drawToCanvas(ACanvas : ISkCanvas);
 
        procedure DblClick; override;
        procedure MouseDown (Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
@@ -111,16 +112,17 @@ type
       divideByZeroError : boolean;
       designerForm : TfrmGraphPackageDlg;
       backgroundColor : TAlphaColor;
+      dimGraph : boolean;
 
       procedure   saveOffScreenBitmap;
 
       constructor Create (AOwner : TComponent); override;
       destructor  Destroy; override;
 
-      procedure   clear;
+      procedure   Clear;
 
-      function    addDefaultSubgraph : TSubGraph;
-      function    new  (rxmin, rymin, rwidth, rheight : double) : TSubGraph;
+      function    AddDefaultSubgraph : TSubGraph;
+      function    NewSubGraph  (rxmin, rymin, rwidth, rheight : double) : TSubGraph;
       function    onSubGraph (ACanvas : ISkCanvas; x, y : single; var graphObject : TGraphBase; var Id: String) : boolean; overload;
       function    onSubGraph (ACanvas : ISkCanvas; x, y : single; var graphObject : TGraphBase; var index: integer) : boolean; overload;
       //function    onSubGraph (x, y : integer; var index: integer) : boolean; overload;
@@ -137,7 +139,7 @@ type
       procedure   exportToPDF (filename : string);
 
       procedure   startAddInteractiveGraph;
-      procedure   startPropertyEditor (AOwner : TComponent; subGraphId : integer);
+      procedure   startPropertyEditor (AOwner : TComponent; subGraphId : integer; objectType :TSubGraphSelectedObjectType);
       procedure   updatePropertyEditor (subGraphId : integer);
 
       function    getSubgraph (index :integer) : TSubGraph;
@@ -472,6 +474,7 @@ begin
   bolDblClick := false;
   currentSubGraphId := -1;
   HitTest := True;
+  dimGraph := False;
 
   designerForm := TfrmGraphPackageDlg.Create(nil);
 
@@ -605,12 +608,13 @@ if currentSubGraphId = -1 then
 
   case FSubgraphs[currentSubGraphId].SelectedObjectType of
      coNone : exit;
-     coMainTitle  : startPropertyEditor (self, 0);
-     coXAxisTitle : startPropertyEditor (self, 0);
-     coYAxisTitle : showmessage ('Y Axis title');
-     coXAxis      : showmessage ('X Axis');
-     coLegend     : showmessage ('Legend');
-     coGraphingArea : startPropertyEditor (self, 0);
+     coMainTitle    : startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coMainTitle);
+     coXAxisTitle   : startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coXAxisTitle);
+     coYAxisTitle   : startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coYAxisTitle);
+     coXAxis        : startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coXAxisTitle);
+     coYAxis        : startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coYAxisTitle);
+     coLegend       : startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coLegend);
+     coGraphingArea : startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coGraphingArea);
   end;
   bolDblClick := true;
 end;
@@ -658,7 +662,15 @@ begin
          coXAxis :
            begin
            FSubgraphs[currentSubGraph].SelectedObjectType := coXAxis;
-           box := FSubgraphs[currentSubGraph].properties.xaxisTitleObject.textProperties.box;  //graphObjects[mainTitleId].textProperties.box;
+           box := FSubgraphs[currentSubGraph].properties.XAxisTitleObject.textProperties.box;  //graphObjects[mainTitleId].textProperties.box;
+           rectStart := boxToRectF (box);
+           exit (true);
+           end;
+
+         coYAxis :
+           begin
+           FSubgraphs[currentSubGraph].SelectedObjectType := coYAxis;
+           box := FSubgraphs[currentSubGraph].properties.YAxisTitleObject.textProperties.box;  //graphObjects[mainTitleId].textProperties.box;
            rectStart := boxToRectF (box);
            exit (true);
            end;
@@ -762,6 +774,7 @@ begin
      bolMovingLasso := true;
      exit;
      end;
+  redraw;
 end;
 
 
@@ -825,7 +838,7 @@ begin
 
   if currentSubGraphId <> -1 then
      begin
-     aBox := subgraphs[currentSubGraphId].relativeToDevice2(subgraphs[currentSubGraphId].properties.graphObjects[graphingAreaId]);
+     aBox := subgraphs[currentSubGraphId].relativeToDevice2(subgraphs[currentSubGraphId].properties.PlottingAreaObject);
      if PtOverHandle (aBox , x, y, dragDirection) then
         Cursor := crCross;
      end;
@@ -904,7 +917,7 @@ begin
      dx := x - orig_x;
      dy := y - orig_y;
 
-     rBoxGraphingArea := FSubgraphs[currentSubGraphId].getLogicalBoundingBox (graphingAreaId);
+     rBoxGraphingArea := FSubgraphs[currentSubGraphId].properties.PlottingAreaObject.logicalBox;//  getLogicalBoundingBox (graphingAreaId);
 
      if currentlySelectedObject.ObjType <> coGraphingArea then
         begin
@@ -967,7 +980,7 @@ end;
 procedure TRRGraph.makeSubGraph (rx, ry, rxend, ryend : double);
 var sg : TSubGraph;
 begin
-   sg := new(rx, ry, rxend, ryend);
+   sg := NewSubGraph (rx, ry, rxend, ryend);
    sg.Xmin := 0;    sg.Xmax := 10;
    sg.Ymin := -1.1; sg.Ymax := 1.1;
    sg.properties.LogXAxis := false;
@@ -1012,7 +1025,7 @@ begin
 end;
 
 
-procedure TRRGraph.startPropertyEditor (AOwner : TComponent; subGraphId : integer);
+procedure TRRGraph.startPropertyEditor (AOwner : TComponent; subGraphId : integer; objectType :TSubGraphSelectedObjectType);
 begin
   if designerForm = nil then
      begin
@@ -1025,6 +1038,14 @@ begin
   try
     designerForm.subgraph := subgraphs[subGraphId];
     designerForm.copyPropertiesToDlg (subgraphs[subGraphId].properties);
+    case objectType of
+       coMainTitle  : designerForm.tabGraph.TabIndex := 0;
+       coXAxisTitle : begin designerForm.tabGraph.TabIndex := 1; designerForm.TabControlAxes.TabIndex := 0; end;
+       coYAxisTitle : begin designerForm.tabGraph.TabIndex := 1; designerForm.TabControlAxes.TabIndex := 1; end;
+       coXAxis      : designerForm.tabGraph.TabIndex := 3;
+       coGraphingArea : designerForm.tabGraph.TabIndex := 2;
+       coLegend : designerForm.tabGraph.TabIndex := 4;
+    end;
     designerForm.Show;
   finally
     // Messes up the visuals on the host form is we try to free this one
@@ -1041,6 +1062,7 @@ begin
 
   result := subgraphs[index];
 end;
+
 
 procedure TRRGraph.setLogXAxis (subgraph : integer; value : boolean);
 begin
@@ -1113,16 +1135,19 @@ begin
 
   if dataBlock >= subgraphs[subgraph].properties.dataBlocks.Count then
      raise Exception.Create('The data block you specified does not exist: ' + inttostr (datablock));
+
+  subGraphs[subGraph].properties.dataBlocks[DataBlock].name := name;
 end;
 
 
-function TRRGraph.addDefaultSubgraph : TSubGraph;
+function TRRGraph.AddDefaultSubgraph : TSubGraph;
 begin
-  result := new (0.15, 0.8, 0.75, 0.6);
+  result := NewSubGraph (0.15, 0.8, 0.75, 0.6);
 end;
+
 
 // Create a new subgraph. The dimensions are normalized coordinates
-function TRRGraph.new (rxmin, rymin, rwidth, rheight : double) : TSubGraph;
+function TRRGraph.NewSubGraph (rxmin, rymin, rwidth, rheight : double) : TSubGraph;
 var w, h, l, t : integer;
 begin
   result := FSubgraphs.Add.FSubgraph;
@@ -1158,13 +1183,20 @@ end;
 
 procedure TRRGraph.drawToCanvas(ACanvas : ISkCanvas);
 var i : integer;
-  vBitMapData  : TBitmapData;
-  vPixelColor  : TAlphaColor;
+    LPaint : ISKPaint;
 begin
   divideByZeroError := false;
   try
-  for i := 0 to FSubgraphs.Count - 1 do
-      FSubgraphs[i].paint(ACanvas);
+    for i := 0 to FSubgraphs.Count - 1 do
+        FSubgraphs[i].paint(ACanvas);
+    if dimGraph then
+       begin
+       LPaint := TSkPaint.Create;
+       LPaint.Color := MakeColor (claLightGray, LEVEL_OF_OPACITY);
+       LPaint.Style := TSkPaintStyle.Fill;
+       ACanvas.DrawRect(TRectF.Create(0, 0, Width, Height), LPaint);
+       end;
+
   except
     on E: EZeroDivide do
        divideByZeroError := true;

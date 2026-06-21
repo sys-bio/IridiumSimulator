@@ -24,6 +24,7 @@ uses
   FMX.Edit,
   FMX.TreeView,
   FMX.Objects,
+  FMX.Styles,
   URRList;
 
 type
@@ -66,6 +67,8 @@ type
     cboColorPalette: TComboBox;
     Label11: TLabel;
     btnScanPython: TButton;
+    btnClearScanVariables: TButton;
+    rdoScanEndPoint: TRadioButton;
     procedure btnWhatToPlotClick(Sender: TObject);
     procedure btnStartScanClick(Sender: TObject);
     procedure lstScanSelectionListChange(Sender: TObject);
@@ -76,6 +79,8 @@ type
     procedure chkShowLegendChange(Sender: TObject);
     procedure cboColorPaletteChange(Sender: TObject);
     procedure btnScanPythonClick(Sender: TObject);
+    procedure btnClearScanVariablesClick(Sender: TObject);
+    procedure rdoScanEndPointChange(Sender: TObject);
   private
     { Private declarations }
     floatingSpeciesIds: TStringList;
@@ -89,6 +94,7 @@ type
 
     procedure scanTimeCourse;
     procedure scanSteadyState;
+    procedure scanEndPoint;
     function  loadModelFromMemo : boolean;
     procedure collectModelSymbols;
     procedure bringUpSelectionForm(selectionList: TStringList; includeTime: boolean);
@@ -107,11 +113,13 @@ implementation
 uses StrUtils,
      IOUtils,
      uRRTypes,
+     uRR2DSimpleMatrix,
      uScanArguments,
      ufSelectionChoices,
      ufFloatingPlotViewer,
      uModelInputManager,
-     ufTextViewer;
+     ufTextViewer,
+     ufMain;
 
 
 function TFrameScanControl.loadModelFromMemo : boolean;
@@ -119,14 +127,14 @@ var
   sbmlStr, errMsg: string;
   modelErrorState : TModelErrorState;
 begin
-  modelErrorState := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.modelMemo.Lines.Text);
+  modelErrorState := controller.modelInputManager.getSBMLFromAntimony(controller.modelInputManager.ModelMemo.Lines.Text);
   if not modelErrorState.ok then
      begin
      showmessage (modelErrorState.errMsg);
      exit (False);
      end;
 
-  controller.loadSBMLModel(modelErrorState.sbmlStr, true);
+  controller.loadSBMLModelFromString (modelErrorState.sbmlStr, true);
 
   collectModelSymbols;
   //if Assigned(frmFloatingPlotViewer) then
@@ -140,6 +148,17 @@ end;
 procedure TFrameScanControl.lstScanSelectionListChange(Sender: TObject);
 begin
   lstScanSelectionList.Items.Delete(lstScanSelectionList.itemindex);
+end;
+
+procedure TFrameScanControl.rdoScanEndPointChange(Sender: TObject);
+begin
+  edtTimeStartScan.enabled := true;
+  edtTimeEndScan.enabled := true;
+  edtTimeCouseNumOfPointsScan.enabled := true;
+  lblScanTimeStart.enabled := true;
+  lblScanTimeEnd.enabled := true;
+  lblScanNumPoints.enabled := true;
+  chkEnableTwoParameterScan.enabled := false;
 end;
 
 procedure TFrameScanControl.rdoScanSteadyStateChange(Sender: TObject);
@@ -215,6 +234,11 @@ begin
 end;
 
 
+procedure TFrameScanControl.btnClearScanVariablesClick(Sender: TObject);
+begin
+  lstScanSelectionList.Clear;
+end;
+
 procedure TFrameScanControl.btnScanPythonClick(Sender: TObject);
 var astr, tmp : string;
     i : integer;
@@ -225,7 +249,7 @@ begin
 
           'r = te.loada (''''''' + sLineBreak +
 
-          controller.modelInputManager.modelMemo.Text + sLineBreak +
+          controller.modelInputManager.ModelMemo.Lines.Text + sLineBreak +
 
   ''''''')' + sLineBreak +
 
@@ -277,16 +301,23 @@ end;
 
 procedure TFrameScanControl.btnStartScanClick(Sender: TObject);
 begin
-  if controller.outOfDate then
-    begin
-      loadModelFromMemo;
-      initializeScanUserInterface;
-    end;
+  btnStartScan.Cursor:= crHourglass;
+  try
+    if controller.OutOfDate then
+      begin
+        loadModelFromMemo;
+        initializeScanUserInterface;
+      end;
 
-  if rdoScanSteadyState.IsChecked then
-    scanSteadyState
-  else
-    scanTimeCourse;
+    if rdoScanSteadyState.IsChecked then
+      scanSteadyState;
+    if rdoScanTimeCourse.IsChecked then
+       scanTimeCourse;
+    if rdoScanEndPoint.IsChecked then
+       scanEndPoint;
+  finally
+     btnStartScan.Cursor:= crDefault;
+  end;
 end;
 
 
@@ -371,6 +402,11 @@ begin
 end;
 
 
+procedure TFrameScanControl.scanEndPoint;
+begin
+
+end;
+
 procedure TFrameScanControl.scanSteadyState;
 var
   selectionList: TStringList;
@@ -436,6 +472,7 @@ end;
 procedure TFrameScanControl.btnWhatToPlotClick(Sender: TObject);
 var
   i: integer;
+  ParentForm: TCommonCustomForm;
 begin
   if controller.outOfDate then
     begin
@@ -444,7 +481,7 @@ begin
     end;
 
   // false = no time as a choice
-  bringUpSelectionForm(TStringList(lstScanSelectionList.Items), false);
+  BringUpSelectionForm(TStringList(lstScanSelectionList.Items), false);
 
   lstScanSelectionList.Clear;
   for i := 0 to frmSelectionChoices.lstSelectedItems.Count - 1 do
@@ -513,6 +550,8 @@ begin
   frmSelectionChoices.Free;
   // This is to avoid visual corruption of calling form (reported to qc)
   frmSelectionChoices := TfrmSelectionChoices.Create(nil);
+  if (Application.MainForm <> nil) and (Application.MainForm.StyleBook <> nil) then
+     frmSelectionChoices.stylebook := Application.MainForm.StyleBook;
   // try
   for i := 0 to selectionList.Count - 1 do
     frmSelectionChoices.lstSelectedItems.Items.Add(selectionList[i]);

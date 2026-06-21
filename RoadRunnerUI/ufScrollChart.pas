@@ -97,7 +97,7 @@ type
     currentTime : double;
     stepSize : double;
     procedure   ViewerModelHasChanged (sender : TObject);
-    procedure   OnRealTimeSliderNotify (parameter : string; value : double);
+    procedure   OnRealTimeSliderNotify (parameter : string; value : double; runSimulation : boolean);
     constructor Create (Owner: TComponent; Controller : TController);
   end;
 
@@ -110,7 +110,7 @@ implementation
 
 Uses StrUtils, ufSliders;
 
-procedure TfrmScrollChart.OnRealTimeSliderNotify (parameter : string; value : double);
+procedure TfrmScrollChart.OnRealTimeSliderNotify (parameter : string; value : double; runSimulation : boolean);
 begin
   controller.simulator.roadrunner.setValue (parameter, value);
   Timer.Enabled := True;

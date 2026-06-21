@@ -86,7 +86,38 @@ uses
   uRRProperties in '..\GraphProject\uRRProperties.pas',
   uMakePython in 'uMakePython.pas',
   uCombineArchive in 'uCombineArchive.pas',
-  uPhrasedMLAPI in '..\..\..\CommonCode\libPhrasedML\uPhrasedMLAPI.pas';
+  uPhrasedMLAPI in '..\..\..\CommonCode\libPhrasedML\uPhrasedMLAPI.pas',
+  uForth in '..\..\PForth\uForth.pas',
+  uFStack in '..\..\PForth\uFStack.pas',
+  uRR2DSimpleMatrix in '..\..\..\CommonCode\libRoadRunner\uRR2DSimpleMatrix.pas',
+  uFrameForSliders in 'uFrameForSliders.pas' {frameForSliders: TFrame},
+  FrameMemoLineCount in '..\..\..\..\ComponentLibrary\FMXMemoLineNumbers\FrameMemoLineCount.pas' {FrameMemoLineCount: TFrame},
+  uMiscFrameConfig in 'uMiscFrameConfig.pas' {$R *.res},
+  ufCollectSliderSavedSet in 'ufCollectSliderSavedSet.pas' {frmSaveSliderState},
+  uPythonFrame in 'uPythonFrame.pas' {PythonFrame: TFrame},
+  uHostAPI in 'uHostAPI.pas',
+  ufPythonIO in 'ufPythonIO.pas' {frmPythonIO},
+  uPythonIOFrame in 'uPythonIOFrame.pas' {PythonIOFrame: TFrame},
+  uPlotAPI in 'uPlotAPI.pas',
+  uFrameForMCA in 'uFrameForMCA.pas' {MCAFrame: TFrame},
+  uModelState in 'uModelState.pas',
+  FMX.RichEdit.Style in '..\RichMemo\FMX.RichEdit.Style.pas',
+  FMX.StyledContextMenu in '..\RichMemo\FMX.StyledContextMenu.pas',
+  SpellChecker in '..\RichMemo\SpellChecker.pas',
+  Syntax.Code.Antimony in '..\RichMemo\Syntax.Code.Antimony.pas',
+  Syntax.Code in '..\RichMemo\Syntax.Code.pas',
+  uCSVUtils in 'uCSVUtils.pas',
+  Syntax.Code.Python in '..\RichMemo\Syntax.Code.Python.pas',
+  SkPlotPaintBox in '..\ChartComponent\SkPlotPaintBox.pas',
+  SkPlotPaintBoxRegister in '..\ChartComponent\SkPlotPaintBoxRegister.pas',
+  uColorManager in '..\ChartComponent\uColorManager.pas',
+  uCSVReaderForPlotter in '..\ChartComponent\uCSVReaderForPlotter.pas',
+  uMathParser in '..\ChartComponent\uMathParser.pas',
+  uPlotMapper in '..\ChartComponent\uPlotMapper.pas',
+  uPlotSeries in '..\ChartComponent\uPlotSeries.pas',
+  ufPlotEditor in '..\ChartComponent\ufPlotEditor.pas' {FrmPlotEditor},
+  uPlotDefaults in '..\ChartComponent\uPlotDefaults.pas',
+  uLabelledTrackBar in '..\ChartComponent\uLabelledTrackBar.pas';
 
 {$R *.res}
 
@@ -133,5 +164,6 @@ begin
 
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmGraphPackageDlg, frmGraphPackageDlg);
+  Application.CreateForm(TFrmPlotEditor, FrmPlotEditor);
   Application.Run;
 end.

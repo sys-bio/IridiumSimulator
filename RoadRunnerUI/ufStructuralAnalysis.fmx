@@ -32725,7 +32725,7 @@ object frmStructuralAnalysis: TfrmStructuralAnalysis
           item
           end>
         IsSelected = False
-        Size.Width = 138.000000000000000000
+        Size.Width = 139.000000000000000000
         Size.Height = 24.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = ''
@@ -32751,7 +32751,7 @@ object frmStructuralAnalysis: TfrmStructuralAnalysis
           item
           end>
         IsSelected = False
-        Size.Width = 78.000000000000000000
+        Size.Width = 79.000000000000000000
         Size.Height = 24.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = ''
@@ -32777,7 +32777,7 @@ object frmStructuralAnalysis: TfrmStructuralAnalysis
           item
           end>
         IsSelected = False
-        Size.Width = 126.000000000000000000
+        Size.Width = 127.000000000000000000
         Size.Height = 24.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = ''

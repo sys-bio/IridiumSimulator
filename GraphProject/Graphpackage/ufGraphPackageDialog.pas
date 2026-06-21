@@ -21,7 +21,7 @@ type
     lblMainTitle: TLabel;
     edtMainTitle: TEdit;
     btnAppy: TButton;
-    TabControl2: TTabControl;
+    TabControlAxes: TTabControl;
     tbXAxis: TTabItem;
     tbYAxis: TTabItem;
     Label1: TLabel;
@@ -151,6 +151,16 @@ type
     edtYMaximum: TEdit;
     chkAutoYScaling: TCheckBox;
     chkLogYAxes: TCheckBox;
+    Label43: TLabel;
+    spinMainTitleFontSize: TSpinBox;
+    Label44: TLabel;
+    spinXAxisFontSize: TSpinBox;
+    Label41: TLabel;
+    spinXAxisLabelsFontSize: TSpinBox;
+    Label42: TLabel;
+    spinYAxisFontSize: TSpinBox;
+    Label45: TLabel;
+    spinYAxisLabelsFontSize: TSpinBox;
     procedure btnCancelClick(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnAppyClick(Sender: TObject);
@@ -214,16 +224,21 @@ type
     procedure cboXTitleColorChange(Sender: TObject);
     procedure cboYTitleColorChange(Sender: TObject);
     procedure cboMainTitleColorChange(Sender: TObject);
+    procedure spinXAxisLabelsFontSizeChange(Sender: TObject);
     procedure trackGraphBorderWidthChange(Sender: TObject);
     procedure spinYMajorGridThicknessChange(Sender: TObject);
     procedure SpinXMajorGridThicknessChange(Sender: TObject);
     procedure SpinXMinorGridWidthChange(Sender: TObject);
     procedure SpinYMinorGridWidthChange(Sender: TObject);
     procedure SpinGraphBorderWidthChange(Sender: TObject);
+    procedure spinMainTitleFontSizeChange(Sender: TObject);
     procedure SpinNumberOfXMinorTicksChange(Sender: TObject);
     procedure SpinNumberOfYMinorTicksChange(Sender: TObject);
     procedure SpinNumberOfXMajorTicksChange(Sender: TObject);
     procedure SpinNumberOfYMajorTicksChange(Sender: TObject);
+    procedure spinXAxisFontSizeChange(Sender: TObject);
+    procedure spinYAxisFontSizeChange(Sender: TObject);
+    procedure spinYAxisLabelsFontSizeChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -246,7 +261,7 @@ Uses uPlottingPanel, uRRDataSeries, uSymbolDetails, uLineDetails, uRRCommon;
 
 
 procedure TfrmGraphPackageDlg.copyPropertiesToDlg (gp : TSubGraphProperties);
-var i : integer;
+var i, j : integer;
 begin
   fireEvent := false;
   currentSubGraph := gp;
@@ -283,6 +298,13 @@ begin
   chkMainTitle.IsChecked := gp.bDrawMainTitle;
   chkXAxisTitle.IsChecked := gp.bDrawXAxisTitle;
 
+  spinXAxisFontSize.Value := gp.XAxisTitleObject.textProperties.font.Size;
+  spinYAxisFontSize.Value := gp.YAxisTitleObject.textProperties.font.Size;
+  spinMainTitleFontSize.Value := gp.MainTitleObject.textProperties.font.Size;
+
+  spinXAxisLabelsFontSize.Value := gp.XAxisLabels.font.Size;
+  spinYAxisLabelsFontSize.Value := gp.YAxisLabels.font.Size;
+
   cboMainTitleColor.Color := gp.MainTitleObject.textProperties.fontColor;
   cboXTitleColor.Color := gp.XAxisTitleObject.textProperties.fontColor;
   cboYTitleColor.Color := gp.YAxisTitleObject.textProperties.fontColor;
@@ -303,22 +325,25 @@ begin
   else
      chkAutoScaleBothAxes.IsChecked := false;
 
-  chkLegendVisible.IsChecked := gp.legend.visible;
-  chkLegendFrameVisible.IsChecked :=  gp.legend.frameVisible;
-  cbLegendFrameColor.color := gp.legend.outlineColor;
-  cboLegendInteriorColor.Color := gp.legend.interiorColor;
-  tkLegendFrameThickness.Value := gp.legend.lineThicknessInCms*300;
+  chkLegendVisible.IsChecked := gp.legendObject.visible;
+  chkLegendFrameVisible.IsChecked :=  gp.legendObject.frameVisible;
+  cbLegendFrameColor.color := gp.legendObject.outlineColor;
+  cboLegendInteriorColor.Color := gp.legendObject.interiorColor;
+  tkLegendFrameThickness.Value := gp.legendObject.lineThicknessInCms*300;
 
-  tkFrameGap.value := gp.legend.frameGapInCms*100;
-  tkLegendLineLength.value := gp.legend.lineLengthInCms*50;
-  tkLegendFrameThickness.Value := gp.legend.frameBorderThickness*10;
+  tkFrameGap.value := gp.legendObject.frameGapInCms*100;
+  tkLegendLineLength.value := gp.legendObject.lineLengthInCms*50;
+  tkLegendFrameThickness.Value := gp.legendObject.frameBorderThickness*10;
 
   lbSeries.Clear;
-  lbSeries.Items.Add (gp.dataBlocks[0].name);
+  for i := 0 to gp.dataBlocks.Count - 1 do
+      lbSeries.Items.Add (gp.dataBlocks[i].name);
+
   lbYColumns.Clear;
+  // We only do block zero here as tha tis the defualt one that is visible at start up
   if gp.dataBlocks.count > 0 then
      for i := 0 to gp.dataBlocks[0].columns.Count - 1 do
-        lbYColumns.Items.Add (gp.dataBlocks[0].columns[i].name);
+         lbYColumns.Items.Add (gp.dataBlocks[0].columns[i].name);
 
   cboSymbols.Clear;
   cboSymbols.Items.Assign(getListOfSymbolNames());
@@ -652,7 +677,7 @@ begin
    if not fireEvent then
      exit;
 
-  currentSubGraph.legend.frameGapInCms := tkFrameGap.Value/150;
+  currentSubGraph.legendObject.frameGapInCms := tkFrameGap.Value/150;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
@@ -662,7 +687,10 @@ begin
    if not fireEvent then
      exit;
 
-  currentSubGraph.legend.frameBorderThickness := tkLegendFrameThickness.Value/10;
+  if tkLegendFrameThickness.Value = 0 then
+     currentSubGraph.legendObject.frameBorderThickness := 0   // ensure 1 pixel thick lines
+  else
+     currentSubGraph.legendObject.frameBorderThickness := tkLegendFrameThickness.Value/10;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
@@ -672,7 +700,7 @@ begin
    if not fireEvent then
      exit;
 
-  currentSubGraph.legend.lineLengthInCms := tkLegendLineLength.Value/50;
+  currentSubGraph.legendObject.lineLengthInCms := tkLegendLineLength.Value/50;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
@@ -746,7 +774,7 @@ begin
 
   index := currentSubGraph.dataBlocks.find (lbSeries.items[lbSeries.ItemIndex]);
 
-  currentSubGraph.legend.outlineColor := cbLegendFrameColor.color;
+  currentSubGraph.legendObject.outlineColor := cbLegendFrameColor.color;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
@@ -762,7 +790,7 @@ begin
 
   index := currentSubGraph.dataBlocks.find (lbSeries.items[lbSeries.ItemIndex]);
 
-  currentSubGraph.legend.interiorColor := cboLegendInteriorColor.color;
+  currentSubGraph.legendObject.interiorColor := cboLegendInteriorColor.color;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
@@ -1060,7 +1088,7 @@ begin
 
   index := currentSubGraph.dataBlocks.find (lbSeries.items[lbSeries.ItemIndex]);
 
-  currentSubGraph.legend.frameVisible := chkLegendFrameVisible.IsChecked;
+  currentSubGraph.legendObject.frameVisible := chkLegendFrameVisible.IsChecked;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
@@ -1124,7 +1152,7 @@ begin
 
    index := currentSubGraph.dataBlocks.find (lbSeries.items[lbSeries.ItemIndex]);
 
-  currentSubGraph.legend.visible := chkLegendVisible.IsChecked;
+  currentSubGraph.legendObject.visible := chkLegendVisible.IsChecked;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
@@ -1226,12 +1254,13 @@ begin
   if lbSeries.ItemIndex = -1 then
      exit;
 
-  datacolumn := currentSubGraph.dataBlocks[0].columns.find (lbSeries.items[lbSeries.ItemIndex], index);
+  index := currentSubGraph.dataBlocks.find (lbSeries.items[lbSeries.ItemIndex]);
   YColumnIndex := lbYColumns.ItemIndex;
 
   currentSubGraph.dataBlocks[index].columns[YColumnIndex].symbol.Visible := chkSymbolsVisible.IsChecked;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
+
 
 procedure TfrmGraphPackageDlg.chkXAxisTitleChange(Sender: TObject);
 begin
@@ -1241,6 +1270,7 @@ begin
   currentSubGraph.bDrawXAxisTitle := chkXAxisTitle.IsChecked;
   (subgraph.parentGraph as TRRGraph).redraw;
 end;
+
 
 procedure TfrmGraphPackageDlg.copyPropertiesFromDlg (gp : TSubGraphProperties);
 var i : integer;
@@ -1299,6 +1329,54 @@ end;
 procedure TfrmGraphPackageDlg.btnCloseClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TfrmGraphPackageDlg.spinMainTitleFontSizeChange(Sender: TObject);
+begin
+   if not fireEvent then
+     exit;
+
+  currentSubGraph.MainTitleObject.textProperties.font.Size := spinMainTitleFontSize.Value;
+  (subgraph.parentGraph as TRRGraph).redraw;
+end;
+
+
+procedure TfrmGraphPackageDlg.spinXAxisFontSizeChange(Sender: TObject);
+begin
+   if not fireEvent then
+     exit;
+
+  currentSubGraph.XAxisTitleObject.textProperties.font.Size := spinXAxisFontSize.Value;
+  (subgraph.parentGraph as TRRGraph).redraw;
+end;
+
+
+procedure TfrmGraphPackageDlg.spinXAxisLabelsFontSizeChange(Sender: TObject);
+begin
+   if not fireEvent then
+     exit;
+
+  currentSubGraph.XAxisLabels.font.Size := spinXAxisLabelsFontSize.Value;
+  (subgraph.parentGraph as TRRGraph).redraw;
+end;
+
+
+procedure TfrmGraphPackageDlg.spinYAxisFontSizeChange(Sender: TObject);
+begin
+   if not fireEvent then
+     exit;
+
+  currentSubGraph.YAxisTitleObject.textProperties.font.Size := spinYAxisFontSize.Value;
+  (subgraph.parentGraph as TRRGraph).redraw;
+end;
+
+procedure TfrmGraphPackageDlg.spinYAxisLabelsFontSizeChange(Sender: TObject);
+begin
+   if not fireEvent then
+     exit;
+
+  currentSubGraph.YAxisLabels.font.Size := spinYAxisLabelsFontSize.Value;
+  (subgraph.parentGraph as TRRGraph).redraw;
 end;
 
 end.

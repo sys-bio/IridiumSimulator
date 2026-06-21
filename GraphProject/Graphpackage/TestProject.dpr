@@ -3,7 +3,8 @@ program TestProject;
 uses
   FMX.Forms,
   FMX.Types,
-  ufMainTest in 'ufMainTest.pas' {frmMain};
+  ufMainTest in 'ufMainTest.pas' {frmMain},
+  uCSVUtils in '..\uCSVUtils.pas';
 
 {$R *.res}
 

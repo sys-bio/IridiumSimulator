@@ -3,8 +3,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 480
-  ClientWidth = 790
+  ClientHeight = 580
+  ClientWidth = 932
   Position = MainFormCenter
   StyleBook = StyleBook1
   FormFactor.Width = 320
@@ -19,6 +19,7 @@ object frmMain: TfrmMain
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     Text = 'Label1'
+    TabOrder = 0
   end
   object Layout3D1: TLayout3D
     Height = 4.000000000000000000
@@ -27,7 +28,7 @@ object frmMain: TfrmMain
   object Layout1: TLayout
     Align = Left
     Size.Width = 137.000000000000000000
-    Size.Height = 480.000000000000000000
+    Size.Height = 580.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
     object btnGridLines: TButton
@@ -42,7 +43,7 @@ object frmMain: TfrmMain
     end
     object btnStartEditor: TButton
       Position.X = 16.000000000000000000
-      Position.Y = 392.000000000000000000
+      Position.Y = 504.000000000000000000
       Size.Width = 80.000000000000000000
       Size.Height = 22.000000000000000000
       Size.PlatformDefault = False
@@ -108,12 +109,19 @@ object frmMain: TfrmMain
       Text = 'Save Bitmap'
       OnClick = btnSaveBitmapClick
     end
-    object Button1: TButton
-      Position.X = 8.000000000000000000
-      Position.Y = 336.000000000000000000
+    object btnDrawPlot: TButton
+      Position.X = 32.000000000000000000
+      Position.Y = 334.000000000000000000
       TabOrder = 8
-      Text = 'Button1'
-      OnClick = Button1Click
+      Text = 'Draw Plot'
+      OnClick = btnDrawPlotClick
+    end
+    object btnLoadData: TButton
+      Position.X = 32.000000000000000000
+      Position.Y = 364.000000000000000000
+      TabOrder = 9
+      Text = 'Load Data'
+      OnClick = btnLoadDataClick
     end
   end
   object StyleBook1: TStyleBook

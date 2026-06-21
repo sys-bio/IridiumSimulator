@@ -10,9 +10,7 @@ type
 
   TTextType = class (TObject)
      value : string;
-     fontName  : string;
-     fontSize  : double;
-     fontColor : TAlphaColor;
+     fontColor : TAlphaColor;  // Color is separate from ISKFont, it is set by the paint object
      visible   : boolean;
      box : TBox;   // Bounding box, computed at draw time
 
@@ -20,7 +18,7 @@ type
      font     : ISkFont;
      procedure setFontSize (size : double);
      function computeDimensions (LPaint : ISkPaint) : TPointF;
-     constructor Create (fontName : string);
+     constructor Create (fontName : string; fontSize : double);
   end;
 
 
@@ -55,6 +53,14 @@ type
 
 
    TYAxisTitle = class (TGraphObject)
+        constructor Create;
+   end;
+
+   TXAxisObject = class (TGraphObject)
+        constructor Create;
+   end;
+
+   TYAxisObject = class (TGraphObject)
         constructor Create;
    end;
 
@@ -94,9 +100,6 @@ end;
 constructor TGraphObject.Create (objType: TSubGraphSelectedObjectType);
 begin
   inherited Create (objType);
-  textProperties := TTextType.Create('Arial');
-  textProperties.typeface := TSkTypeface.MakeFromName('Arial', TSkFontStyle.Normal);
-  textProperties.font := TSkFont.Create(textProperties.typeface, 12, 1);
 end;
 
 
@@ -133,18 +136,16 @@ begin
 end;
 
 
-constructor TTextType.Create (fontName : string);
+constructor TTextType.Create (fontName : string; fontSize : double);
 begin
-  self.fontname := fontName;
   typeface := TSkTypeface.MakeFromName(fontName, TSkFontStyle.Normal);
-  setFontSize (12);
+  setFontSize (fontSize);
 end;
 
 // -------------------------------------------------------------
 
 procedure TTextType.setFontSize (size : double);
 begin
-  fontSize := size;
   font := TSkFont.Create(typeface, size, 1);
 end;
 
@@ -166,20 +167,19 @@ end;
 constructor TLegend.Create (objType : TSubGraphSelectedObjectType);
 begin
   self.ObjType := objType;
-  frameVisible := False;
-  frameBorderThickness := 1;
+  frameVisible := DEFAULT_FRAME_VISIBLE;
+  frameBorderThickness := DEFAULT_FRAME_THICKNESS;
 
   logicalBox.left := 0.65;
   logicalBox.top  := 0.05;
   visible := true;
-  outlineColor := claBlack;
+  outlineColor := DEFAULT_LEGEND_OUTLINE_COLOR;
   interiorColor := claGhostwhite;//  claBeige;
   visible := true;
   lineThicknessInCms := 0.02;
 
-  textProperties := TTextType.Create('Arial');
-  textProperties.typeface := TSkTypeface.MakeFromName('Arial', TSkFontStyle.Normal);
-  textProperties.font := TSkFont.Create(textProperties.typeface, 12, 1);
+  textProperties := TTextType.Create('Arial', DEFAULT_LEGEND_FONT_SIZE);
+  textProperties.fontColor := DEFAULT_LEGEND_TEXT_COLOR;
 
   frameGapInCms := 0.15;
   lineLengthInCms := 1;
@@ -197,11 +197,9 @@ begin
   logicalBox.w := 0;
   logicalBox.h := 0;
 
-  textProperties.fontName := 'Arial';
-  //gObj.textProperties.style := [TFontStyle.fsBold];
-  textProperties.fontcolor := claBlack;
+  textProperties := TTextType.Create('Arial', DEFAULT_MAIN_TITLE_FONT_SIZE);
+  textProperties.fontcolor := DEFAULT_MAIN_TITLE_COLOR;
   textProperties.value := 'Main Title';
-  textProperties.setFontSize(15);
   visible := true;
 end;
 
@@ -211,13 +209,11 @@ begin
   inherited Create (coXAxisTitle);
 
   logicalBox.left := 0.45;
-  logicalBox.top  := 1.125;
+  logicalBox.top  := 1.225;  // May 2024. increased from 1.125 to make more space
 
-  textProperties.fontName := 'Arial';
-  //graphObjects[xaxisTitleId].textProperties.style := [TFontStyle.fsBold];
-  textProperties.fontcolor := claBlack;
+  textProperties := TTextType.Create('Arial', DEFAULT_XAXIS_TITLE_FONT_SIZE);
+  textProperties.fontcolor := DEFAULT_XAXIS_COLOR;
   textProperties.value := 'X Axis';
-  textProperties.setFontSize(14);
   visible := true;
 end;
 
@@ -229,12 +225,36 @@ begin
   logicalBox.left := -0.1;
   logicalBox.top  := 0.5;
 
-  //graphObjects[yaxisTitleId].textProperties.style := [TFontStyle.fsBold];
-  textProperties.fontcolor := claBlack;
+  textProperties := TTextType.Create('Arial', DEFAULT_YAXIS_TITLE_FONT_SIZE);
+  textProperties.fontcolor := DEFAULT_YAXIS_COLOR;
   textProperties.value := 'Y Axis';
-  textProperties.setFontSize(14);
   visible := true;
 end;
 
+
+constructor TXAxisObject.Create;
+begin
+  inherited Create (coXAxis);
+
+  logicalBox.left := 0.0;
+  logicalBox.top  := 1;
+  logicalBox.w := 1;
+  logicalBox.h := 0.1;
+
+  visible := true;
+end;
+
+
+constructor TYAxisObject.Create;
+begin
+  inherited Create (coYAxis);
+
+  logicalBox.left := -0.1;
+  logicalBox.top  := 0;
+  logicalBox.w := 0.1;
+  logicalBox.h := 1.0;
+
+  visible := true;
+end;
 
 end.

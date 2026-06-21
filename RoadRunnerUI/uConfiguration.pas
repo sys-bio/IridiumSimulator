@@ -6,6 +6,7 @@ Uses SysUtils, REST.Json, FMX.Dialogs,
      uTableFrameViewer,
      ufMainConfig,
      uTimeCourseConfig,
+     uMiscFrameConfig,
      uModelInputManager;
 
 const
@@ -18,6 +19,7 @@ type
      FModelInputManagerConfig : TModelInputManagerConfig;
      FTimeCourseConfig : TTimeCourseConfig;
      FTextFormViewer : TTableFormViewerConfig;
+     FMiscFrameConfig : TMiscFrameConfig;
      FUIStyle : string;
     published
       property UIStyle : string read FUIStyle write FUIStyle;
@@ -25,6 +27,7 @@ type
       property timeCourceConfig : TTimeCourseConfig read FTimeCourseConfig write FTimeCourseConfig;
       property modelInputManagerConfig : TModelInputManagerConfig read FModelInputManagerConfig write FModelInputManagerConfig;
       property textFormViewer : TTableFormViewerConfig read FTextFormViewer write FTextFormViewer;
+      property miscFrameConfig : TMiscFrameConfig read FMiscFrameConfig write FMiscFrameConfig;
     public
       procedure saveToJson (const fileName : string);
       procedure readFromJson (const fileName : string);
@@ -77,6 +80,7 @@ begin
        configOpts.FModelInputManagerConfig := TModelInputManagerConfig.CreateDefault;
        configOpts.FTextFormViewer := TTableFormViewerConfig.CreateDefault;
        configOpts.FTimeCourseConfig := TTimeCourseConfig.CreateDefault;
+       configOpts.FMiscFrameConfig := TMiscFrameConfig.CreateDefault;
        configOpts.UIStyle := 'MineShaft_Win_Style';
        end;
   except
@@ -105,6 +109,7 @@ begin
    mainObj.AddPair (TTimeCourseConfig.configName, FTimeCourseConfig.saveToJson);
    mainObj.AddPair (TModelInputManagerConfig.configName, FModelInputManagerConfig.saveToJson);
    mainObj.AddPair (TTableFormViewerConfig.configName, FTextFormViewer.saveToJson);
+   mainObj.AddPair (TMiscFrameConfig.configName, FMiscFrameConfig.saveToJson);
 
   // ar := TJSONArray.Create();
    //JsonObj.AddPair('subgraphs', ar);
@@ -138,6 +143,7 @@ begin
      FModelInputManagerConfig := TModelInputManagerConfig.CreateDefault;
      FTextFormViewer := TTableFormViewerConfig.CreateDefault;
      FTimeCourseConfig := TTimeCourseConfig.createDefault;
+     FMiscFrameConfig := TMiscFrameConfig.createDefault;
      UIStyle := 'MineShaft_Win_Style';
      exit;
      end;
@@ -151,6 +157,7 @@ begin
   FTimeCourseConfig := TTimeCourseConfig.readSection (configObj);
   FModelInputManagerConfig := TModelInputManagerConfig.readSection (configObj);
   FTextFormViewer := TTableFormViewerConfig.readSection (configObj);
+  FMiscFrameConfig := TMiscFrameConfig.readSection (configObj);
 end;
 
 

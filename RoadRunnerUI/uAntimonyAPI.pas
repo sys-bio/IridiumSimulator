@@ -4,6 +4,11 @@ interface
 
 Uses Classes, SysUtils, uModelInputManager;
 
+const
+  allFormulas : integer = 2;
+  varSpecies :  integer = 11;
+  constSpecies : integer = 15;
+
 var
    DLLLoaded : boolean;
 
@@ -11,8 +16,18 @@ var
 
    function ant_loadSBMLString (str : AnsiString) : integer;
    function ant_loadAntimonyString (str : AnsiString) : integer;
+   function ant_loadAntimonyStringWithException (str : AnsiString) : integer;
    function getSBMLFromAntimony (str : AnsiString) : TModelErrorState;
    function getAntimonyFromSBML (str : AnsiString) : AnsiString;
+
+   function printAllDataFor : AnsiString;
+
+   function getNumReactions : integer;
+   function getSymbolsEquations (return_type : integer) : TArray<string>;
+   function getSymbolNamesOfType (return_type : integer) : TArray<string>;
+   function getNumSymbolsOfType (return_type : integer) : integer;
+
+   //char ** 	getSymbolNamesOfType (const char *moduleName, return_type rtype)
 
 
 implementation
@@ -31,16 +46,29 @@ type
   TCharFunc = function : PAnsiChar; cdecl;
   TCharCharFunc = function (str : PAnsiChar) : PAnsiChar; cdecl;
 
+  TCharCharReturnCharInt = function (str : PAnsiChar; returnValue : integer) : PPAnsiChar; cdecl;
+  TIntCharInt = function (str : PAnsiChar; returnValue : integer) : integer; cdecl;
+
+  TAnsiCharPtrArray = array[0..0] of PAnsiChar;
+  PAnsiCharPtrArray = ^TAnsiCharPtrArray;
+
 var FLibHandle : HModule;
     libAntimonyName : string;
 
     ant_libLoadSBMLString : TIntCharFunc;
     libLoadString : TIntCharFunc;
-    loadAntimonyString : TIntCharFunc;
+    libLoadAntimonyString : TIntCharFunc;
     libGetSBMLString : TCharCharFunc;
     libGetAntimonyString : TCharCharFunc;
     libGetMainModuleName : TCharFunc;
+    libGetNumReactions : TIntCharFunc;
     libGetlastError : TCharFunc;
+    libGetSymbolNamesOfType : TCharCharReturnCharInt;
+    libGetSymbolNamesOfType2 : TCharCharReturnCharInt;
+    libGetNumSymbolsOfType : TIntCharInt;
+    libPrintAllDataFor : TCharCharFunc;
+
+    libGetSymbolEquationsOfType : TCharCharReturnCharInt;
 
 
 function GetProcAddress(AModule: HMODULE; AName: System.PChar): Pointer;
@@ -70,11 +98,20 @@ begin
 end;
 
 
+function ant_loadAntimonyStringWithException (str : AnsiString) : integer;
+var p : PAnsiChar;
+    err : integer;
+begin
+  err := libLoadAntimonyString (PAnsiChar (str));
+  result := err;
+end;
+
+
 function ant_loadAntimonyString (str : AnsiString) : integer;
 var p : PAnsiChar;
     err : integer;
 begin
-  err := ant_libLoadSBMLString (PAnsiChar (str));
+  err := libLoadAntimonyString (PAnsiChar (str));
   if err = -1 then
      begin
      p := libGetLastError;
@@ -115,6 +152,71 @@ begin
 end;
 
 
+function printAllDataFor : AnsiString;
+var p : PAnsiChar;
+begin
+  p := libPrintAllDataFor (libGetMainModuleName());
+  result := AnsiString (p);
+end;
+
+
+function getNumReactions : integer;
+begin
+  result := libGetNumReactions (libGetMainModuleName());
+end;
+
+
+function getNumSymbolsOfType (return_type : integer) : integer;
+begin
+  result := libGetNumSymbolsOfType (libGetMainModuleName(), return_type);
+end;
+
+
+function getSymbolNamesOfType (return_type : integer) : TArray<string>;
+var
+  StringPtrArray: PAnsiCharPtrArray;
+  i, numSymbols : Integer;
+begin
+  numSymbols := libGetNumSymbolsOfType (libGetMainModuleName(), return_type);
+
+  SetLength(Result, numSymbols);
+  StringPtrArray := PAnsiCharPtrArray(libGetSymbolNamesOfType (libGetMainModuleName(), return_type));
+  if StringPtrArray <> nil then
+  begin
+    for i := 0 to numSymbols - 1 do
+    begin
+      if StringPtrArray^[i] <> nil then
+        Result[i] := string(StringPtrArray^[i])
+      else
+        Result[i] := '';
+    end;
+  end;
+end;
+
+
+function getSymbolsEquations (return_type : integer) : TArray<string>;
+var
+  StringPtrArray: PAnsiCharPtrArray;
+  i, numSymbols : Integer;
+begin
+ numSymbols := libGetNumSymbolsOfType (libGetMainModuleName(), return_type);
+
+  SetLength(Result, numSymbols);
+  StringPtrArray := PAnsiCharPtrArray(libGetSymbolEquationsOfType (libGetMainModuleName(), return_type));
+  if StringPtrArray <> nil then
+  begin
+    for i := 0 to numSymbols - 1 do
+    begin
+      if StringPtrArray^[i] <> nil then
+        Result[i] := string(StringPtrArray^[i])
+      else
+        Result[i] := '';
+    end;
+  end;
+
+end;
+
+
 function loadAntimonyLibrary (var errMsg : string) : boolean;
 var path : string;
     DLErrorMsg : string;
@@ -142,9 +244,16 @@ begin
     @libLoadString  := GetProcAddress (FLibHandle, 'loadString');
     @libGetSBMLString := GetProcAddress (FLibHandle, 'getSBMLString');
     @libGetAntimonyString := GetProcAddress (FLibHandle, 'getAntimonyString');
-    @loadAntimonyString := GetProcAddress (FLibHandle, 'loadAntimonyString');
+    @libLoadAntimonyString := GetProcAddress (FLibHandle, 'loadAntimonyString');
     @libGetMainModuleName := GetProcAddress (FLibHandle, 'getMainModuleName');
+    @libGetNumReactions := GetProcAddress (FLibHandle, 'getNumReactions');
     @libGetlastError := GetProcAddress (FLibHandle, 'getLastError');
+    @libGetSymbolEquationsOfType := GetProcAddress (FLibHandle, 'getSymbolEquationsOfType');
+
+    @libPrintAllDataFor := GetProcAddress (FLibHandle, 'printAllDataFor');
+
+    @libGetNumSymbolsOfType := GetProcAddress (FLibHandle, 'getNumSymbolsOfType');
+    @libGetSymbolNamesOfType := GetProcAddress (FLibHandle, 'getSymbolNamesOfType');
   except
      on E: Exception do
         begin

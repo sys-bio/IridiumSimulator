@@ -117,21 +117,37 @@ object frmFloatingPlotViewer: TfrmFloatingPlotViewer
       end
     end
   end
-  object plt: TRRGraph
-    subgraphs = <
-      item
-        subgraph.Id = 'SG6151'
-        subgraph.XMax = 10.000000000000000000
-        subgraph.YMax = 10.000000000000000000
-        subgraph.MainTitle = 'Main Title'
-        subgraph.XAxisTitle = 'X Axis'
-        subgraph.YAxisTitle = 'Y Axis'
-        subgraph.graphBorder = True
-        subgraph.properties.XGridLines = False
-        subgraph.properties.YGridLines = False
-        subgraph.properties.AutoXScaling = False
-        subgraph.properties.AutoYScaling = False
-      end>
+  object Plot: TSkPlotPaintBox
     Align = Client
+    HitTest = True
+    Size.Width = 699.000000000000000000
+    Size.Height = 510.000000000000000000
+    Size.PlatformDefault = False
+    AxisProperties.MaxX = 1.000000000000000000
+    AxisProperties.MaxY = 1.000000000000000000
+    AutoXScaling = True
+    AutoYScaling = True
+    LogX = False
+    LogY = False
+    ChartTitle.Text = 'Data Plot'
+    ChartTitle.Visible = True
+    ChartTitle.Color = claBlack
+    ChartTitle.FontSize = 16.000000000000000000
+    XAxisTitle.Text = 'X Axis'
+    XAxisTitle.Visible = True
+    XAxisTitle.Color = claBlack
+    XAxisTitle.FontSize = 14.000000000000000000
+    YAxisTitle.Text = 'Y Axis'
+    YAxisTitle.Visible = True
+    YAxisTitle.Color = claBlack
+    YAxisTitle.FontSize = 14.000000000000000000
+    XAxisFontSize = 14.000000000000000000
+    YAxisFontSize = 14.000000000000000000
+    OriginOnAxis = True
+    PlotAreaColor = claWhite
+    PlotBorderColor = claBlack
+    PlotBorderWidth = 1.500000000000000000
+    PlotBorderVisible = True
+    BackGroundColor = claWhite
   end
 end

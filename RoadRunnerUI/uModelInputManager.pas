@@ -6,6 +6,8 @@ Uses SysUtils,
      Classes,
      FMX.Dialogs,
      FMX.Memo,
+     StrUtils,
+     FrameMemoLineCount,
      Json;//, uController;
 
 type
@@ -28,6 +30,7 @@ type
     ok : boolean;
     errMsg : string;
     sbmlStr : string;
+    runStr : string;
   end;
 
   TModelInputManager = class (TObject)
@@ -36,7 +39,7 @@ type
 
       antimonyStr : string;
 
-      modelMemo : TMemo;
+      modelMemo : TMemo;  // reference to a TMemo control
       antimonyLoaded : boolean;
       currentAntimonyFileName : string;
       function  getSBMLFromAntimony (antStr : string) : TModelErrorState;
@@ -44,9 +47,10 @@ type
 
       function loadAntimonyFromFile (fileName : string; var errMsg : string) : boolean;
 
+      function checkForValidAntimony : boolean;
       procedure loadAntimonyLibrary;
-      procedure setInputMemo (memo : TMemo);
-      procedure setMemoFontSize (fontSize : integer);
+      procedure SetInputMemo (memo : TMemo);
+      procedure SetMemoFontSize (fontSize : integer);
       procedure exportSBML;
       function  importSBML (var path : string) : string;
       constructor Create;
@@ -121,21 +125,41 @@ begin
 //    end;
 end;
 
-procedure TModelInputManager.setInputMemo (memo : TMemo);
+
+procedure TModelInputManager.setInputMemo (Memo : TMemo);
 begin
-  modelMemo := memo;
+  modelMemo := Memo;
 end;
 
-procedure TModelInputManager.setMemoFontSize (fontSize : integer);
+
+procedure TModelInputManager.SetMemoFontSize (FontSize : integer);
 begin
-  modelMemo.Font.Size := fontSize;
+  ModelMemo.TextSettings.Font.Size := FontSize;
+
   configOpts.modelInputManagerConfig.FFontSize := fontSize;
 end;
 
 
 function TModelInputManager.getSBMLFromAntimony (antStr : string) : TModelErrorState;
+var offset : integer;
+    runStr : string;
+    r : string;
 begin
+  r := '#RUN';
+  // Check for #run section
+  offset := Pos (r.ToLower, antStr);
+  if offset <> 0 then
+     begin
+     runStr := copy (antStr, offset + length ('#RUN'), length (antStr));
+     runStr := ReplaceStr(runStr, sLineBreak, ' ');
+     antStr := copy (antStr, 0, offset);
+     end;
+
   result := uAntimonyAPI.getSBMLFromAntimony(antstr);
+  if runStr <> '' then
+     result.runStr := runStr
+  else
+     result.runStr := '';
 end;
 
 
@@ -160,6 +184,15 @@ begin
 end;
 
 
+function TModelInputManager.checkForValidAntimony : boolean;
+begin
+  if uAntimonyAPI.ant_loadAntimonyStringWithException(antimonyStr) <> -1 then
+     result := False
+  else
+     result := True;
+end;
+
+
 procedure TModelInputManager.loadAntimonyLibrary;
 var
   errMsg : string;
@@ -173,19 +206,21 @@ begin
     antimonyLoaded := true;
 end;
 
+
 procedure TModelInputManager.exportSBML;
 var sbmlStr : string;
     modelErrorState : TModelErrorState;
 begin
   if SaveSBMLDialog.Execute then
     begin
-      modelErrorState := uAntimonyAPI.getSBMLFromAntimony(modelMemo.Text);
+      modelErrorState := uAntimonyAPI.getSBMLFromAntimony(ModelMemo.Lines.Text);
       if modelErrorState.ok then
          TFile.WriteAllText(SaveSBMLDialog.FileName, modelErrorState.sbmlStr)
       else
          showmessage (modelErrorState.errMsg);
     end;
 end;
+
 
 function TModelInputManager.importSBML (var path : string) : string;
 begin

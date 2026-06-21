@@ -22,7 +22,8 @@ type
     btnSimPlot: TButton;
     btnSaveBitmap: TButton;
     StyleBook1: TStyleBook;
-    Button1: TButton;
+    btnDrawPlot: TButton;
+    btnLoadData: TButton;
     procedure btnGridLinesClick(Sender: TObject);
     procedure RRGraphReportCordinates(mx, my, gx, gy: Single);
     procedure ComboColorBoxChange(Sender: TObject);
@@ -33,7 +34,8 @@ type
     procedure btnSimPlotClick(Sender: TObject);
     procedure btnSaveBitmapClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure btnDrawPlotClick(Sender: TObject);
+    procedure btnLoadDataClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -50,7 +52,7 @@ implementation
 
 {$R *.fmx}
 
-Uses System.UIConsts, uSymbolDetails, uRRDataSeries, uRRCommon, Generics.Collections;
+Uses System.UIConsts, uSymbolDetails, uLineDetails, uRRDataSeries, uRRCommon, Generics.Collections;
 
 const
   mydata : Array[0..199,0..1] of double =
@@ -259,24 +261,29 @@ const
 procedure TfrmMain.btnPlotClick(Sender: TObject);
 var npoints, i, index : integer;
     startx, hstep : double;
-    ds : TData;
+    ds : TDataBlocks;
+    sg : TSubGraph;
+    subgraph : TSubGraph;
 begin
-  ds := RRgraph.subgraphs[0].properties.dataSeries;
+  if RRGraph.subgraphs.Count = 0 then
+     begin
+     RRGraph.AddDefaultSubgraph;
+     end;
 
+  ds := RRgraph.subgraphs[0].properties.dataBlocks;
   ds.clear;
+  ds.Add(TDataBlock.Create);
 
-  //RRGraph.subgraphs[0].MajorXTicksStyle := tsOut;
-  //RRGraph.subgraphs[0].MajorYTicksStyle := tsOut;
+  subgraph := RRGraph.getSubgraph(0);
 
-  //RRGraph.subgraphs[0].MinorXTicksStyle := tsOut;
-  //RRGraph.subgraphs[0].MinorYTicksStyle := tsOut;
-
-  RRGraph.subgraphs[0].graphBorder := false;
+  RRGraph.subgraphs[0].graphBorder := True;
 
   npoints := 40;
   startx := 0.0; hstep := 20/npoints;
-  ds[0].createDataColumn('x', npoints);
-  ds[0].createDataColumn('y', npoints);
+  ds[0].createDataColumn('x1', npoints);
+  ds[0].createDataColumn('y1', npoints);
+  ds[0].xaxisColumn := 'x1';
+  RRGraph.setNameOfDataSet (0, 0, 'Sine Wave');
 
 //  ds[0].YData.names[0] := 'Y Data';
   for i := 0 to npoints - 1 do
@@ -290,19 +297,33 @@ begin
   rrGraph.subgraphs[0].setWorldYMin(-2);
   rrGraph.subgraphs[0].setWorldYMax(2);
 
-//  ds[index].YLines[0].Color := claBlue;
-//  ds[index].YLines[0].ThicknessInCms := 0.04;
-//
-//  ds[index].YSymbols[0].Symbol := SolidSquare;
+  Index := ds.Add(TDataBlock.Create);
+  npoints := 40;
+  startx := 0.0; hstep := 20/npoints;
+  ds[Index].createDataColumn('x2', npoints);
+  ds[Index].createDataColumn('y2', npoints);
+  ds[Index].xaxisColumn := 'x2';
+  ds[Index].Name := 'Cosine Wave';
+  RRGraph.setNameOfDataSet (0, 1, 'Cosine Wave');
+
+  //  ds[0].YData.names[0] := 'Y Data';
+  for i := 0 to npoints - 1 do
+      begin
+      ds[Index].columns[0].data[i] := startx;
+      ds[Index].columns[1].data[i] := cos (startx);
+      startx := startx + hstep;
+      end;
+  ds[index].Columns[1].Symbol.FillColor := claRed;
+
   RRgraph.Redraw;
 end;
 
 procedure TfrmMain.btnPlotTwoGraphsClick(Sender: TObject);
-var  ds : TData;
+var  ds : TDataBlocks;
      i : integer;
      index: integer;
 begin
-  ds := RRgraph.subgraphs[0].properties.dataSeries;
+  ds := RRgraph.subgraphs[0].properties.dataBlocks;
 
   ds.Clear;
 
@@ -343,11 +364,11 @@ begin
 end;
 
 procedure TfrmMain.btnSimPlotClick(Sender: TObject);
-var  ds : TData;
+var  ds : TDataBlocks;
      i : integer;
      index: integer;
 begin
-  ds := RRgraph.subgraphs[0].properties.dataSeries;
+  ds := RRgraph.subgraphs[0].properties.dataBlocks;
   ds.Clear;
 
   index := ds.Add (TDataBlock.Create ('dsSimData', 200, 1));
@@ -384,10 +405,10 @@ end;
 
 procedure TfrmMain.btnStartEditorClick(Sender: TObject);
 begin
-  RRGraph.startPropertyEditor (self, 0);
+  RRGraph.startPropertyEditor (self, 0, TSubGraphSelectedObjectType.coNone);
 end;
 
-procedure TfrmMain.Button1Click(Sender: TObject);
+procedure TfrmMain.btnDrawPlotClick(Sender: TObject);
 var i : integer;
     startx, hstep : double;
     npoints, index, lstIndex : integer;
@@ -400,9 +421,9 @@ begin
 
   sg := RRGraph.addDefaultSubgraph;
   sg.YMin := -3;
-  sg.YMax := 3;
+  sg.YMax := 10;
   sg.XMin := 0;
-  sg.XMax := 10;
+  sg.XMax := 7;
 
   npoints := 40;
   startx := 0.0; hstep := 20/npoints;
@@ -423,26 +444,48 @@ begin
   data0 := RRGraph.createDataColumn (0, 'x', npoints);
   data1 := RRGraph.createDataColumn (0, 'sin (x)', npoints);
 
-  for i := 0 to length (RRGraph.subgraphs[0].properties.dataSeries[0].columns[0].data) - 1 do
+  for i := 0 to length (RRGraph.subgraphs[0].properties.dataBlocks[0].columns[0].data) - 1 do
       begin
       data0.setDataValue(i, startx);
       data1.setDataValue(i, sin (startx));
       startx := startx + hstep;
       end;
 
-  ds := subgraph.properties.dataSeries[0];
-  ds.columns[1].lineDetails.Color := claBlue;
-  ds.columns[1].lineDetails.ThicknessInCms := 0.04;
-  ds.columns[1].lineDetails.Visible := True;
+//  ds := subgraph.properties.dataBlocks[0];
+//  ds.columns[1].lineDetails.Color := claBlue;
+//  ds.columns[1].lineDetails.ThicknessInSkiaUnits := 0.04;
+//  ds.columns[1].lineDetails.Style := TLineStyle.lsSolid;
+//  ds.columns[1].lineDetails.Visible := True;
+//
+//  ds.columns[1].symbol.symType := SolidCircle;
+//  ds.columns[1].symbol.outlineInCms := ds.columns[1].symbol.outlineInCms*1.4;
+end;
 
-  ds.columns[1].symbol.symType := SolidCircle;
-  ds.columns[1].symbol.outlineInCms := ds.columns[1].symbol.outlineInCms*1.4;
 
-  //lstDataBlocks.Clear;
-  //for i := 0 to RRGraph.subgraphs[0].properties.dataSeries[0].columns.Count - 1 do
-  //    lstIndex := lstDataBlocks.Items.Add (plt.subgraphs[0].properties.dataSeries[0].columns[i].name);
-  //lstDataBlocks.ItemIndex := 1;
-  //updateForm (1);
+procedure TfrmMain.btnLoadDataClick(Sender: TObject);
+var ds : TDataBlocks;
+    db : TDataBlock;
+    cd : String;
+    subgraph  : TSubGraph;
+begin
+  ds := RRgraph.subgraphs[0].properties.dataBlocks;
+  cd := ExtractFilePath(ParamStr(0)) + 'test3.csv';
+  if FileExists(cd) then
+     RRGraph.LoadCSVData('test3.csv')
+  else
+     showmessage ('Cant find file');
+
+  subgraph  := RRGraph.getSubgraph(0);
+
+  db := subgraph.properties.dataBlocks[1];
+  db.columns[1].lineDetails.Color := claRed;
+  db.columns[1].lineDetails.ThicknessInSkiaUnits := 10.04;
+  db.columns[1].lineDetails.Visible := True;
+  db.columns[1].Symbol.fillColor := claRed;
+  db.columns[2].Symbol.fillColor := claGreen;
+
+  db.columns[1].symbol.symType := SolidCircle;
+  db.columns[1].symbol.outlineInCms := db.columns[1].symbol.outlineInCms*1.4;
 end;
 
 procedure TfrmMain.ComboColorBoxChange(Sender: TObject);
@@ -453,7 +496,7 @@ begin
   RRgraph.subgraphs[0].properties.YMinorGridColor := ComboColorBox.Color;
   RRgraph.subgraphs[0].properties.XMinorGridColor := ComboColorBox.Color;
   RRGraph.subgraphs[0].GridLineStyle := TStrokeDash.Dash;
-  RRGraph.subgraphs[0].MinorGridThicknessInCms := 0.005;
+  //RRGraph.subgraphs[0].MinorGridThicknessInCms := 0.005;
 
   RRgraph.redraw;
 end;
@@ -462,7 +505,7 @@ procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   rrGraph := TRRGraph.Create(self);
   rrGraph.Parent := frmMain;
-  rrGraph.new(0.2, 0.8, 0.7, 0.6);
+  rrGraph.NewSubGraph(0.2, 0.8, 0.7, 0.6);
   rrGraph.Align := TAlignLayout.Client;
 end;
 

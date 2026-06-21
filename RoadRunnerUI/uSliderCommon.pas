@@ -16,6 +16,8 @@ type
         lb1, lb2 : TLabel;
         closeButton : TSpeedButton;
         configButton : TSpeedButton;
+        function convertToSliderValue (value : double) : double;
+        function convertSliderValueToActualValue : double;
         constructor Create (name : string; index : integer; minValue, maxValue, stepValue : double; lb1, lb2 : TLabel);
   end;
 
@@ -32,6 +34,18 @@ begin
   Self.stepValue := stepValue;
   Self.lb1 := lb1;
   Self.lb2 := lb2;
+end;
+
+
+function TSliderInfo.convertToSliderValue (value : double) : double;
+begin
+  result := 100 * ((value - minValue) / (maxValue - minValue));
+end;
+
+
+function TSliderInfo.convertSliderValueToActualValue : double;
+begin
+   result := minValue + (slider.value/100) * (maxValue - minValue);
 end;
 
 

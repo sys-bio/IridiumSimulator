@@ -10,7 +10,7 @@ uses
   Generics.Collections;
 
 type
-  TSliderListener =  procedure (parameter : string; value : double) of object;
+  TSliderListener =  procedure (parameter : string; value : double; runSimulation : boolean) of object;
 
   TSliderInitialValue = class (TObject)
     lowRange, highRange : double;
@@ -337,7 +337,7 @@ begin
   updateRangeLabel ((sender as TTrackBar).Tag);
 
   if Assigned (OnNotifyChange) then
-     OnNotifyChange (sliderInfo.parameter, value);
+     OnNotifyChange (sliderInfo.parameter, value, True);
 end;
 
 

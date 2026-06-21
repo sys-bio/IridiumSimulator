@@ -6,6 +6,7 @@ Uses SysUtils,
      Classes,
      uRoadRunner,
      uRRTypes,
+     uRR2DSimpleMatrix,
      Generics.Collections,
      uScanArguments,
      uModelInputManager,
@@ -25,15 +26,15 @@ type
 
      selectionList : TStringList;
      roadrunner : TRoadRunner;
-     simulationData : T2DMatrix;
+     simulationData : T2DMatrix;   // simulator data is owned by this class.
 
      procedure setSelectionList (selectionList : TStringList);
-     function  simulate : T2DMatrix;
+     procedure  simulate;
      procedure runTimeCourseScan (selectionList : TStringList; scanArguments : TScanArguments);
      procedure runSteadyStateScan (selectionList : TStringList; scanArguments : TScanArguments);
      function  loadSBMLFromString (sbmlStr : string) : boolean;
-     function  loadAntModelFromString (antimonyStr : string) : TModelErrorState;
      procedure updateModel (astr : string);
+     procedure InvalidateSimulationData;
 
      constructor Create;
      destructor  Destroy; override;
@@ -67,19 +68,27 @@ procedure TSimulator.setSelectionList (selectionList : TStringList);
 begin
   self.selectionList.Assign (selectionList);
   roadrunner.setTimeCourseSelectionListEx(self.selectionList);
-  scanControl := TScanControl.Create (self);
+  if not Assigned (scanControl) then
+     scanControl := TScanControl.Create (self);
 end;
 
 
-function TSimulator.simulate : T2DMatrix;
+procedure TSimulator.simulate;
 begin
-  result := roadrunner.simulateEx(timeStart, timeEnd, numberOfPoints);
-  simulationData := result;
+  if Assigned (simulationData) then
+     begin
+     simulationData.Free;
+     simulationData := nil;
+     end;
+
+  simulationData := roadrunner.simulateEx(timeStart, timeEnd, numberOfPoints);
+  simulationData.valid := True;
 end;
 
 
 procedure TSimulator.runTimeCourseScan (selectionList : TStringList; scanArguments : TScanArguments);
 begin
+  try
     scanControl.timeStart := scanArguments.FTimeStart;
     scanControl.timeEnd := scanArguments.FTimeEnd;
     scanControl.numberOfPoints := scanArguments.FNumberOfPoints;
@@ -93,15 +102,13 @@ begin
     scanControl.listOfValues := scanArguments.FListValues;
 
     simulationData := scanControl.doTimeCourseSingleParameterScan(selectionList, scanArguments);
+  finally
+    // Do not free scancontrol!
+  end;
 end;
 
 
 procedure TSimulator.runSteadyStateScan (selectionList : TStringList; scanArguments : TScanArguments);
-var
-  i: integer;
-  scanValues1, scanValues2: TDoubleArray;
-  m, scanResult: T2DMatrix;
-  parameterStr: string;
 begin
   try
     // Single scan
@@ -113,31 +120,8 @@ begin
     scanControl.scanValuesType := scanArguments.FScanValuesType;
 
     simulationData := scanControl.doSteadyStateSingleParameterScan(selectionList);
-
-    // else
-    // begin
-    // // scanValues2 := getScanValues(strtofloat (edtMin2.text), strtofloat (edtMax2.text), strtoint (edtNumScanPoints2.Text),
-    // // chkLogScan2.checked, edtManualValues2.Text, chkScanManual2.checked);
-    // // for i := 0 to lstOutputScan.Count - 1 do
-    // // selectionList.Add (scanSelectionList[i]);
-    // //
-    // // m := doSteadyStateDoubleParameterScan (cboScan1.Items[cboScan1.ItemIndex], cboScan2.Items[cboScan2.ItemIndex], selectionList, scanValues1, scanValues2);
-    // // selectionList.Insert (0, parameterStr);
-    // //
-    // // tmp := TCMatrix.Create (length (scanValues1), 1);
-    // // tmp.setColumnName(1, parameterStr);
-    // // for i := 0 to length (scanValues1) - 1 do
-    // // tmp[i+1,1] := complex (scanValues1[i], 0);
-    // //
-    // // scanResult := TCMatrix.Create;
-    // // scanResult.augment (tmp, m);
-    // //
-    // // buildScanChart (selectionList);
-    // // UpdateScanViewer (scanResult, 1, selectionList, true);
-    // end;
-
   finally
-    //scanControl.Free;
+    // Do not free scancontrol!
   end;
 end;
 
@@ -154,25 +138,31 @@ begin
 end;
 
 
-function TSimulator.loadAntModelFromString (antimonyStr : string) : TModelErrorState;
-var antStr, sbmlStr, errMsg : string;
-    modelErrorState : TModelErrorState;
+procedure TSimulator.InvalidateSimulationData;
 begin
-  modelErrorState := uAntimonyAPI.getSBMLFromAntimony(antimonyStr);
-  if not modelErrorState.ok then
-     begin
-     exit (modelErrorState);
-     end;
-
-  if not roadrunner.loadSBMLFromString(modelErrorState.sbmlStr) then
-     begin
-     modelErrorState.errMsg := roadrunner.getLastError();
-     modelErrorState.ok := False;
-     result := modelErrorState;
-     end
-  else
-    result := modelErrorState;
+  if simulationData <> nil then
+     simulationData.valid := False;
 end;
+
+//function TSimulator.loadAntModelFromString (antimonyStr : string) : TModelErrorState;
+//var antStr, sbmlStr, errMsg : string;
+//    modelErrorState : TModelErrorState;
+//begin
+//  modelErrorState := uAntimonyAPI.getSBMLFromAntimony(antimonyStr);
+//  if not modelErrorState.ok then
+//     begin
+//     exit (modelErrorState);
+//     end;
+//
+//  if not roadrunner.loadSBMLFromString (modelErrorState.sbmlStr) then
+//     begin
+//     modelErrorState.errMsg := roadrunner.getLastError();
+//     modelErrorState.ok := False;
+//     result := modelErrorState;
+//     end
+//  else
+//    result := modelErrorState;
+//end;
 
 //
 //function TSimulator.loadAntModelFromFile (fileName : string) : boolean;

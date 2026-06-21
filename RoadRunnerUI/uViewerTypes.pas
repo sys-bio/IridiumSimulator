@@ -5,7 +5,7 @@ interface
 // When a viewer registers with the controller, the control will pass this
 // record to the viewer when the viewer needs to be updated.
 
-Uses Rtti;
+Uses Rtti, uRR2DSimpleMatrix;
 
 type
   TViewerPackage = class (TObject)
@@ -24,6 +24,7 @@ type
   // The sender will normally be a reference to the controller
   TNotifySimulateEvent = procedure(Sender: TObject; viewPackage : TViewerPackage) of object;
   TNotifySetPropertyEvent = procedure(name : string; value : TValue) of object;
+  TNotifyViewDataEvent = procedure (Sender : TObject; data : T2DMatrix; viewerPackage : TViewerPackage) of object;
 
 
 implementation

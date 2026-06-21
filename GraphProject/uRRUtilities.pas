@@ -30,12 +30,12 @@ end;
 function selectedObjectToId  (obj : TSubGraphSelectedObjectType) : integer;
 begin
   case obj of
-     coGraphingArea : result := graphingAreaId;
+     //coGraphingArea : result := graphingAreaId;
      //coMainTitle : result := mainTitleId;
      //coXAxisTitle : result := xaxisTitleId;
      //coYAxisTitle : result := yaxisTitleId;
-     coXAxis : result := xaxisId;
-     coYAxis : result := yaxisId;
+     //coXAxis : result := xaxisId;
+     //coYAxis : result := yaxisId;
      coLegend : result := -1;
   end;
 end;

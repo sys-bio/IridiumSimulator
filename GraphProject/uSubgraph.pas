@@ -18,6 +18,7 @@ Uses SysUtils, System.Classes,
   FMX.Skia.Canvas,
   uRRProperties;
 
+
 type
   TSubgraph = class(TPersistent)
 
@@ -33,7 +34,6 @@ type
     XminComputedLimit, XmaxComputedLimit, YminComputedLimit, YmaxComputedLimit: double;
     AutoScale_Xmin, AutoScale_Xmax, AutoScale_Ymin, AutoScale_Ymax: Extended;
 
-    // AxesLabelsFont : TTextType;
     LPaint: ISkPaint;
 
     procedure initializeDefaults();
@@ -70,6 +70,7 @@ type
     procedure drawLogYMinorTicks(canvas: TCanvas; startvalue, stepValue, Origin, min, max: double; nticks, direction: integer);
     procedure drawYGridLine(ACanvas: ISkCanvas; y, xmin, xmax: double; LPaint: ISkPaint);
 
+    procedure drawXAxisTitle (ACanvas : ISKCanvas);
     procedure drawYAxisTitle(ACanvas: ISkCanvas);
 
     procedure drawSelectedGraphingArea(ACanvas: ISkCanvas);
@@ -180,7 +181,6 @@ type
     function deviceToWorld(x, y: single): TPointF;
     function deltaDeviceToDeltaWorld(x, y: single): TPointF;
     function legend_relativeToDevice: TBox;
-    // function relativeToDevice(graphObject: TGraphObject): TBox;
     function relativeToDevice2(graphObject: TGraphBase): TBox;
 
     procedure unselectAllObjects;
@@ -191,6 +191,7 @@ type
     function IsOnMainTitle(ACanvas: ISkCanvas; x, y: single): boolean;
     function IsOnXAxisTitle(ACanvas: ISkCanvas; x, y: single): boolean;
     function IsOnXAxis(ACanvas: ISkCanvas; x, y: single): boolean;
+    function IsOnYAxis(ACanvas: ISkCanvas; x, y: single): boolean;
     function IsOnYAxisTitle(ACanvas: ISkCanvas; x, y: single): boolean;
     function IsOnLegend(ACanvas: ISkCanvas; x, y: single): boolean;
 
@@ -321,48 +322,51 @@ end;
 
 procedure TSubgraph.setRx(value: double);
 begin
-  properties.graphObjects[graphingAreaId].logicalBox.left := value;
+  properties.PlottingAreaObject.logicalBox.left := value;
 end;
 
 function TSubgraph.getRx: double;
 begin
-  result := properties.graphObjects[graphingAreaId].logicalBox.left;
+  result := properties.PlottingAreaObject.logicalBox.left;
 end;
 
 procedure TSubgraph.setRw(value: double);
 begin
-  properties.graphObjects[graphingAreaId].logicalBox.w := value;
+  properties.PlottingAreaObject.logicalBox.w := value;
 end;
 
 function TSubgraph.getRw: double;
 begin
-  result := properties.graphObjects[graphingAreaId].logicalBox.w;
+  result := properties.PlottingAreaObject.logicalBox.w;
 end;
 
 procedure TSubgraph.setRy(value: double);
 begin
-  properties.graphObjects[graphingAreaId].logicalBox.top := value;
+  properties.PlottingAreaObject.logicalBox.top := value;
 end;
 
 function TSubgraph.getRy: double;
 begin
-  result := properties.graphObjects[graphingAreaId].logicalBox.top;
+  result := properties.PlottingAreaObject.logicalBox.top;
 end;
 
 procedure TSubgraph.setRh(value: double);
 begin
-  properties.graphObjects[graphingAreaId].logicalBox.h := value;
+  properties.PlottingAreaObject.logicalBox.h := value;
 end;
+
 
 function TSubgraph.getRh: double;
 begin
-  result := properties.graphObjects[graphingAreaId].logicalBox.h;
+  result := properties.PlottingAreaObject.logicalBox.h;
 end;
+
 
 function TSubgraph.getLogicalBoundingBox(Id: integer): TLogicalBox;
 begin
   result := properties.graphObjects[Id].logicalBox;
 end;
+
 
 procedure TSubgraph.createGraphObjects;
 var
@@ -372,12 +376,19 @@ begin
   properties.graphObjects := TObjectList<TGraphObject>.Create;
   graphObjects := properties.graphObjects;
 
-  graphingAreaId := graphObjects.Add(TGraphObject.Create(coGraphingArea));
-  graphObjects[graphingAreaId].logicalBox.left := 0.2;
-  graphObjects[graphingAreaId].logicalBox.top := 0.8;
-  graphObjects[graphingAreaId].logicalBox.w := 0.7;
-  graphObjects[graphingAreaId].logicalBox.h := 0.6;
-  graphObjects[graphingAreaId].reSizable := True;
+  properties.PlottingAreaObject := TGraphObject.Create(coGraphingArea);
+  properties.PlottingAreaObject.logicalBox.left := 0.2;
+  properties.PlottingAreaObject.logicalBox.top := 0.8;
+  properties.PlottingAreaObject.logicalBox.w := 0.7;
+  properties.PlottingAreaObject.logicalBox.h := 0.6;
+  properties.PlottingAreaObject.reSizable := True;
+
+  //graphingAreaId := graphObjects.Add(TGraphObject.Create(coGraphingArea));
+  //graphObjects[graphingAreaId].logicalBox.left := 0.2;
+  //graphObjects[graphingAreaId].logicalBox.top := 0.8;
+  //graphObjects[graphingAreaId].logicalBox.w := 0.7;
+  //graphObjects[graphingAreaId].logicalBox.h := 0.6;
+  //graphObjects[graphingAreaId].reSizable := True;
 
   // *********************************************************
   // Coords relative to the left/**top** corner of graph drawing area
@@ -388,16 +399,12 @@ begin
   properties.YAxisTitleObject := TYAxisTitle.Create;
 
   // The axis itself
-  xaxisId := graphObjects.Add(TGraphObject.Create(coXAxis));
-  graphObjects[xaxisId].logicalBox.left := 0.1;
-  graphObjects[xaxisId].logicalBox.top := 0.2;
-  graphObjects[xaxisId].logicalBox.w := 0.5;
-  graphObjects[xaxisId].logicalBox.h := 0.5;
+  properties.XAxisObject := TXAxisObject.Create;
+  properties.YAxisObject := TYAxisObject.Create;
 
-  // The Y axis itself - to be done
-  yaxisId := graphObjects.Add(TGraphObject.Create(coYAxis));
+  properties.legendObject := TLegend.Create(coLegend);
 
-  properties.Legend := TLegend.Create(coLegend);
+  graphObjects.Add(properties.PlottingAreaObject);
 end;
 
 procedure TSubgraph.initializeDefaults();
@@ -467,6 +474,7 @@ begin
   drawYLabelsOnAxes := True;
 end;
 
+
 // Returns device coordinates
 function TSubgraph.getGraphDeviceDrawingArea: TRectF;
 var
@@ -474,13 +482,14 @@ var
   rBox: TLogicalBox;
 begin
   panel := parentGraph as TRRGraph;
-  rBox := getLogicalBoundingBox(graphingAreaId);
+  rBox := properties.PlottingAreaObject.logicalBox;
 
   result.left := rBox.left * panel.Width;
   result.top := panel.Height - rBox.top * panel.Height;
   result.Right := result.left + panel.Width * rBox.w;
   result.Bottom := result.top + panel.Height * rBox.h;
 end;
+
 
 function TSubgraph.relativeToDevice2(graphObject: TGraphBase): TBox;
 var
@@ -497,7 +506,7 @@ begin
     end;
 
   panel := parentGraph as TRRGraph;
-  rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
+  rBoxGraphingArea := properties.PlottingAreaObject.logicalBox; // getLogicalBoundingBox(graphingAreaId);
   rBox := graphObject.logicalBox;
 
   w0 := panel.Width;
@@ -519,6 +528,7 @@ begin
   result.h := h1 * rBox.h;
 end;
 
+
 function TSubgraph.legend_relativeToDevice: TBox;
 var
   rBox: TLogicalBox;
@@ -528,8 +538,8 @@ var
   h0, h1, h2, h3, h4, h5: single;
 begin
   panel := parentGraph as TRRGraph;
-  rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
-  rBox := properties.Legend.logicalBox;
+  rBoxGraphingArea := properties.PlottingAreaObject.logicalBox;// getLogicalBoundingBox(graphingAreaId);
+  rBox := properties.legendObject.logicalBox;
 
   w0 := panel.Width;
   w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
@@ -587,6 +597,7 @@ end;
 // result.h := h1 * rBox.h;
 // end;
 
+
 procedure TSubgraph.unselectAllObjects;
 var
   i: integer;
@@ -594,6 +605,7 @@ begin
   for i := 0 to properties.graphObjects.Count - 1 do
     properties.graphObjects[i].selected := false;
 end;
+
 
 procedure TSubgraph.findDataLimits;
 var
@@ -669,6 +681,7 @@ begin
     end;
 end;
 
+
 procedure TSubgraph.autoScaleXAxis(HowtoScale: THowtoScale);
 begin
   // Assume no adjustment to begin with
@@ -698,14 +711,16 @@ begin
 
   if (HowtoScale = hUpperLimit) or (HowtoScale = hBothLimits) then
     begin
-      if XmaxComputedLimit > 1 then
-        AutoScale_Xmax := RoundUp(XmaxComputedLimit);
-      if (XmaxComputedLimit <= 1) and (XmaxComputedLimit > 0) then
-        AutoScale_Xmax := RoundUp(XmaxComputedLimit);
+      // HMS (April 2024) Let's not round because it produces odd looking graph.
+      //if XmaxComputedLimit > 1 then
+      //  AutoScale_Xmax := RoundUp(XmaxComputedLimit);
+      //if (XmaxComputedLimit <= 1) and (XmaxComputedLimit > 0) then
+      //  AutoScale_Xmax := RoundUp(XmaxComputedLimit);
       if XmaxComputedLimit < 0 then
         AutoScale_Xmax := -RoundDown(abs(XmaxComputedLimit));
     end;
 end;
+
 
 procedure TSubgraph.autoScaleYAxis(HowtoScale: THowtoScale);
 begin
@@ -773,8 +788,9 @@ begin
     end;
 end;
 
-{ This procedure decides where the axes will be positioned relative to each other
-  Only called when the World coordinates have been assigned }
+
+// This procedure decides where the axes will be positioned relative to each other
+// Only called when the World coordinates have been assigned
 procedure TSubgraph.determineOrigin;
 begin
   XOrigin := properties.FWorldXmin;
@@ -790,10 +806,11 @@ begin
   YOrigin := properties.FWorldYmin;
   if properties.FWorldYmin = 0 then
     YOrigin := 0.0;
-  { if AutoScale_Ymax <= 0 then Y_Origin := AutoScale_Ymin; }
+  // if AutoScale_Ymax <= 0 then Y_Origin := AutoScale_Ymin;
   if (properties.FWorldYmin < 0) and (properties.FWorldYmax > 0) then
     YOrigin := 0.0;
 end;
+
 
 function TSubgraph.IsOnXAxisTitle(ACanvas: ISkCanvas; x, y: single): boolean;
 var
@@ -806,16 +823,36 @@ begin
       result := True;
 end;
 
+
 function TSubgraph.IsOnXAxis(ACanvas: ISkCanvas; x, y: single): boolean;
 var
   box: TBox;
+  b : TLogicalBox;
 begin
   result := false;
-  // box := graphObjects[xaxisId].box;
+  b := properties.XAxisObject.logicalBox;
+
+  box := relativeToDevice2(properties.XAxisObject);
   if (x > box.left) and (x < box.left + box.w) then
     if (y > box.top) and (y < box.top + box.h) then
       result := True;
 end;
+
+
+function TSubgraph.IsOnYAxis(ACanvas: ISkCanvas; x, y: single): boolean;
+var
+  box: TBox;
+  b : TLogicalBox;
+begin
+  result := false;
+  b := properties.YAxisObject.logicalBox;
+
+  box := relativeToDevice2(properties.YAxisObject);
+  if (x > box.left) and (x < box.left + box.w) then
+    if (y > box.top) and (y < box.top + box.h) then
+      result := True;
+end;
+
 
 function TSubgraph.IsOnYAxisTitle(ACanvas: ISkCanvas; x, y: single): boolean;
 var
@@ -828,6 +865,7 @@ begin
       result := True;
 end;
 
+
 function TSubgraph.IsOnLegend(ACanvas: ISkCanvas; x, y: single): boolean;
 var
   rBox: TLogicalBox;
@@ -838,12 +876,10 @@ var
   h0, h1, h2, h3, h4, h5: single;
 begin
   result := false;
-  // rbox := getLogicalBoundingBox (legendId);
-  // box := relativeToDevice (properties.legend as TGraphObject);
 
   panel := parentGraph as TRRGraph;
-  rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
-  rBox := properties.Legend.logicalBox;
+  rBoxGraphingArea := properties.PlottingAreaObject.logicalBox; //getLogicalBoundingBox(graphingAreaId);
+  rBox := properties.legendObject.logicalBox;
 
   w0 := panel.Width;
   w1 := rBoxGraphingArea.w * w0; // Width in pixels of graphing area
@@ -868,6 +904,7 @@ begin
       result := True;
 end;
 
+
 function TSubgraph.IsOnMainTitle(ACanvas: ISkCanvas; x, y: single): boolean;
 var
   box: TBox;
@@ -878,6 +915,7 @@ begin
     if (y > box.top) and (y < box.top + box.h) then
       result := True;
 end;
+
 
 // Returns the graph object that the mouse is currently hovering over
 function TSubgraph.onSubGraph(ACanvas: ISkCanvas; x, y: single; var graphObject: TGraphBase): boolean;
@@ -890,33 +928,44 @@ begin
   result := false;
 
   if IsOnXAxisTitle(ACanvas, x, y) then
-    begin
-      graphObject := properties.XAxisTitleObject;
-      exit(True);
-    end;
+     begin
+     graphObject := properties.XAxisTitleObject;
+     exit(True);
+     end;
 
   if IsOnMainTitle(ACanvas, x, y) then
-    begin
-      graphObject := properties.MainTitleObject;
-      exit(True);
-    end;
+     begin
+     graphObject := properties.MainTitleObject;
+     exit(True);
+     end;
 
   if IsOnYAxisTitle(ACanvas, x, y) then
-    begin
-      result := True;
-      graphObject := properties.YAxisTitleObject;
-      exit (True);
-    end;
+     begin
+     graphObject := properties.YAxisTitleObject;
+     exit (True);
+     end;
+
+  if IsOnXAxis(ACanvas, x, y) then
+     begin
+     graphObject := properties.XAxisObject;
+     exit (True);
+     end;
+
+  if IsOnYAxis(ACanvas, x, y) then
+     begin
+     graphObject := properties.YAxisObject;
+     exit (True);
+     end;
 
   if IsOnLegend(ACanvas, x, y) then
     begin
-      graphObject := properties.Legend;
+      graphObject := properties.legendObject;
       exit(True);
     end;
 
   if PtInRect(rectf, pointf(x, y)) then
     begin
-      graphObject := properties.graphObjects[graphingAreaId];
+      graphObject := properties.PlottingAreaObject;  //graphObjects[graphingAreaId];
       exit(True);
     end;
 
@@ -929,6 +978,7 @@ begin
   if (result < 1) and (result > 0.1) then
     result := 0; // avoid antialiasing artifacts
 end;
+
 
 procedure TSubgraph.computeScalingFactors(rect: TRectF);
 var
@@ -966,6 +1016,7 @@ begin
     yfactor := (properties.FWorldYmax * vymin - properties.FWorldYmin * vymax) / dy;
 end;
 
+
 // Convert world coordinates to physical coordinates
 function TSubgraph.fx(wx: double): double;
 var
@@ -986,6 +1037,7 @@ begin
     result := w;
 end;
 
+
 // Convert world coordinates to physical coordinates, note reversal of y axis
 function TSubgraph.fy(wy: double): double;
 var
@@ -996,8 +1048,8 @@ var
 begin
   panel := parentGraph as TRRGraph;
 
-  deviceYMax := panel.Height - properties.graphObjects[graphingAreaId].logicalBox.top * panel.Height;
-  heightOfGraph := properties.graphObjects[graphingAreaId].logicalBox.h * panel.Height;
+  deviceYMax := panel.Height - properties.PlottingAreaObject.logicalBox.top * panel.Height;
+  heightOfGraph := properties.PlottingAreaObject.logicalBox.h * panel.Height;
 
   deviceYMin := deviceYMax + heightOfGraph;
   if properties.LogYAxis then
@@ -1015,6 +1067,7 @@ begin
     result := w;
 end;
 
+
 function TSubgraph.deltaDeviceToDeltaWorld(x, y: single): TPointF;
 var
   p1, p2: TPointF;
@@ -1025,7 +1078,8 @@ begin
   result.y := abs(p2.y - p1.y);
 end;
 
-// Convert a device oordinate to a world coordinate
+
+// Convert a device coordinate to a world coordinate
 function TSubgraph.deviceToWorld(x, y: single): TPointF;
 var
   deviceYMin, deviceYMax: single;
@@ -1037,8 +1091,8 @@ begin
   x := (x / Magnification);
   y := (y / Magnification);
 
-  deviceYMax := panel.Height - properties.graphObjects[graphingAreaId].logicalBox.top * panel.Height;
-  heightOfGraph := properties.graphObjects[graphingAreaId].logicalBox.h * panel.Height;
+  deviceYMax := panel.Height - properties.PlottingAreaObject.logicalBox.top * panel.Height;
+  heightOfGraph := properties.PlottingAreaObject.logicalBox.h * panel.Height;
   deviceYMin := deviceYMax + heightOfGraph;
 
   if properties.LogXAxis then
@@ -1051,6 +1105,45 @@ begin
   else
     result.y := ((deviceYMax + deviceYMin) - yfactor - y) / yscale;
 end;
+
+
+procedure TSubGraph.drawXAxisTitle (ACanvas : ISKCanvas);
+var textProperties: TTextType;
+    twidth: single;
+    gdArea: TRectF;
+    gdWidth: single;
+    box: TBox;
+    x, y: double;
+    LBlob: ISkTextBlob;
+    pt : TPointF;
+begin
+  textProperties := properties.XAxisTitleObject.textProperties;
+  if textProperties.value <> '' then
+     begin
+     pt := textProperties.computeDimensions(LPaint);
+     LPaint.color := textProperties.fontColor;
+     LPaint.Style := TSkPaintStyle.Fill;
+
+     twidth := textProperties.computeDimensions(LPaint).x;
+
+     // Update the logical dimensions based on the current X axis text
+     // Doing this means a user can't move the text left or right, only up and down.
+     gdArea := getGraphDeviceDrawingArea;
+     gdWidth := gdArea.Right - gdArea.left;
+     properties.XAxisTitleObject.logicalBox.left := ((gdWidth / 2) - twidth / 2) / gdWidth;
+     box := relativeToDevice2(properties.XAxisTitleObject);
+
+     x := box.left;
+     y := box.top;
+
+     LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
+     ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
+
+     textProperties.box.left := x;
+     textProperties.box.top := y - pt.y; // pt.y is the height of the text
+     end;
+end;
+
 
 procedure TSubgraph.drawYAxisTitle(ACanvas: ISkCanvas);
 var
@@ -1095,6 +1188,7 @@ begin
 
   LDest.x := x - horizDisplacement;
   LDest.y := y;
+  textProperties.font.Size := textProperties.font.Size;
   LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
   ACanvas.Save;
   try
@@ -1106,147 +1200,6 @@ begin
   end;
 end;
 
-procedure TSubgraph.paint(ACanvas: ISkCanvas);
-var
-  box: TBox;
-  panel: TRRGraph;
-  p: TPointF;
-  textProperties: TTextType;
-  twidth: single;
-  x, y: double;
-  LBlob: ISkTextBlob;
-  font: ISkFont;
-  typeface: ISkTypeface;
-  r: TRectF;
-  pt: TPointF;
-  ds: TDataColumns;
-  index: integer;
-  gdArea: TRectF;
-  gdWidth: single;
-begin
-  panel := parentGraph as TRRGraph;
-
-  ds := properties.dataBlocks[0].columns;
-  // If there is nothing to plot then don't try to find the data limits
-  if ds.find(properties.dataBlocks[0].xaxisColumn, index) <> nil then
-    if properties.AutoXScaling or properties.AutoYScaling then
-      findDataLimits;
-
-  setAxesLimits;
-  determineOrigin;
-  computeScalingFactors(getGraphDeviceDrawingArea());
-
-  r := getGraphDeviceDrawingArea;
-
-  // MajorTickLength := computePhysicalSize(MajorTickInCms);
-  // MinorTickLength := computePhysicalSize(MinorTickInCms);
-  XAxisLengthInPixels := computePhysicalSize(XAxisLengthInCms);
-  YAxisLengthInPixels := computePhysicalSize(YAxisLengthInCms);
-
-  box := relativeToDevice2(properties.graphObjects[graphingAreaId]);
-  LPaint.color := properties.GraphBackgroundColor;
-  LPaint.Style := TSkPaintStyle.Fill;
-  ACanvas.DrawRect(TRectF.Create(box.left, box.top, box.left + box.w, box.top + box.h), LPaint);
-
-  if properties.bDrawMainTitle then
-    begin
-      textProperties := properties.MainTitleObject.textProperties; // graphObjects[mainTitleId].textProperties;
-      if textProperties.value <> '' then
-        begin
-          LPaint.color := textProperties.fontColor;
-          LPaint.Style := TSkPaintStyle.Fill;
-
-          pt := textProperties.computeDimensions(LPaint);
-
-          box := relativeToDevice2(properties.MainTitleObject);
-
-          x := box.left;
-          y := box.top;
-          LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
-          ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
-          textProperties.box.left := x;
-          textProperties.box.top := y - pt.y; // pt.y is the height of the text
-        end;
-      // if SelectedObjectType = coMainTitle then
-      // drawMainTitleSelected(canvas);
-    end;
-
-  if properties.bDrawXAxisTitle then
-    begin
-      textProperties := properties.XAxisTitleObject.textProperties;
-      if textProperties.value <> '' then
-        begin
-          LPaint.color := textProperties.fontColor;
-          LPaint.Style := TSkPaintStyle.Fill;
-
-          twidth := textProperties.computeDimensions(LPaint).x;
-
-          // Update the logical dimensions based on the current X axis text
-          // Doing this means a user can't move the text left or right, only up and down.
-          gdArea := getGraphDeviceDrawingArea;
-          gdWidth := gdArea.Right - gdArea.left;
-          properties.XAxisTitleObject.logicalBox.left := ((gdWidth / 2) - twidth / 2) / gdWidth;
-          box := relativeToDevice2(properties.XAxisTitleObject);
-
-          x := box.left;
-          y := box.top;
-
-          LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
-          ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
-
-          textProperties.box.left := x;
-          textProperties.box.top := y - pt.y; // pt.y is the height of the text
-        end;
-
-      // if SelectedObjectType = coXAxisTitle then
-      // drawXAxisTitleSelected(ACanvas);
-    end;
-
-  if properties.bDrawYAxisTitle then
-    begin
-      drawYAxisTitle(ACanvas);
-
-      // //if SelectedObject = coXAxisTitle then
-      // //   drawXAxisTitleSelected(canvas);
-    end;
-
-  if properties.LogYAxis then
-    drawYAxisLogTicks(ACanvas)
-  else
-    drawYAxisTicks(ACanvas);
-
-  if properties.LogXAxis then
-    drawXAxisLogTicks(ACanvas)
-  else
-    drawXAxisTicks(ACanvas);
-
-  if FSubGraphProperties.XGridLines then
-    drawAllMajorXGridLines(ACanvas);
-
-  if FSubGraphProperties.YGridLines then
-    drawAllMajorYGridLines(ACanvas);
-
-  if not properties.graphObjects[graphingAreaId].selected then
-    begin
-      drawAxesLines(ACanvas, True, True);
-
-      if FSubGraphProperties.GraphBorder then
-        drawGraphBorder(ACanvas);
-    end
-  else
-    drawSelectedGraphingArea(ACanvas);
-
-  ACanvas.Save;
-  try
-    ACanvas.ClipRect(r);
-
-    plotLines(ACanvas);
-    plotSymbols(ACanvas);
-  finally
-    ACanvas.Restore;
-  end;
-  drawLegend(ACanvas);
-end;
 
 // Returns screen coordinates.
 function TSubgraph.getTextBoundingBox(ACanvas: ISkCanvas; textDetails: TTextType): TBox;
@@ -1265,6 +1218,7 @@ begin
   result.left := round((rwidth / 2 + rxmin) * panel.Width);
   result.top := panel.Height - round((rymin + go.logicalBox.top) * panel.Height);
 end;
+
 
 function TSubgraph.getYAxisTitleBoundingBox(ACanvas: ISkCanvas; textDetails: TTextType): TBox;
 begin
@@ -1333,40 +1287,67 @@ procedure TSubgraph.drawMainTitleSelected(ACanvas: ISkCanvas);
 var
   box: TBox;
   r: TRectF;
+  LPaint: ISkPaint;
 begin
+  LPaint := TSkPaint.Create (TSkPaintStyle.Stroke);
+  LPaint.AntiAlias := False;
   box := properties.MainTitleObject.textProperties.box;
   r := rectf(box.left, box.top, box.left + box.w, box.top + box.h);
-  InflateRect(r, -0.5, -0.5);
+  InflateRect(r, 15, 5);
+  LPaint.color := claBlack;
+  LPaint.StrokeWidth := 0;
   ACanvas.DrawRect(r, LPaint);
 end;
+
 
 procedure TSubgraph.drawXAxisTitleSelected(ACanvas: ISkCanvas);
 var
   box: TBox;
+  r: TRectF;
+  LPaint: ISkPaint;
 begin
-  // box := getCenteredTextBoundingBox (ACanvas, xaxisTitleId);
-  // HMS canvas.DrawFocusRect (rect (box.left, box.top, box.left + box.w, box.top + box.h));
+  LPaint := TSkPaint.Create (TSkPaintStyle.Stroke);
+  box := properties.XAxisTitleObject.textProperties.box;
+  r := rectf(box.left, box.top, box.left + box.w, box.top + box.h);
+  InflateRect(r, 9, 7);
+  LPaint.color := claBlack;
+  LPaint.StrokeWidth := 0;     // ###
+  ACanvas.DrawRect(r, LPaint);
 end;
 
+
+// ###
 procedure TSubgraph.drawYAxisTitleSelected(ACanvas: ISkCanvas);
 var
   box: TBox;
+  r : TRectF;
+  L1Paint: ISkPaint;
 begin
-  // box := getYAxisTitleBoundingBox (ACanvas, properties.graphObjects[yaxisTitleId].textProperties);
   // HMS canvas.DrawFocusRect (rect (box.left, box.top, box.left + box.w, box.top + box.h));
+  LPaint := TSkPaint.Create (TSkPaintStyle.Stroke);
+  box := properties.YAxisTitleObject.textProperties.box;
+  // swap the box.h and box.w because the titel is rotated 90 degrees
+  r := rectf(box.left, box.top, box.left + box.h, box.top + box.w);
+  InflateRect(r, 8, 30);
+  LPaint.color := claBlack;
+  LPaint.StrokeWidth := 0;
+  ACanvas.DrawRect(r, LPaint);
 end;
+
 
 { Plot symbols for all data sets }
 procedure TSubgraph.plotSymbols(ACanvas: ISkCanvas);
 var
-  i, j, k, n, nXColumns, nYColumns: integer;
+  i, j, k, l, n, nXColumns, nYColumns: integer;
   x, y, deltaX, deltaY: double;
   columns: TDataColumns;
   xaxisColumn: string;
   XData, YData: TDataColumn;
   index: integer;
 begin
-  columns := properties.dataBlocks[0].columns;
+  for l := 0 to properties.dataBlocks.Count - 1 do
+  begin
+  columns := properties.dataBlocks[l].columns;
 
   if columns = nil then
     exit;
@@ -1384,7 +1365,7 @@ begin
   else
     deltaY := 0.005 * (properties.FWorldYmax - properties.FWorldYmin);
 
-  xaxisColumn := properties.dataBlocks[0].xaxisColumn;
+  xaxisColumn := properties.dataBlocks[l].xaxisColumn;
   XData := columns.find(xaxisColumn, index);
   if XData = nil then
     begin
@@ -1414,7 +1395,9 @@ begin
             end;
         end;
     end;
+  end;
 end;
+
 
 procedure TSubgraph.drawXErrorBar(ACanvas: ISkCanvas; symbol: TSymbol; wx, wy, dx: single; Style: TErrorBarStyle;
   CapStyle: TErrorBarCapStyle);
@@ -1589,6 +1572,7 @@ begin
   drawSymbolAtDeviceCoords(ACanvas, wx, wy, symbol);
 end;
 
+
 // Plot lines for all data sets
 procedure TSubgraph.plotLines(ACanvas: ISkCanvas);
 var
@@ -1607,6 +1591,7 @@ var
   index: integer;
   pt1, pt2: TPointF;
   PathEffect: ISkPathEffect;
+  db : TDataBlock;
 begin
   ds := properties.dataBlocks[0];
   if ds = nil then
@@ -1627,24 +1612,25 @@ begin
     ACanvas.ClipRect(getGraphDeviceDrawingArea());
     for i := 0 to properties.dataBlocks.Count - 1 do
       begin
+        db := properties.dataBlocks[i];
         if properties.dataBlocks[i].columns.Count = 0 then
           exit;
 
         xaxisColumn := properties.dataBlocks[i].xaxisColumn;
-        XData := ds.columns.find(xaxisColumn, index);
+        XData := db.columns.find(xaxisColumn, index);
         // Default x axis to the first column if none if defined.
         if XData = nil then
           begin
-            XData := ds.columns[0];
+            XData := db.columns[0];
             xaxisColumn := XData.name;
           end;
-        for j := 0 to ds.columns.Count - 1 do
+        for j := 0 to db.columns.Count - 1 do
           begin
-            if ds.columns[j].lineDetails.visible then
+            if db.columns[j].lineDetails.visible then
               begin
-                if ds.columns[j].name <> xaxisColumn then
+                if db.columns[j].name <> xaxisColumn then
                   begin
-                    YData := ds.columns[j];
+                    YData := db.columns[j];
 
                     thickness := YData.lineDetails.ThicknessInSkiaUnits;
                     LPaint.color := YData.lineDetails.color;
@@ -2691,6 +2677,7 @@ begin
     end;
 end;
 
+
 procedure TSubgraph.drawYMinorTicks(ACanvas: ISkCanvas; startvalue, stepValue, Origin, min, max: double;
   nticks, direction: integer);
 var
@@ -2811,6 +2798,7 @@ begin
     end;
 end;
 
+
 procedure TSubgraph.drawXGridLine(ACanvas: ISkCanvas; x, ymin, ymax: double; LPaint: ISkPaint);
 begin
   if (x <> XOrigin) and (x <> properties.FWorldXmax) then
@@ -2833,13 +2821,18 @@ begin
     end;
 end;
 
+
 procedure TSubgraph.drawSelectedGraphingArea(ACanvas: ISkCanvas);
 var
   aleft, atop, aRight, aBottom: single;
   pathEffect : ISkPathEffect;
+  LPaint : ISkPaint;
 begin
-  if properties.graphObjects[graphingAreaId].selected then
+  if properties.PlottingAreaObject.selected then
     begin
+      ACanvas.Save;
+      LPaint := TSKPaint.Create;
+
       aleft := fx(properties.FWorldXmin);
       aRight := fx(properties.FWorldXmax);
       aBottom := fy(properties.FWorldYmin);
@@ -2884,6 +2877,7 @@ begin
       ACanvas.DrawRect(TRectF.Create(aright, abottom, aright-8, abottom-8), LPaint);
       ACanvas.DrawRect(TRectF.Create(aleft, abottom, aleft+8, abottom-8), LPaint);
 
+      ACanvas.Restore;
       // // Don't use DrawRect, its too slow
       // drawDottedBox (canvas, aleft, atop, aRight, aBottom);
       // canvas.FillRect (rectf (aleft, atop, aleft+5, atop+5), 0, 0, [], 1.0);
@@ -2894,6 +2888,7 @@ begin
       // exit;
     end;
 end;
+
 
 procedure TSubgraph.drawAxesLines(ACanvas: ISkCanvas; DrawXAxis, DrawYAxis: boolean);
 var
@@ -2940,6 +2935,7 @@ begin
   LPaint.AntiAlias := True;
 end;
 
+
 procedure TSubgraph.drawXLabel(ACanvas: ISkCanvas; value: double; x, y: single);
 var
   str: string;
@@ -2981,9 +2977,8 @@ begin
 
   LPaint := TSkPaint.Create;
 
-  typeface := TSkTypeface.MakeFromName('Arial', TSkFontStyle.Normal);
-  font := TSkFont.Create(typeface, 12, 1);
-  // textDetails.font := font;
+  font := FSubGraphProperties.XAxisLabels.font;
+  font.Size := FSubGraphProperties.XAxisLabels.font.Size;
 
   font.MeasureText(str, ABounds, LPaint);
   twidth := ABounds.Width;
@@ -3002,6 +2997,7 @@ begin
   LBlob := TSkTextBlob.MakeFromText(str, font);
   ACanvas.DrawTextBlob(LBlob, rec.Right, rec.top, LPaint);
 end;
+
 
 procedure TSubgraph.drawYLabel(ACanvas: ISkCanvas; value: double; x, y: single);
 var
@@ -3031,8 +3027,8 @@ begin
   LPaint.color := TAlphaColors.Black;
   LPaint.Style := TSkPaintStyle.Fill;
 
-  typeface := TSkTypeface.MakeFromName('Arial', TSkFontStyle.Normal);
-  font := TSkFont.Create(typeface, 12, 1);
+  font := FSubGraphProperties.YAxisLabels.font;
+  font.Size := FSubGraphProperties.YAxisLabels.font.Size;
 
   font.MeasureText(str, ABounds, LPaint);
   twidth := ABounds.Width;
@@ -3041,9 +3037,6 @@ begin
   y := y + tHeight / 2;
   rec.left := trunc(x);
   rec.top := trunc(y);
-
-  LPaint.color := TAlphaColors.Black;
-  LPaint.Style := TSkPaintStyle.Fill;
 
   LBlob := TSkTextBlob.MakeFromText(str, font);
   // x-tWidth ensures right-alignment
@@ -3100,6 +3093,8 @@ begin
     result := floattostrF(d, ffExponent, 2, 0);
 end;
 
+
+// Only used when drawing text in the legend
 procedure TSubgraph.drawText(ACanvas: ISkCanvas; box: TBox; text: TTextType);
 var
   x, y: double;
@@ -3107,24 +3102,13 @@ var
   LBlob: ISkTextBlob;
   ABounds: TRectF;
 begin
-  LPaint.color := TAlphaColors.Black;
+  LPaint.color := text.fontColor;
   LPaint.Style := TSkPaintStyle.Fill;
 
   LBlob := TSkTextBlob.MakeFromText(text.value, text.font);
   ACanvas.DrawTextBlob(LBlob, box.left, box.top, LPaint);
-
-  // textLayout := TTextLayoutManager.DefaultTextLayout.Create;
-  // textLayout.BeginUpdate;
-  // textLayout.Text := text.value;
-  // textLayout.Color := text.color;
-  // textLayout.Font.Size := text.size/fontScalingFactor;
-  // textLayout.Font.Family := text.fontName;
-  // textLayout.Font.Style := text.style;
-  // textLayout.TopLeft := TPointF.Create (box.left, box.top);
-  // textLayout.EndUpdate;
-  //
-  // textLayout.RenderLayout (Canvas);
 end;
+
 
 procedure TSubgraph.drawSolidLine(ACanvas: ISkCanvas; x1, y1, x2, y2: single; color: TAlphaColor; lineThickness: single);
 var
@@ -3159,6 +3143,7 @@ begin
   ACanvas.DrawRect(r, LPaint);
 end;
 
+
 procedure FillLegendRectangle(ACanvas: ISkCanvas; r: TRectF; InteriorColor: TAlphaColor);
 var
   LPaint: ISkPaint;
@@ -3168,6 +3153,7 @@ begin
   LPaint.Style := TSkPaintStyle.Fill;
   ACanvas.DrawRect(r, LPaint);
 end;
+
 
 procedure TSubgraph.drawLegend(ACanvas: ISkCanvas);
 var
@@ -3196,16 +3182,16 @@ begin
   if properties.dataBlocks.Count = 0 then
     exit;
 
-  if not properties.Legend.visible then
+  if not properties.LegendObject.visible then
     exit;
 
-  Legend := properties.Legend;
+  Legend := properties.LegendObject;
   panel := parentGraph as TRRGraph;
 
   hspace := 0.3 / 2.54 * CurrentXPixelsPerInch; // Leave space of 3mm between text and symbol
   lineLength := computePhysicalSize(Legend.lineLengthInCms);
   // 1.2/2.54 * CurrentXPixelsPerInch; // Length of line sample segment on either side of symbol
-  HosizontalGapDistance := 1.1;
+  HosizontalGapDistance := 1.2;
 
   // How many lines will there be in the legend ?
   // How many datasets are there to plot?
@@ -3213,8 +3199,8 @@ begin
 
   longestText := 0; // Stored longest piece of text in the legend
 
-  // Find the longest piece of text
-  txt := TTextType.Create(legend.textProperties.fontName);
+  // Find the longest piece of text      // HMS
+  txt := legend.textProperties;// TTextType.Create(legend.textProperties.font.Typeface.FamilyName, DEFAULT_LEGEND_FONT_SIZE);
   for i := 0 to properties.dataBlocks.Count - 1 do
     begin
       for j := 0 to properties.dataBlocks[i].columns.Count - 1 do
@@ -3229,7 +3215,7 @@ begin
 
   widthOfLegend := longestText + hspace + lineLength;
 
-  rBoxGraphingArea := getLogicalBoundingBox(graphingAreaId);
+  rBoxGraphingArea := properties.PlottingAreaObject.logicalBox;  // getLogicalBoundingBox(graphingAreaId);
   // This will only compute the top/left corner of the legend box
   aBox := legend_relativeToDevice;
   topLeftcorner := aBox.top;
@@ -3254,7 +3240,7 @@ begin
               if abs(TextH) < 1E-6 then
                 TextH := 12;
 
-              legendHeight := legendHeight + HosizontalGapDistance * 1.3 * TextH;
+              legendHeight := legendHeight + 4 + HosizontalGapDistance * 1.3 * TextH;
             end;
         end;
     end;
@@ -3318,8 +3304,8 @@ begin
                   LPaint.PathEffect := nil;
                 end;
               end;
-              ACanvas.drawLine(pointf(lineStart, txtPosition.top - TextH / 2 + 2),
-                pointf(lineStart + lineLength, txtPosition.top - TextH / 2 + 2), LPaint);
+              ACanvas.drawLine(pointf(lineStart, txtPosition.top - TextH / 2 + 0),
+                pointf(lineStart + lineLength, txtPosition.top - TextH / 2 + 0), LPaint);
 
               // // Draw symbol on line segment
               x := lineStart + lineLength;
@@ -3339,5 +3325,129 @@ begin
   Legend.logicalBox.w := widthOfLegend / (rBoxGraphingArea.w * panel.Width);
   Legend.logicalBox.h := aBox.top / (rBoxGraphingArea.h * panel.Height);
 end;
+
+
+
+// Main entry point
+procedure TSubgraph.paint(ACanvas: ISkCanvas);
+var
+  box: TBox;
+  panel: TRRGraph;
+  p: TPointF;
+  textProperties: TTextType;
+  twidth: single;
+  x, y: double;
+  LBlob: ISkTextBlob;
+  font: ISkFont;
+  typeface: ISkTypeface;
+  r: TRectF;
+  pt: TPointF;
+  ds: TDataColumns;
+  index: integer;
+  gdArea: TRectF;
+  gdWidth: single;
+begin
+  panel := parentGraph as TRRGraph;
+
+  ds := properties.dataBlocks[0].columns;
+  // If there is nothing to plot then don't try to find the data limits
+  if ds.find(properties.dataBlocks[0].xaxisColumn, index) <> nil then
+    if properties.AutoXScaling or properties.AutoYScaling then
+      findDataLimits;
+
+  setAxesLimits;
+  determineOrigin;
+  computeScalingFactors(getGraphDeviceDrawingArea());
+
+  r := getGraphDeviceDrawingArea;
+
+  // MajorTickLength := computePhysicalSize(MajorTickInCms);
+  // MinorTickLength := computePhysicalSize(MinorTickInCms);
+  XAxisLengthInPixels := computePhysicalSize(XAxisLengthInCms);
+  YAxisLengthInPixels := computePhysicalSize(YAxisLengthInCms);
+
+  box := relativeToDevice2(properties.PlottingAreaObject);
+  LPaint.color := properties.GraphBackgroundColor;
+  LPaint.Style := TSkPaintStyle.Fill;
+  ACanvas.DrawRect(TRectF.Create(box.left, box.top, box.left + box.w, box.top + box.h), LPaint);
+
+  if properties.bDrawMainTitle then
+    begin
+      textProperties := properties.MainTitleObject.textProperties; // graphObjects[mainTitleId].textProperties;
+      if textProperties.value <> '' then
+        begin
+          LPaint.color := textProperties.fontColor;
+          LPaint.Style := TSkPaintStyle.Fill;
+
+          pt := textProperties.computeDimensions(LPaint);
+
+          box := relativeToDevice2(properties.MainTitleObject);
+
+          x := box.left;
+          y := box.top;
+          //textProperties.font.Size := textProperties.font.Size;
+          LBlob := TSkTextBlob.MakeFromText(textProperties.value, textProperties.font);
+          ACanvas.DrawTextBlob(LBlob, x, y, LPaint);
+          textProperties.box.left := x;
+          textProperties.box.top := y - pt.y; // pt.y is the height of the text
+        end;
+       if SelectedObjectType = coMainTitle then
+          drawMainTitleSelected(Acanvas);
+    end;
+
+  if properties.bDrawXAxisTitle then
+     begin
+     drawXAxisTitle(ACanvas);
+
+      if SelectedObjectType = coXAxisTitle then
+         drawXAxisTitleSelected(ACanvas);
+     end;
+
+  if properties.bDrawYAxisTitle then
+     begin
+     drawYAxisTitle(ACanvas);
+
+     if SelectedObjectType = coYAxisTitle then
+        drawYAxisTitleSelected (ACanvas);
+     end;
+
+  if properties.LogYAxis then
+    drawYAxisLogTicks(ACanvas)
+  else
+    drawYAxisTicks(ACanvas);
+
+  if properties.LogXAxis then
+    drawXAxisLogTicks(ACanvas)
+  else
+    drawXAxisTicks(ACanvas);
+
+  if FSubGraphProperties.XGridLines then
+    drawAllMajorXGridLines(ACanvas);
+
+  if FSubGraphProperties.YGridLines then
+    drawAllMajorYGridLines(ACanvas);
+
+  if not properties.PlottingAreaObject.selected then
+    begin
+      drawAxesLines(ACanvas, True, True);
+
+      if FSubGraphProperties.GraphBorder then
+         drawGraphBorder(ACanvas);
+    end
+  else
+    drawSelectedGraphingArea(ACanvas);
+
+  ACanvas.Save;
+  try
+    ACanvas.ClipRect(r);
+
+    plotLines(ACanvas);
+    plotSymbols(ACanvas);
+  finally
+    ACanvas.Restore;
+  end;
+  drawLegend(ACanvas);
+end;
+
 
 end.
