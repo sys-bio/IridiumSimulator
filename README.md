@@ -10,7 +10,7 @@
 </table> 
 
    
-### Coming soon for summer 2022 - Beta has Arrived
+### This is a new rewrite of the original Iridium Simulator PLatoform ###
  
  
 Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
