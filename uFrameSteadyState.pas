@@ -156,6 +156,9 @@ type
     procedure RefreshAllOpen3DWindows;
     procedure CloseAll3DWindows;
 
+  protected
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+
   public
     destructor Destroy; override;
     procedure SetContext(const AContext: IAnalysisContext);
@@ -172,6 +175,21 @@ const
   SECTION_HEIGHT_MAX = 600;
   SECTION_HEADER_H   = 24;
   SECTION_PADDING    = 8;
+
+
+procedure TFrameSteadyState.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited;
+  { Self-cleaning dict: if a tracked 3D window dies by ANY path
+    (user close, Application-owner shutdown, explicit Free), drop
+    its entry here before the pointer can go stale. This is the
+    safety net OnFormClosed can't provide -- OnFormClosed only
+    fires on the Close path, not on direct destruction. }
+  if (Operation = opRemove) and
+     (F3DWindows <> nil) and
+     (AComponent is TfrmBar3D) then
+    F3DWindows.Remove(TfrmBar3D(AComponent).Kind);
+end;
 
 { -- grid helpers ---------------------------------------------------------
 
@@ -408,7 +426,11 @@ end;
 
 destructor TFrameSteadyState.Destroy;
 begin
-  CloseAll3DWindows;
+  { Do NOT call CloseAll3DWindows here. At main-form-close time the
+    3D windows are owned by Application and will be freed by it; calling
+    Close on them mid-shutdown either AVs (if they're already gone) or
+    triggers FMX Close machinery in a half-dead environment.
+    FreeNotification keeps F3DWindows from holding stale pointers. }
   F3DWindows.Free;
   FGradientPos.Free;
   FGradientNeg.Free;
@@ -1259,6 +1281,7 @@ function TFrameSteadyState.GetOrCreate3DWindow(AKind: TBar3DMatrixKind): TfrmBar
     Result := TfrmBar3D.Create(Application);
     Result.OnFormClosed := On3DWindowClosed;
     F3DWindows.Add(AKind, Result);
+    Result.FreeNotification(Self);
 end;
 
 

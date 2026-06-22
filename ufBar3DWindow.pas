@@ -37,9 +37,11 @@ uses
   System.Classes, System.SysUtils, System.UITypes, System.Math,
   System.UIConsts,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.StdCtrls, FMX.Layouts,
-  FMX.Controls.Presentation, FMX.Objects,
+  FMX.Controls.Presentation,
+  FMX.Objects,
   U3DBarGraph,
-  uRR2DSimpleMatrix, FMX.ListBox, FMX.Colors;
+  uRR2DSimpleMatrix,
+  FMX.ListBox, FMX.Colors;
 
 type
   { Tag identifying which steady-state matrix a window is showing.
