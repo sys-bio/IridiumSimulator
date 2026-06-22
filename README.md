@@ -25,3 +25,9 @@ Here are some screenshots to show you what it looks like:
 <img src="/Images/iridium1.png" width="80%"></img> <img src="/Images/iridium3.png" width="80%"></img> <img src="/Images/iridium2.png" width="80%"></img> 
 
 <img src="/Images/iridium4.png" width="80%"></img> 
+
+Millard E coli model (2016)
+
+Control coefficient matrix:
+
+<img src="/Images/iridium5.png" width="80%"></img> 
