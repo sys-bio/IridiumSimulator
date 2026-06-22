@@ -2,7 +2,7 @@ object frmBar3D: TfrmBar3D
   Left = 0
   Top = 0
   Caption = '3D Bar View'
-  ClientHeight = 600
+  ClientHeight = 614
   ClientWidth = 800
   FormFactor.Width = 320
   FormFactor.Height = 480
@@ -41,8 +41,59 @@ object frmBar3D: TfrmBar3D
   object LayoutHost: TLayout
     Align = Client
     Size.Width = 800.000000000000000000
-    Size.Height = 564.000000000000000000
+    Size.Height = 500.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
+  end
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 536.000000000000000000
+    Size.Width = 800.000000000000000000
+    Size.Height = 78.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object cboColorGrid: TColorComboBox
+      DropDownKind = Custom
+      Color = claLightgray
+      DisableFocusEffect = False
+      DropDownCount = 12
+      ItemIndex = 71
+      Position.X = 32.000000000000000000
+      Position.Y = 32.000000000000000000
+      Size.Width = 137.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      OnChange = cboColorGridChange
+    end
+    object Label1: TLabel
+      Position.X = 32.000000000000000000
+      Position.Y = 11.000000000000000000
+      Size.Width = 117.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Grid Color:'
+      TabOrder = 2
+    end
+    object Label2: TLabel
+      Position.X = 216.000000000000000000
+      Position.Y = 11.000000000000000000
+      Text = 'XZ and YZ Plane Color'
+      TabOrder = 3
+    end
+    object cboColorXYandYXPlaneColor: TColorComboBox
+      DropDownKind = Custom
+      Color = claLightgray
+      DisableFocusEffect = False
+      DropDownCount = 12
+      ItemIndex = 71
+      Position.X = 216.000000000000000000
+      Position.Y = 32.000000000000000000
+      Size.Width = 137.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      OnChange = cboColorXYandYXPlaneColorChange
+    end
   end
 end

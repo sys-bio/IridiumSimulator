@@ -10,8 +10,8 @@ object frmMain: TfrmMain
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
+  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
-  OnDestroy = FormDestroy
   OnPaint = FormPaint
   DesignerMasterStyle = 0
   object Layout1: TLayout
@@ -1267,6 +1267,7 @@ object frmMain: TfrmMain
     Top = 530
   end
   object SaveDialogAnt: TSaveDialog
+    DefaultExt = '.txt'
     Filter = 'Antimony file|*.txt|Antimony file|*.ant|Any files|*.*'
     Left = 120
     Top = 610

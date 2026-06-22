@@ -23,8 +23,10 @@ uses
   System.SysUtils,
   FMX.Styles,
   System.Types,
-  System.UIConsts, System.UITypes,
-  System.Classes, System.Variants,
+  System.UIConsts,
+  System.UITypes,
+  System.Classes,
+  System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
   FMX.Memo.Types, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo,
   FMX.StdCtrls, FMX.Layouts,
@@ -150,7 +152,6 @@ type
     Plot: TSkPlotPaintBox;
     mnuGoToWedIridium: TMenuItem;
     procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
     procedure btnTimeCourse1Click(Sender: TObject);
     procedure btnSteadyStateClick(Sender: TObject);
     procedure moAntimonyChangeTracking(Sender: TObject);
@@ -200,6 +201,7 @@ type
     procedure btnGeneratePythonClick(Sender: TObject);
     procedure mnuGoToWedIridiumClick(Sender: TObject);
     procedure mnuGeneralHelpClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FSession:          TModelSession;
     FSliderFrame:      TFrameSliderContainer;
@@ -304,6 +306,21 @@ begin
 end;
 { ── form lifecycle ───────────────────────────────────────────────────────── }
 
+procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  try
+    FSession.Free;
+    // Frames and slider frame are owned by Self (TComponent ownership) and will be freed automatically.
+    Action := TCloseAction.caFree;
+  except
+    on E: Exception do
+     begin
+     ShowMessage('An internal error occurred: ' + E.Message);
+     Action := TCloseAction.caFree;
+     end;
+  end;
+end;
+
 procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := True;
@@ -378,13 +395,6 @@ begin
   ShowAnalysisFrame(FFrameTimeCourse);   { default view }
 
   FireEvent := True;
-end;
-
-procedure TfrmMain.FormDestroy(Sender: TObject);
-begin
-  FSession.Free;
-  { Frames and slider frame are owned by Self (TComponent ownership) and
-    will be freed automatically. }
 end;
 
 procedure TfrmMain.FormPaint(Sender: TObject; Canvas: TCanvas;

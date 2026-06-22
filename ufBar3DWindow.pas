@@ -39,7 +39,7 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.StdCtrls, FMX.Layouts,
   FMX.Controls.Presentation, FMX.Objects,
   U3DBarGraph,
-  uRR2DSimpleMatrix;
+  uRR2DSimpleMatrix, FMX.ListBox, FMX.Colors;
 
 type
   { Tag identifying which steady-state matrix a window is showing.
@@ -53,12 +53,22 @@ type
     lblTitle: TLabel;
     lblScaling: TLabel;
     LayoutHost: TLayout;
+    Layout1: TLayout;
+    cboColorGrid: TColorComboBox;
+    Label1: TLabel;
+    Label2: TLabel;
+    cboColorXYandYXPlaneColor: TColorComboBox;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure cboColorGridChange(Sender: TObject);
+    procedure cboColorXYandYXPlaneColorChange(Sender: TObject);
   private
     FBarGraph: TBarGraph;
     FKind: TBar3DMatrixKind;
     FOnFormClosed: TNotifyEvent;
+
+    FGridColor: TAlphaColor;
+    FXYAndYZColor: TAlphaColor;
 
     function ColorForValue(V, MaxAbs: Double): TAlphaColor;
   public
@@ -157,6 +167,16 @@ begin
   TAlphaColorRec(Result).B := LerpChannel(B0, B1, T);
 end;
 
+procedure TfrmBar3D.cboColorGridChange(Sender: TObject);
+begin
+  FBarGraph.GridColor := cboColorGrid.Color;
+end;
+
+procedure TfrmBar3D.cboColorXYandYXPlaneColorChange(Sender: TObject);
+begin
+  FBarGraph.XZandYZPlaneColor := cboColorXYandYXPlaneColor.Color;
+end;
+
 function TfrmBar3D.ColorForValue(V, MaxAbs: Double): TAlphaColor;
 var
   T: Single;
@@ -177,6 +197,9 @@ end;
 
 procedure TfrmBar3D.FormCreate(Sender: TObject);
 begin
+  FXYAndYZColor := claLightGrey;
+  FGridColor := claLightGrey;
+
   { The bar graph is created in code rather than placed at design time
     so the unit can be compiled and dropped in without an IDE-edited
     .fmx referencing U3DBarGraph (which would force the IDE to load
@@ -184,6 +207,8 @@ begin
   FBarGraph := TBarGraph.Create(Self);
   FBarGraph.Parent := LayoutHost;
   FBarGraph.Align := TAlignLayout.Client;
+  FBarGraph.XZandYZPlaneColor := FGridColor;
+  FBarGraph.GridColor := FXYAndYZColor;
 
   { Sensible defaults; the user can drag/zoom/rotate from here. The
     component handles its own camera/mouse/keyboard. }
