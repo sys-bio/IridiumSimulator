@@ -409,7 +409,7 @@ end;
 destructor TFrameSteadyState.Destroy;
 begin
   CloseAll3DWindows;
-  //F3DWindows.Free;
+  F3DWindows.Free;
   FGradientPos.Free;
   FGradientNeg.Free;
   inherited;
