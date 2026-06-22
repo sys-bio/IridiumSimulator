@@ -24,7 +24,7 @@ Source code: https://github.com/sys-bio/WebIridium
 
 GitHub page: https://sys-bio.github.io/WebIridium/
 
-Here are some screenshots to show you what it looks like:
+Here are some screenshots of the desktop version:
 
 Time course simulation:
 
