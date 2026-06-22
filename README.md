@@ -10,7 +10,7 @@
 </table> 
 
    
-### This is a new rewrite of the original Iridium Simulator PLatoform ###
+### This is a new rewrite of the original Iridium Simulator Platform ###
  
  Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
 
