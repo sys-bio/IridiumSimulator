@@ -30,8 +30,11 @@ Time course parameter scan:
 
 <img src="/Images/iridium2.png" width="80%"></img> 
 
+Control coefficients 3D plot (random network):
+
 <img src="/Images/iridium3.png" width="80%"></img> 
 
+Control coefficients 3D plot (random network):
 
 <img src="/Images/iridium4.png" width="80%"></img> 
 
