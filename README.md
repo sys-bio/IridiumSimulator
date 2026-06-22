@@ -12,13 +12,17 @@
    
 ### This is a new rewrite of the original Iridium Simulator PLatoform ###
  
- 
-Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
+ Interactive desktop simulator (Windows/Mac) for systems biology. Built on top of the simulation engine [libroadrunner](https://github.com/sys-bio/roadrunner).
 
-Supports: Time course simulation, steady-state, real-time interactive simulation, parameter scans, slider control, MCA style sensitivity analysis (https://en.wikipedia.org/wiki/Metabolic_control_analysis), and network structural analysis. It uses the [antimony](https://github.com/sys-bio/antimony) format to describe models and is fully [SBML](https://github.com/sbmlteam/libsbml) compliant.
-
+The current version suppotrs: Time course simulation, steady-state, real-time interactive simulation via sliders, parameter scans, and MCA style sensitivity analysis (https://en.wikipedia.org/wiki/Metabolic_control_analysis). It uses the [antimony](https://github.com/sys-bio/antimony) format to describe models and is fully [SBML](https://github.com/sbmlteam/libsbml) compliant.
 
 I would like to thank Guillermo Canedo Ramirez who did an excellent job in making the 3D bar plotting compoment (https://github.com/gcanedo/T3DBarGraph)
+
+The web version which runs inside the browser can be found at
+
+Source code: https://github.com/sys-bio/WebIridium
+
+GitHub page: https://sys-bio.github.io/WebIridium/
 
 Here are some screenshots to show you what it looks like:
 
