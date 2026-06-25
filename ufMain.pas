@@ -50,12 +50,14 @@ uses
   FMX.NumberBox,
   FMX.Objects,
   uBuiltInModels,
+  uCommonTypes,
   FMX.SpinBox, FMX.TabControl,
-  FMX.ListBox, System.Math.Vectors, FMX.Controls3D,
+  FMX.ListBox,
+  System.Math.Vectors, FMX.Controls3D,
   FMX.Layers3D;
 
 const
-    VERSION = '0.96            ';
+    VERSION = '0.980            ';
 
 type
   TfrmMain = class(TForm, IAnalysisContext)
@@ -151,6 +153,12 @@ type
     Label2: TLabel;
     Plot: TSkPlotPaintBox;
     mnuGoToWedIridium: TMenuItem;
+    GroupBox1: TGroupBox;
+    Label3: TLabel;
+    cboLoadedFilename: TComboBox;
+    Label4: TLabel;
+    lblParameterName: TLabel;
+    btnCopyToStorage: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btnTimeCourse1Click(Sender: TObject);
     procedure btnSteadyStateClick(Sender: TObject);
@@ -202,6 +210,15 @@ type
     procedure mnuGoToWedIridiumClick(Sender: TObject);
     procedure mnuGeneralHelpClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormDestroy(Sender: TObject);
+    procedure cboLoadedFilenameChange(Sender: TObject);
+    procedure btnCopyToStorageClick(Sender: TObject);
+    procedure Splitter2MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Single);
+    procedure Splitter2Moved(Sender: TObject);
+    procedure moAntimonyViewportPositionChange(Sender: TObject;
+      const OldViewportPosition, NewViewportPosition: TPointF;
+      const ContentSizeChanged: Boolean);
   private
     FSession:          TModelSession;
     FSliderFrame:      TFrameSliderContainer;
@@ -213,6 +230,11 @@ type
     FCurrentFileName : String;
     FireEvent: Boolean;
     FIsModifiedSinceLastSave: Boolean;
+
+    FSavedViewport : TPointF;
+    FDragging  : Boolean;
+
+    FListOfLoadedDataFiles : TList<TLoadDataFile>;
 
     procedure CreateSession;
     procedure CreateSliderContainer;
@@ -246,6 +268,8 @@ type
     procedure CopyTextToTextWindow (AString : String);
   public
     { Public declarations }
+    procedure SplitterBeforeMove;
+    procedure SplitterAfterMove;
   end;
 
 var
@@ -256,7 +280,7 @@ implementation
 {$R *.fmx}
 
 uses
-  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uRoadRunner, ufPlotEditor;
+  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uRoadRunner, ufPlotEditor, uMySplitter;
 
 const
   DEFAULT_SLIDER_HEIGHT = 322.0;
@@ -331,14 +355,21 @@ begin
 
 end;
 
-
-
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
   errMsgAnsi: AnsiString;
   errMsg:     string;
 begin
+  // This is part of a hack to avoid the tmemo snapping
+  // to the top when a user moves the spitters. TMySplitter
+  // allows us access the splitter movement before it tries
+  // to redraw stuff.
+  PPointer(Splitter1)^ := TMySplitter;
+  PPointer(Splitter2)^ := TMySplitter;
+
   TabControl1.ActiveTab := tbPlot;
+
+  FListOfLoadedDataFiles := TList<TLoadDataFile>.Create;
 
   FireEvent := False;
 
@@ -384,6 +415,12 @@ begin
   chkAutoscaleY.IsChecked := Plot.AutoYScaling;
   chkShowLegend.IsChecked := Plot.LegendStyle.Visible;
 
+  edtXMin.Enabled := False; edtXmax.Enabled := False;
+  lblXMin.Enabled := False; lblXMax.Enabled := False;
+
+  edtYMin.Enabled := False; edtYmax.Enabled := False;
+  lblYMin.Enabled := False; lblYMax.Enabled := False;
+
   edtXMin.Text := '0';
   edtXMax.Text := '20';
   edtYMin.Text := '0';
@@ -395,6 +432,26 @@ begin
   ShowAnalysisFrame(FFrameTimeCourse);   { default view }
 
   FireEvent := True;
+end;
+
+procedure TfrmMain.FormDestroy(Sender: TObject);
+begin
+   FListOfLoadedDataFiles.Free;
+end;
+
+
+procedure TfrmMain.SplitterBeforeMove;
+begin
+  FDragging := True;
+end;
+
+procedure TfrmMain.SplitterAfterMove;
+begin
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      FDragging := False;
+    end);
 end;
 
 procedure TfrmMain.FormPaint(Sender: TObject; Canvas: TCanvas;
@@ -575,6 +632,16 @@ begin
   //PresenterName := 'RichEditStyled';
 end;
 
+procedure TfrmMain.moAntimonyViewportPositionChange(Sender: TObject;
+  const OldViewportPosition, NewViewportPosition: TPointF;
+  const ContentSizeChanged: Boolean);
+begin
+  if FDragging and ContentSizeChanged then
+    moAntimony.ViewportPosition := FSavedViewport
+  else if not FDragging then
+    FSavedViewport := NewViewportPosition;
+end;
+
 procedure TfrmMain.edtXMaxExit(Sender: TObject);
 var
   Value: Double;
@@ -677,12 +744,12 @@ begin
   if AParameterSetChanged then
   begin
     FSliderFrame.ClearSliders;
-    FSliderFrame.LoadParams(FSession.GetParameterNames,    { <-- refresh catalogue }
-                            FSession.GetParameterValues);
+    FSliderFrame.LoadParams(FSession.GetTunableNames,    { <-- refresh catalogue }
+                            FSession.GetTunableValues);
   end
   else
-    FSliderFrame.RefreshValues(FSession.GetParameterNames,
-                               FSession.GetParameterValues);
+    FSliderFrame.RefreshValues(FSession.GetTunableNames,
+                               FSession.GetTunableValues);
 end;
 
 
@@ -718,9 +785,13 @@ begin
   FFrameSteadyState.Visible   := False;
   FFrameParameterScan.Visible := False;
 
-  if FActiveFrame <> ATarget then
-    FSliderFrame.ClearSliders;
-
+  { Sliders persist across frame switches. The shared slider container is a
+    single instance, and slider moves already write into the live model
+    (OnSliderChanged -> Session.SetParameterValue), so the user's tuned
+    values carry over to whichever analysis they switch to. We deliberately
+    do NOT ClearSliders here — that is reserved for genuine model changes
+    (SessionModelReloaded with a changed parameter set, or the model going
+    unloaded in SessionStateChanged). }
   FActiveFrame := ATarget;
 
   { Re-bind shared slider container to the now-active frame. ClearSliders
@@ -757,6 +828,28 @@ begin
   moAntimony.Font.Size := spFontSize.Value;
 end;
 
+procedure TfrmMain.Splitter2MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
+begin
+  moAntimony.Align := TAlignLayout.None;
+  moAntimony.Visible := False;
+  moAntimony.BeginUpdate;
+  FSavedViewport := moAntimony.ViewportPosition;
+end;
+
+procedure TfrmMain.Splitter2Moved(Sender: TObject);
+begin
+  // Defer until after the layout pass finishes
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      moAntimony.ViewportPosition := FSavedViewport;
+      moAntimony.Align := TAlignLayout.Client;
+      moAntimony.EndUpdate;
+      moAntimony.Visible := True;
+    end);
+end;
+
 procedure TfrmMain.TabControl1Change(Sender: TObject);
 begin
   if TabControl1.ActiveTab = tbTextView then
@@ -780,11 +873,10 @@ end;
 
 procedure TfrmMain.btnClearDataClick(Sender: TObject);
 begin
-  for var i :=  Plot.Series.Count - 1 downto 0 do
-      begin
-      if Plot.Series[i].SeriesType = SERIES_TYPE_DATA then
-         Plot.Series.Delete(i);
-      end;
+  Plot.ClearSeriesKind(skData);
+  FListOfLoadedDataFiles.Clear;
+  cboLoadedFilename.Clear;
+  lblParameterName.Text := 'None';
   Plot.Redraw;
 end;
 
@@ -794,6 +886,7 @@ begin
   moTextView.CopyToClipboard;
 end;
 
+
 procedure TfrmMain.btnEditGraphClick(Sender: TObject);
 begin
   if not Assigned (frmPlotEditor) then
@@ -801,7 +894,6 @@ begin
   try
     frmPlotEditor.CopyPropertiesToEditor(Plot);
     frmPlotEditor.Show;
-    //frmPlotEditor.CopyPropertiesFromEditor(Plot);
   finally
     //frmPlotEditor.Free;
   end;
@@ -855,23 +947,109 @@ end;
 procedure TfrmMain.btnLoadCSVClick(Sender: TObject);
 var i : Integer;
     Series : TStringList;
+    Index : Integer;
+    LoadedDataFile : TLoadDataFile;
+    FileName : String;
+    ClearSeries, ClearDataKind : Boolean;
 begin
   if OpenDialog1.Execute then
      begin
-     Series := Plot.LoadData(OpenDialog1.FileName, False, True, False);
+     ClearSeries := False;
+     ClearDataKind := True;
+
+     FileName := ExtractFileName(OpenDialog1.FileName);
+     FireEvent := False;
+     for i := 0 to FListOfLoadedDataFiles.Count - 1 do
+         if FileName = FListOfLoadedDataFiles[i].FileName then
+            begin
+            showmessage ('This data file has already been loaded');
+            exit;
+            end;
+
+     Index := cboLoadedFilename.Items.Add(FileName);
+     cboLoadedFilename.ItemIndex := Index;
+     FireEvent := True;
+
+     // Note TStringList Series don't own the Series, so its ok to free the stringlist.
+     Series := Plot.LoadData(OpenDialog1.FileName, False, True, ClearSeries, ClearDataKind);
      for i := 0 to Series.Count - 1 do
          begin
-         TPlotSeries (Series.Objects[i]).SeriesType := SERIES_TYPE_DATA;
+         TPlotSeries (Series.Objects[i]).SeriesKind := skData;
+         TPlotSeries (Series.Objects[i]).SeriesId := FileName + '_' + inttostr (i);
          TPlotSeries (Series.Objects[i]).LineVisible := False;
-         //TPlotSeries (Series.Objects[i]).MarkerStrokeColor := TColorManager.NextColor;
          TPlotSeries (Series.Objects[i]).MarkerStrokeWidth := 1.5;
          TPlotSeries (Series.Objects[i]).MarkerFillColor := TPlotSeries (Series.Objects[i]).MarkerStrokeColor;
          TPlotSeries (Series.Objects[i]).MarkerSize := 4;
          end;
+
+     lblParameterName.Text := Series[0];
+
+     LoadedDataFile := TLoadDataFile.Create;
+     LoadedDataFile.FileName := FileName;
+     LoadedDataFile.ParameterName := Series[0];
+     for i := 0 to Series.Count - 1 do
+         LoadedDataFile.Series.Add(TPlotSeries (Series.Objects[i]).Clone);
+     FListOfLoadedDataFiles.Add(LoadedDataFile);
+
      Series.Free;
      Plot.Redraw;
      end;
 end;
+
+procedure TfrmMain.cboLoadedFilenameChange(Sender: TObject);
+var i : integer;
+    Index : Integer;
+    Found : Boolean;
+begin
+  if not FireEvent then Exit;
+
+  Found := False;
+  for i := 0 to FListOfLoadedDataFiles.Count - 1 do
+      if cboLoadedFilename.items[cboLoadedFilename.ItemIndex] = FListOfLoadedDataFiles[i].FileName then
+         begin
+         lblParameterName.Text := FListOfLoadedDataFiles[i].ParameterName;
+         Found := True;
+         Index:= i;
+         break;
+         end;
+  if Found then
+     begin
+     Plot.ClearSeriesKind(skData);
+     for i := 0 to FListOfLoadedDataFiles[Index].Series.Count - 1 do
+         Plot.AddSeries(FListOfLoadedDataFiles[Index].Series[i].Clone);
+     end;
+  Plot.Redraw;
+end;
+
+
+procedure TfrmMain.btnCopyToStorageClick(Sender: TObject);
+var i : integer;
+    Index : Integer;
+    StoredSeries : TPlotSeries;
+    Found : Boolean;
+begin
+  Found := False;
+  for i := 0 to FListOfLoadedDataFiles.Count - 1 do
+      if cboLoadedFilename.items[cboLoadedFilename.ItemIndex] = FListOfLoadedDataFiles[i].FileName then
+         begin
+         lblParameterName.Text := FListOfLoadedDataFiles[i].ParameterName;
+         Found := True;
+         Index:= i;
+         break;
+         end;
+
+  for i := 0 to Plot.Series.Count -1 do
+      if Plot.Series[i].SeriesKind = skData then
+         begin
+         if Plot.Series[i].SeriesId = FListOfLoadedDataFiles[Index].Series[i].SeriesId then
+            begin
+            FListOfLoadedDataFiles[Index].Series[i].MarkerSize := Plot.Series[i].MarkerSize;
+            FListOfLoadedDataFiles[Index].Series[i].MarkerFillColor := Plot.Series[i].MarkerFillColor;
+            FListOfLoadedDataFiles[Index].Series[i].MarkerStrokeColor := Plot.Series[i].MarkerStrokeColor;
+            end;
+         end;
+end;
+
 
 procedure TfrmMain.btnRefreshClick(Sender: TObject);
 begin
@@ -896,6 +1074,7 @@ begin
   FSession.ClearDirty;
   FFrameTimeCourse.SetSimulationParameters(Model.timeEnd, Model.NumberOfPoints);
 end;
+
 
 procedure TfrmMain.chkAutoscaleXChange(Sender: TObject);
 begin
@@ -1017,9 +1196,7 @@ var
 
 begin
   { Remove any previous simulation series. }
-  for I := Plot.Series.Count - 1 downto 0 do
-    if Plot.Series[I].SeriesType = SERIES_TYPE_SIMULATION then
-      Plot.Series.Delete(I);
+  Plot.ClearSeriesKind(skSimulation);
 
   NumRows := AData.r;
 
@@ -1046,12 +1223,8 @@ begin
 end;
 
 procedure TfrmMain.PlotClearSimulationSeries;
-var
-  I: Integer;
 begin
-  for I := Plot.Series.Count - 1 downto 0 do
-    if Plot.Series[I].SeriesType = SERIES_TYPE_SIMULATION then
-      Plot.Series.Delete(I);
+  Plot.ClearSeriesKind(skSimulation);
 end;
 
 procedure TfrmMain.PlotAddSeries(ASeries: TObject);
@@ -1072,7 +1245,7 @@ var
 begin
   if not Assigned(ANextColor) then Exit;
   for I := 0 to Plot.Series.Count - 1 do
-    if Plot.Series[I].SeriesType = SERIES_TYPE_SIMULATION then
+    if Plot.Series[I].SeriesKind = skSimulation then
     begin
       NewColor := ANextColor();
       Plot.Series[I].LineColor         := NewColor;

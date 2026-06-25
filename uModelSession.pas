@@ -73,6 +73,9 @@ type
     function  GetParameterValues: TArray<Double>;
     procedure SetParameterValue(const AName: string; AValue: Double);
 
+    function  GetTunableNames:  TArray<string>;   { globals + boundary species }
+    function  GetTunableValues: TArray<Double>;
+
     procedure AddStateListener(const AHandler: TNotifyEvent);
     procedure RemoveStateListener(const AHandler: TNotifyEvent);
 
@@ -238,7 +241,7 @@ var
 begin
   if not FIsLoaded then Exit('');
 
-  Names := GetParameterNames;
+  Names := GetTunableNames;
   Lst := TStringList.Create;
   try
     Lst.Sorted := True;
@@ -361,6 +364,46 @@ begin
     Result := FOnNeedAntimonyText
   else
     Result := '';
+end;
+
+function TModelSession.GetTunableNames: TArray<string>;
+var
+  Ids: TStringList;
+  P:   TArray<string>;
+  I, N: Integer;
+begin
+  if not FIsLoaded then Exit(nil);
+
+  P := GetParameterNames;
+  Ids := FRoadRunner.getBoundarySpeciesIds;
+  try
+    SetLength(Result, Length(P) + Ids.Count);
+    for I := 0 to High(P) do
+      Result[I] := P[I];
+    N := Length(P);
+    for I := 0 to Ids.Count - 1 do
+      Result[N + I] := Ids[I];
+  finally
+    Ids.Free;
+  end;
+end;
+
+function TModelSession.GetTunableValues: TArray<Double>;
+var
+  V:    TArray<Double>;
+  I, N: Integer;
+  NB:   Integer;
+begin
+  if not FIsLoaded then Exit(nil);
+
+  V  := GetParameterValues;
+  NB := FRoadRunner.GetNumberOfBoundarySpecies;
+  SetLength(Result, Length(V) + NB);
+  for I := 0 to High(V) do
+    Result[I] := V[I];
+  N := Length(V);
+  for I := 0 to NB - 1 do
+    Result[N + I] := FRoadRunner.getBoundarySpeciesByIndex(I);
 end;
 
 end.

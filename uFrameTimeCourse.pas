@@ -927,8 +927,8 @@ begin
 
   if not FContext.SliderContainer.ParamPanelVisible then
     begin
-    Names  := FContext.Session.GetParameterNames;
-    Values := FContext.Session.GetParameterValues;
+    Names  := FContext.Session.GetTunableNames;
+    Values := FContext.Session.GetTunableValues;
     FContext.SliderContainer.LoadParams(Names, Values);
     end;
 
@@ -958,8 +958,8 @@ begin
 
   if not FContext.SliderContainer.ParamPanelVisible then
     begin
-    Names  := FContext.Session.GetParameterNames;
-    Values := FContext.Session.GetParameterValues;
+    Names  := FContext.Session.GetTunableNames;
+    Values := FContext.Session.GetTunableValues;
     FContext.SliderContainer.LoadParams(Names, Values);
     end;
 

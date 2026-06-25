@@ -267,9 +267,12 @@ end;
 
 procedure TFrameParameterScan.PopulateParameterCombo;
 var
-  Names: TArray<string>;
-  N:     string;
+  Names:    TArray<string>;
+  N:        string;
   PrevName: string;
+  RR:       TRoadRunner;
+  Ids:      TStringList;
+  I:        Integer;
 begin
   PrevName := '';
   if cbParameter.ItemIndex >= 0 then
@@ -279,14 +282,16 @@ begin
   try
     cbParameter.Clear;
     if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
-    Names := FContext.Session.GetParameterNames;
+
+    { Global parameters. }
+    Names := FContext.Session.GetTunableNames;
     for N in Names do
       cbParameter.Items.Add(N);
 
     if PrevName <> '' then
       cbParameter.ItemIndex := cbParameter.Items.IndexOf(PrevName);
     if cbParameter.ItemIndex < 0 then
-      cbParameter.ItemIndex := 0;     { fall back if previous name is gone }
+      cbParameter.ItemIndex := 0;
   finally
     cbParameter.EndUpdate;
   end;
@@ -791,6 +796,7 @@ begin
   pbScanProgress.Visible := False;
 end;
 
+
 procedure TFrameParameterScan.btnRunScanMouseLeave(Sender: TObject);
 begin
   TButton(Sender).Enabled := False;
@@ -820,8 +826,8 @@ begin
 
   if not FContext.SliderContainer.ParamPanelVisible then
   begin
-    Names  := FContext.Session.GetParameterNames;
-    Values := FContext.Session.GetParameterValues;
+    Names  := FContext.Session.GetTunableNames;
+    Values := FContext.Session.GetTunableValues;
     FContext.SliderContainer.LoadParams(Names, Values);
   end;
 

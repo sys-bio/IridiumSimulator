@@ -1,0 +1,155 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Condition="Exists('$(BDS)\bin\CodeGear.Deployment.targets')" Project="$(BDS)\bin\CodeGear.Deployment.targets"/>
+    <ProjectExtensions>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <PropertyGroup/>
+    <ItemGroup Condition="'$(Platform)'=='OSX64'"/>
+    <ItemGroup Condition="'$(Platform)'=='Win32'">
+        <DeployFile Include="Win32\Debug\IridiumSimulator.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator\</RemoteDir>
+            <RemoteName>IridiumSimulator.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='OSXARM64'">
+        <DeployFile Include="OSXARM64\OSX64ARM_libs\libroadrunner_c_api.dylib" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libroadrunner_c_api.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Debug\IridiumSimulator.info.plist" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator.app\Contents\</RemoteDir>
+            <RemoteName>Info.plist</RemoteName>
+            <DeployClass>ProjectOSXInfoPList</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\OSX64ARM_libs\libroadrunner_c_api.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>IridiumSimulator.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libroadrunner_c_api.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Release\IridiumSimulator.info.plist" Condition="'$(Config)'=='Release'">
+            <RemoteDir>IridiumSimulator.app\Contents\</RemoteDir>
+            <RemoteName>Info.plist</RemoteName>
+            <DeployClass>ProjectOSXInfoPList</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\delphi_PROJECTICNS.icns" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator.app\Contents\Resources\</RemoteDir>
+            <RemoteName>IridiumSimulator.icns</RemoteName>
+            <DeployClass>ProjectOSXResource</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\bin\delphi_PROJECTICNS.icns" Condition="'$(Config)'=='Release'">
+            <RemoteDir>IridiumSimulator.app\Contents\Resources\</RemoteDir>
+            <RemoteName>IridiumSimulator.icns</RemoteName>
+            <DeployClass>ProjectOSXResource</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Release\IridiumSimulator.entitlements" Condition="'$(Config)'=='Release'">
+            <RemoteDir>IridiumSimulator.app\..\</RemoteDir>
+            <RemoteName>IridiumSimulator.entitlements</RemoteName>
+            <DeployClass>ProjectOSXEntitlements</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\OSX64ARM_libs\libantimony.dylib" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libantimony.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\OSX64ARM_libs\libantimony.dylib" Condition="'$(Config)'=='Release'">
+            <RemoteDir>IridiumSimulator.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>libantimony.dylib</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Release\IridiumSimulator" Condition="'$(Config)'=='Release'">
+            <RemoteDir>IridiumSimulator.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>IridiumSimulator</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Debug\IridiumSimulator.entitlements" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator.app\..\</RemoteDir>
+            <RemoteName>IridiumSimulator.entitlements</RemoteName>
+            <DeployClass>ProjectOSXEntitlements</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="OSXARM64\Debug\IridiumSimulator" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator.app\Contents\MacOS\</RemoteDir>
+            <RemoteName>IridiumSimulator</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='Win64'">
+        <DeployFile Include="Win64\Debug\IridiumSimulator.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator\</RemoteDir>
+            <RemoteName>IridiumSimulator.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="Win64\Release\IridiumSimulator.exe" Condition="'$(Config)'=='Release'">
+            <RemoteDir>IridiumSimulator\</RemoteDir>
+            <RemoteName>IridiumSimulator.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
+    <ItemGroup Condition="'$(Platform)'=='Win64x'"/>
+</Project>

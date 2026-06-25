@@ -1,7 +1,0 @@
-1. Go to GraphPacakge folder
-2. Install GraphPackage.dpk first
-3. Install design package dclGraphPackage.dpk
-
-
-$(BDSPROJECTSDIR)\CommonCode\libRoadRunner
-

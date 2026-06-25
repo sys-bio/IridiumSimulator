@@ -48,10 +48,13 @@ type
   TSliderRow = record
     Layout:    TLayout;
     RemoveBtn: TButton;
+    Resetbtn:  TButton;
     Lbl:       TLabel;
     Track:     TTrackBar;
     ParamName: string;
   end;
+
+  TScrollBoxCracker = class(TVertScrollBox);
 
   TFrameSliderContainer = class(TFrame)
     VertScrollBox1: TVertScrollBox;
@@ -61,7 +64,7 @@ type
     ListBoxParams:  TListBox;
     Layout1: TLayout;
     btnAddAllParameters: TButton;
-    btnResetParameters: TButton;
+    btnResetAllParameters: TButton;
   private
     FRows:            TArray<TSliderRow>;
     FOwned:           TObjectList<TComponent>;
@@ -75,7 +78,7 @@ type
     FAllParamNames:  TArray<string>;
     FAllParamValues: TArray<Double>;
 
-    { Optional "locked" parameter -- shown in the listbox but greyed and
+      { Optional "locked" parameter -- shown in the listbox but greyed and
       not clickable, and if it has an active slider that slider's track
       is disabled. Used by the parameter-scan frame to lock the
       currently-scanning parameter. Empty string = no lock. }
@@ -102,6 +105,8 @@ type
     procedure DoFilterChange(Sender: TObject);
     procedure DoBtnAddAllClick(Sender: TObject);
     procedure DoBtnResetClick(Sender: TObject);
+
+    procedure DoResetSingleSlider (Sender : TObject);
 
     function  FormatLabelText(const AName: string;
                               const AValue: Single): string;
@@ -319,7 +324,16 @@ begin
   ListBoxParams.OnItemClick := DoListBoxItemClick;
 
   btnAddAllParameters.OnClick := DoBtnAddAllClick;
-  btnResetParameters.OnClick  := DoBtnResetClick;
+  btnResetAllParameters.OnClick  := DoBtnResetClick;
+
+  VertScrollBox1.ShowScrollBars := True;
+  VertScrollBox1.AniCalculations.AutoShowing := False;
+
+  if TScrollBoxCracker(VertScrollBox1).VScrollBar <> nil then
+    begin
+    TScrollBoxCracker(VertScrollBox1).AutoHide := False;
+    TScrollBoxCracker(VertScrollBox1).VScrollBar.Visible := True;
+    end;
 end;
 
 destructor TFrameSliderContainer.Destroy;
@@ -453,7 +467,7 @@ begin
   var BtnLayout := TLayout.Create(Self);
   BtnLayout.Parent        := Row.Layout;
   BtnLayout.Align         := TAlignLayout.Left;
-  BtnLayout.Width         := BTN_W;
+  BtnLayout.Width         := BTN_W*2;
   BtnLayout.Margins.Right := 4;
 
   Row.RemoveBtn            := TButton.Create(Self);
@@ -463,10 +477,22 @@ begin
   Row.RemoveBtn.Height     := BTN_H;
   Row.RemoveBtn.Position.X := 0;
   Row.RemoveBtn.Position.Y := (Row.Layout.Height - BTN_H) - 27;
-  Row.RemoveBtn.Text       := 'x';
+  Row.RemoveBtn.Text       := 'X';
   Row.RemoveBtn.TagString  := AName;
   Row.RemoveBtn.Hint       := 'Delete slider';
   Row.RemoveBtn.OnClick    := DoRemoveBtnClick;
+
+  Row.Resetbtn             := TButton.Create(Self);
+  Row.ResetBtn.Parent     := BtnLayout;
+  Row.ResetBtn.Align      := TAlignLayout.None;
+  Row.ResetBtn.Width      := BTN_W - 4;
+  Row.ResetBtn.Height     := BTN_H;
+  Row.ResetBtn.Position.X := 26;
+  Row.ResetBtn.Position.Y := (Row.Layout.Height - BTN_H) - 27;
+  Row.ResetBtn.Text       := 'R';
+  Row.ResetBtn.TagString  := AName;
+  Row.ResetBtn.Hint       := 'Reset slider';
+  Row.ResetBtn.OnClick    := DoResetSingleSlider;
 
   { -- inner layout for label + trackbar -- }
   Row.Lbl             := TLabel.Create(Self);
@@ -486,11 +512,6 @@ begin
   Row.Track.Parent      := Row.Layout;
   Row.Track.Align       := TAlignLayout.Client;
   Row.Track.Margins.Top := -8;
-  //Row.Track.Min         := RangeMin;
-  //Row.Track.Max         := RangeMax;
-  //Row.Track.Value       := AInitValue;
-  //Row.Track.Frequency := (RangeMax - RangeMin) / 200;
-
   SetTrackRange(Row.Track, RangeMin, RangeMax, AInitValue);
   Row.Track.Tracking    := not FReleaseOnlyMode;
   Row.Track.OnChange    := DoTrackBarChange;
@@ -505,9 +526,13 @@ begin
   FRows[High(FRows)] := Row;
 
   { If this row corresponds to the currently-locked parameter, disable
-    its trackbar so the user can see (and not change) the value. }
+    its trackbar and reset button so the user can see (and not change)
+    the value. }
   if (FLockedParam <> '') and SameText(AName, FLockedParam) then
-    Row.Track.Enabled := False;
+  begin
+    Row.Track.Enabled    := False;
+    Row.ResetBtn.Enabled := False;
+  end;
 end;
 
 { -- slider row removal -------------------------------------------------- }
@@ -710,6 +735,7 @@ var
 begin
   if not (Sender is TTrackBar) then Exit;
   Track := TTrackBar(Sender);
+
   if not (Assigned(Track.TagObject) and (Track.TagObject is TLabel)) then Exit;
   Lbl := TLabel(Track.TagObject);
 
@@ -739,7 +765,41 @@ begin
   RebuildListBox(EditFilter.Text);
 end;
 
-{ -- "Reset" button ------------------------------------------------------ }
+{ -- "Reset" buttons ----------------------------------------------------- }
+
+procedure TFrameSliderContainer.DoResetSingleSlider (Sender : TObject);
+var
+  Idx:      Integer;
+  InitVal:  Double;
+  Row:      TSliderRow;
+begin
+  { Reset the slider whose own "R" button was clicked. The button carries
+    its parameter name in TagString (set in AddSliderRow), so we look the
+    row up by name -- resetting strictly that row, regardless of which
+    slider the user last dragged. }
+  if not (Sender is TButton) then Exit;
+
+  Idx := RowIndexOf(TButton(Sender).TagString);
+  if Idx < 0 then Exit;
+
+  Row     := FRows[Idx];
+  InitVal := InitialValueOf(Row.ParamName);
+
+  if InitVal < Row.Track.Min then Row.Track.Min := InitVal;
+  if InitVal > Row.Track.Max then Row.Track.Max := InitVal;
+
+  Row.Track.OnChange := nil;
+  try
+    Row.Track.Value := InitVal;
+  finally
+    Row.Track.OnChange := DoTrackBarChange;
+  end;
+
+  Row.Lbl.Text := FormatLabelText(Row.ParamName, InitVal);
+
+  if Assigned(FOnSliderChanged) then
+     FOnSliderChanged(Self, Row.ParamName, InitVal);
+end;
 
 procedure TFrameSliderContainer.DoBtnResetClick(Sender: TObject);
 var
@@ -778,29 +838,30 @@ var
   Track:         TTrackBar;
   NewMin, NewMax: Single;
 begin
-  if Button <> TMouseButton.mbRight then Exit;
-  if not (Sender is TLabel) then Exit;
-  Lbl := TLabel(Sender);
-  if not (Assigned(Lbl.TagObject) and (Lbl.TagObject is TTrackBar)) then Exit;
-  Track := TTrackBar(Lbl.TagObject);
+  // 1. Check if it is a standard right-click
+  // 2. OR check if it is a Mac trackpad context click (Left click + Control key)
+  if (Button = TMouseButton.mbRight) or
+     ((Button = TMouseButton.mbLeft) and (ssCtrl in Shift)) then
+     begin
+     if not (Sender is TLabel) then Exit;
+     Lbl := TLabel(Sender);
+     if not (Assigned(Lbl.TagObject) and (Lbl.TagObject is TTrackBar)) then Exit;
+     Track := TTrackBar(Lbl.TagObject);
 
-  NewMin := Track.Min;
-  NewMax := Track.Max;
+     NewMin := Track.Min;
+     NewMax := Track.Max;
 
-  if PromptForRange('Edit range -- ' + Lbl.TagString, NewMin, NewMax) then
-  begin
-    Track.BeginUpdate;
-    try
-      //Track.Min   := NewMin;
-      //Track.Max   := NewMax;
-      //Track.Value := EnsureRange(Track.Value, NewMin, NewMax);
-      //Track.Frequency := (NewMax - NewMin) / 200;
-      SetTrackRange(Track, NewMin, NewMax, Track.Value);
-    finally
-      Track.EndUpdate;
-    end;
-    Lbl.Text := FormatLabelText(Lbl.TagString, Track.Value);
-  end;
+     if PromptForRange('Edit range -- ' + Lbl.TagString, NewMin, NewMax) then
+      begin
+        Track.BeginUpdate;
+        try
+          SetTrackRange(Track, NewMin, NewMax, Track.Value);
+        finally
+          Track.EndUpdate;
+        end;
+        Lbl.Text := FormatLabelText(Lbl.TagString, Track.Value);
+      end;
+     end;
 end;
 
 procedure TFrameSliderContainer.GetSliderValues(out ANames: TArray<string>;
@@ -829,7 +890,10 @@ begin
   begin
     OldIdx := RowIndexOf(FLockedParam);
     if OldIdx >= 0 then
-      FRows[OldIdx].Track.Enabled := True;
+    begin
+      FRows[OldIdx].Track.Enabled    := True;
+      FRows[OldIdx].ResetBtn.Enabled := True;
+    end;
   end;
 
   FLockedParam := AParamName;
@@ -838,7 +902,10 @@ begin
   begin
     NewIdx := RowIndexOf(FLockedParam);
     if NewIdx >= 0 then
-      FRows[NewIdx].Track.Enabled := False;
+    begin
+      FRows[NewIdx].Track.Enabled    := False;
+      FRows[NewIdx].ResetBtn.Enabled := False;
+    end;
   end;
 
   RebuildListBox(EditFilter.Text);

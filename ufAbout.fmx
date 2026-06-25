@@ -1282,7 +1282,7 @@ object frmAbout: TfrmAbout
   object Label1: TLabel
     Position.X = 8.000000000000000000
     Position.Y = 267.000000000000000000
-    Size.Width = 216.000000000000000000
+    Size.Width = 465.000000000000000000
     Size.Height = 17.000000000000000000
     Size.PlatformDefault = False
     Text = 'License: (Open Source) Artistic License 2.0'
@@ -1308,7 +1308,7 @@ object frmAbout: TfrmAbout
   object lblWho: TLabel
     Position.X = 9.000000000000000000
     Position.Y = 287.000000000000000000
-    Size.Width = 405.000000000000000000
+    Size.Width = 479.000000000000000000
     Size.Height = 18.000000000000000000
     Size.PlatformDefault = False
     Text = 'lblWho'

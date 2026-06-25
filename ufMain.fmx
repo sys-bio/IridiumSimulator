@@ -12,6 +12,7 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
+  OnDestroy = FormDestroy
   OnPaint = FormPaint
   DesignerMasterStyle = 0
   object Layout1: TLayout
@@ -29,8 +30,8 @@ object frmMain: TfrmMain
       TabOrder = 0
       object cboExampleModels: TComboBox
         DropDownCount = 16
-        Position.X = 131.000000000000000000
-        Position.Y = 12.000000000000000000
+        Position.X = 118.000000000000000000
+        Position.Y = 14.000000000000000000
         Size.Width = 315.000000000000000000
         Size.Height = 26.000000000000000000
         Size.PlatformDefault = False
@@ -43,7 +44,7 @@ object frmMain: TfrmMain
         Size.Width = 97.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
-        Text = 'Examples Models:'
+        Text = 'Example Models:'
         TabOrder = 0
       end
     end
@@ -107,7 +108,7 @@ object frmMain: TfrmMain
             Size.PlatformDefault = False
             TabOrder = 0
             object chkAutoscaleX: TCheckBox
-              Position.X = 24.000000000000000000
+              Position.X = 10.000000000000000000
               Position.Y = 8.000000000000000000
               Size.Width = 105.000000000000000000
               Size.Height = 25.000000000000000000
@@ -117,20 +118,20 @@ object frmMain: TfrmMain
               OnChange = chkAutoscaleXChange
             end
             object chkAutoScaleY: TCheckBox
-              Position.X = 162.000000000000000000
+              Position.X = 148.000000000000000000
               Position.Y = 8.000000000000000000
               TabOrder = 27
               Text = 'Autoscale Y'
               OnChange = chkAutoScaleYChange
             end
             object lblXMin: TLabel
-              Position.X = 24.000000000000000000
+              Position.X = 10.000000000000000000
               Position.Y = 43.000000000000000000
               Text = 'X Minimum:'
               TabOrder = 22
             end
             object lblYMin: TLabel
-              Position.X = 185.000000000000000000
+              Position.X = 132.000000000000000000
               Position.Y = 43.000000000000000000
               Size.Width = 71.000000000000000000
               Size.Height = 17.000000000000000000
@@ -139,7 +140,7 @@ object frmMain: TfrmMain
               TabOrder = 26
             end
             object lblYMax: TLabel
-              Position.X = 185.000000000000000000
+              Position.X = 132.000000000000000000
               Position.Y = 72.000000000000000000
               Size.Width = 80.000000000000000000
               Size.Height = 17.000000000000000000
@@ -148,7 +149,7 @@ object frmMain: TfrmMain
               TabOrder = 25
             end
             object lblXMax: TLabel
-              Position.X = 24.000000000000000000
+              Position.X = 10.000000000000000000
               Position.Y = 71.000000000000000000
               Size.Width = 81.000000000000000000
               Size.Height = 18.000000000000000000
@@ -158,8 +159,8 @@ object frmMain: TfrmMain
             end
             object chkShowLegend: TCheckBox
               IsChecked = True
-              Position.X = 24.000000000000000000
-              Position.Y = 97.000000000000000000
+              Position.X = 10.000000000000000000
+              Position.Y = 101.000000000000000000
               Size.Width = 120.000000000000000000
               Size.Height = 19.000000000000000000
               Size.PlatformDefault = False
@@ -168,7 +169,7 @@ object frmMain: TfrmMain
               OnChange = chkShowLegendChange
             end
             object btnEditGraph: TButton
-              Position.X = 354.000000000000000000
+              Position.X = 256.000000000000000000
               Position.Y = 8.000000000000000000
               Size.Width = 90.000000000000000000
               Size.Height = 25.000000000000000000
@@ -178,27 +179,27 @@ object frmMain: TfrmMain
               OnClick = btnEditGraphClick
             end
             object btnLoadCSV: TButton
-              Position.X = 452.000000000000000000
-              Position.Y = 8.000000000000000000
-              Size.Width = 141.000000000000000000
+              Position.X = 256.000000000000000000
+              Position.Y = 72.000000000000000000
+              Size.Width = 90.000000000000000000
               Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 31
-              Text = 'Load Experimental Data'
+              Text = 'Load Data'
               OnClick = btnLoadCSVClick
             end
             object btnClearData: TButton
-              Position.X = 452.000000000000000000
-              Position.Y = 41.000000000000000000
-              Size.Width = 141.000000000000000000
+              Position.X = 256.000000000000000000
+              Position.Y = 105.000000000000000000
+              Size.Width = 90.000000000000000000
               Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 30
-              Text = 'Clear Experimental Data'
+              Text = 'Clear Data'
               OnClick = btnClearDataClick
             end
             object btnExportToPDF: TButton
-              Position.X = 354.000000000000000000
+              Position.X = 256.000000000000000000
               Position.Y = 41.000000000000000000
               Size.Width = 90.000000000000000000
               Size.Height = 25.000000000000000000
@@ -213,10 +214,10 @@ object frmMain: TfrmMain
               Top = 694
             end
             object btnShowData: TButton
-              Position.X = 396.000000000000000000
-              Position.Y = 74.000000000000000000
-              Size.Width = 105.000000000000000000
-              Size.Height = 22.000000000000000000
+              Position.X = 135.000000000000000000
+              Position.Y = 105.000000000000000000
+              Size.Width = 114.000000000000000000
+              Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 33
               Text = 'Show Raw Data'
@@ -225,9 +226,9 @@ object frmMain: TfrmMain
             object edtXMin: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
               TabOrder = 37
-              Position.X = 102.000000000000000000
+              Position.X = 78.000000000000000000
               Position.Y = 44.000000000000000000
-              Size.Width = 76.000000000000000000
+              Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
               OnKeyDown = edtXMinKeyDow
@@ -236,9 +237,9 @@ object frmMain: TfrmMain
             object edtXMax: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
               TabOrder = 36
-              Position.X = 102.000000000000000000
-              Position.Y = 71.000000000000000000
-              Size.Width = 76.000000000000000000
+              Position.X = 77.000000000000000000
+              Position.Y = 68.000000000000000000
+              Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
               OnKeyDown = edtXMaxKeyDown
@@ -247,9 +248,9 @@ object frmMain: TfrmMain
             object edtYMin: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
               TabOrder = 35
-              Position.X = 264.000000000000000000
+              Position.X = 199.000000000000000000
               Position.Y = 42.000000000000000000
-              Size.Width = 76.000000000000000000
+              Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
               OnKeyDown = edtYMinKeyDown
@@ -258,13 +259,67 @@ object frmMain: TfrmMain
             object edtYMax: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
               TabOrder = 34
-              Position.X = 264.000000000000000000
+              Position.X = 199.000000000000000000
               Position.Y = 72.000000000000000000
-              Size.Width = 76.000000000000000000
+              Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
               OnKeyDown = edtYMaxKeyDown
               OnExit = edtYMaxExit
+            end
+            object GroupBox1: TGroupBox
+              Anchors = [akLeft, akTop, akRight]
+              Position.X = 354.000000000000000000
+              Position.Y = 8.000000000000000000
+              Size.Width = 244.000000000000000000
+              Size.Height = 128.000000000000000000
+              Size.PlatformDefault = False
+              Text = ' Select Data Set to Overlay'
+              TabOrder = 38
+              object Label3: TLabel
+                Position.X = 16.000000000000000000
+                Position.Y = 30.000000000000000000
+                Size.Width = 25.000000000000000000
+                Size.Height = 17.000000000000000000
+                Size.PlatformDefault = False
+                Text = 'File:'
+                TabOrder = 44
+              end
+              object cboLoadedFilename: TComboBox
+                Anchors = [akLeft, akTop, akRight]
+                Position.X = 56.000000000000000000
+                Position.Y = 28.000000000000000000
+                Size.Width = 175.000000000000000000
+                Size.Height = 22.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 45
+                OnChange = cboLoadedFilenameChange
+              end
+              object Label4: TLabel
+                Position.X = 16.000000000000000000
+                Position.Y = 60.000000000000000000
+                Size.Width = 60.000000000000000000
+                Size.Height = 17.000000000000000000
+                Size.PlatformDefault = False
+                Text = 'Parameter:'
+                TabOrder = 43
+              end
+              object lblParameterName: TLabel
+                Position.X = 84.000000000000000000
+                Position.Y = 60.000000000000000000
+                Text = 'None'
+                TabOrder = 46
+              end
+              object btnCopyToStorage: TButton
+                Position.X = 16.000000000000000000
+                Position.Y = 88.000000000000000000
+                Size.Width = 161.000000000000000000
+                Size.Height = 22.000000000000000000
+                Size.PlatformDefault = False
+                TabOrder = 47
+                Text = 'Copy Current View to Data'
+                OnClick = btnCopyToStorageClick
+              end
             end
           end
           object Plot: TSkPlotPaintBox
@@ -277,6 +332,10 @@ object frmMain: TfrmMain
             AxisLimits.MaxY = 1.000000000000000000
             AxisStyle.LogX = False
             AxisStyle.LogY = False
+            AxisStyle.XMajorTickLength = 8.000000000000000000
+            AxisStyle.XMinorTickLength = 5.000000000000000000
+            AxisStyle.YMajorTickLength = 8.000000000000000000
+            AxisStyle.YMinorTickLength = 5.000000000000000000
             AutoXScaling = True
             AutoYScaling = True
             ChartTitle.Text = 'Data Plot'
@@ -930,6 +989,7 @@ object frmMain: TfrmMain
       Size.Width = 441.000000000000000000
       Size.Height = 8.000000000000000000
       Size.PlatformDefault = False
+      OnMoved = Splitter2Moved
     end
     object LayoutEditorPanel: TLayout
       Align = Client
@@ -966,6 +1026,7 @@ object frmMain: TfrmMain
         Size.Height = 470.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
+        OnViewportPositionChange = moAntimonyViewportPositionChange
         OnPresentationNameChoosing = moAntimonyPresentationNameChoosing
         Viewport.Width = 427.000000000000000000
         Viewport.Height = 462.000000000000000000
@@ -1269,6 +1330,7 @@ object frmMain: TfrmMain
   object SaveDialogAnt: TSaveDialog
     DefaultExt = '.txt'
     Filter = 'Antimony file|*.txt|Antimony file|*.ant|Any files|*.*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Left = 120
     Top = 610
   end
@@ -1281,6 +1343,7 @@ object frmMain: TfrmMain
   object SaveSBMLDialog: TSaveDialog
     DefaultExt = 'xml'
     Filter = 'SBML Model|*.xml|Any files|*.*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Left = 152
     Top = 674
   end

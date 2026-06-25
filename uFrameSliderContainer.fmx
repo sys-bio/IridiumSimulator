@@ -8,7 +8,9 @@ object FrameSliderContainer: TFrameSliderContainer
     Size.Height = 602.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
-    Viewport.Width = 258.000000000000000000
+    AutoHide = False
+    ScrollAnimation = True
+    Viewport.Width = 242.000000000000000000
     Viewport.Height = 602.000000000000000000
   end
   object LayoutLeft: TLayout
@@ -54,14 +56,14 @@ object FrameSliderContainer: TFrameSliderContainer
         TabOrder = 0
         Text = 'Add All Parameters'
       end
-      object btnResetParameters: TButton
+      object btnResetAllParameters: TButton
         Position.X = 32.000000000000000000
         Position.Y = 40.000000000000000000
         Size.Width = 121.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        Text = 'Reset'
+        Text = 'Reset All Sliders'
       end
     end
   end
