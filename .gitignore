@@ -70,3 +70,10 @@ __recovery/
 
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
+
+# macOS build output (generated binaries, .dcu/.o, dSYM, generated
+# entitlements/info.plist). The macOS executables have no extension so they
+# slip past the *.exe/*.o rules above -- ignore the whole output tree.
+# NOTE: Win64/ is intentionally NOT ignored -- Win64/Debug holds tracked
+# model/data files (E_coli_Millard2016.xml, fcc_model*.txt, sample CSVs).
+OSXARM64/
