@@ -58,6 +58,26 @@ type
     procedure PlotAddSeries(ASeries: TObject);
     procedure PlotRedraw;
 
+    { Per-analysis plot-styling persistence. A frame must bracket every
+      operation that clears and rebuilds its series (whether via PlotData or
+      via PlotClearSimulationSeries + PlotAddSeries) between these two calls:
+
+        PlotBeginRebuild - snapshot the plot's CURRENT styling under the
+                           active analysis's key, so the user's latest edits
+                           (colours, markers, axes, legend, limits, titles)
+                           are captured before the series are destroyed.
+        PlotEndRebuild   - re-apply that key's styling to the freshly rebuilt
+                           series (matched by series name) and redraw.
+
+      The shell owns the key (one per analysis frame) and the settings store,
+      so frames never pass a key. Styling therefore survives both re-plots
+      within a frame and switches away to another analysis and back.
+      Right after a frame switch the first PlotBeginRebuild deliberately skips
+      the snapshot so the outgoing frame's leftover series aren't captured
+      under the incoming frame's key. }
+    procedure PlotBeginRebuild;
+    procedure PlotEndRebuild;
+
     { Reassign the LineColor (and MarkerStrokeColor) of every
       SERIES_TYPE_SIMULATION series currently in the plot, drawing
       successive colours from ANextColor, then redraw. The caller is

@@ -54,7 +54,7 @@ uses
   FMX.SpinBox, FMX.TabControl,
   FMX.ListBox,
   System.Math.Vectors, FMX.Controls3D,
-  FMX.Layers3D;
+  FMX.Layers3D, uSkiaCodeEditor;
 
 const
     VERSION = '0.980            ';
@@ -67,7 +67,6 @@ type
     Layout4: TLayout;
     Layout6: TLayout;
     SliderContainer: TLayout;
-    moAntimony: TMemo;
     LayoutContainer: TLayout;
     MainMenu1: TMainMenu;
     mnuFile: TMenuItem;
@@ -127,7 +126,6 @@ type
     btnEditGraph: TButton;
     btnLoadCSV: TButton;
     btnClearData: TButton;
-    btnExportToPDF: TButton;
     OpenDialog1: TOpenDialog;
     btnShowData: TButton;
     moTextView: TMemo;
@@ -159,17 +157,19 @@ type
     Label4: TLabel;
     lblParameterName: TLabel;
     btnCopyToStorage: TButton;
+    Label5: TLabel;
+    chkOverlayData: TCheckBox;
+    moAntimony: TSkiaCodeEditor;
     procedure FormCreate(Sender: TObject);
     procedure btnTimeCourse1Click(Sender: TObject);
     procedure btnSteadyStateClick(Sender: TObject);
-    procedure moAntimonyChangeTracking(Sender: TObject);
+    procedure moAntimony1ChangeTracking(Sender: TObject);
     procedure mnuLoadFileClick(Sender: TObject);
     procedure mnuSaveClick(Sender: TObject);
     procedure chkAutoscaleXChange(Sender: TObject);
     procedure chkAutoScaleYChange(Sender: TObject);
     procedure chkShowLegendChange(Sender: TObject);
     procedure btnEditGraphClick(Sender: TObject);
-    procedure btnExportToPDFClick(Sender: TObject);
     procedure btnLoadCSVClick(Sender: TObject);
     procedure btnClearDataClick(Sender: TObject);
     procedure mnuNewClick(Sender: TObject);
@@ -189,7 +189,7 @@ type
     procedure btnCopyToClipBoardClick(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure btnRefreshClick(Sender: TObject);
-    procedure moAntimonyPresentationNameChoosing(Sender: TObject;
+    procedure moAntimony1PresentationNameChoosing(Sender: TObject;
       var PresenterName: string);
     procedure chkShowLineNumbersChange(Sender: TObject);
     procedure cboExampleModelsChange(Sender: TObject);
@@ -216,7 +216,7 @@ type
     procedure Splitter2MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Single);
     procedure Splitter2Moved(Sender: TObject);
-    procedure moAntimonyViewportPositionChange(Sender: TObject;
+    procedure moAntimony1ViewportPositionChange(Sender: TObject;
       const OldViewportPosition, NewViewportPosition: TPointF;
       const ContentSizeChanged: Boolean);
   private
@@ -226,6 +226,11 @@ type
     FFrameSteadyState: TFrameSteadyState;
     FFrameParameterScan: TFrameParameterScan;
     FActiveFrame:      TFrame;
+
+    { When True, the next PlotBeginRebuild skips its styling snapshot. Set on
+      every frame switch so the incoming frame's first rebuild does not capture
+      the outgoing frame's leftover series under the incoming frame's key. }
+    FSuppressPlotSnapshot: Boolean;
 
     FCurrentFileName : String;
     FireEvent: Boolean;
@@ -239,6 +244,10 @@ type
     procedure CreateSession;
     procedure CreateSliderContainer;
     procedure CreateAnalysisFrames;
+
+    { Settings-store key for the currently active analysis frame, or '' if none
+      / unrecognised. Used to persist plot styling per analysis. }
+    function ActiveAnalysisKey: string;
 
     procedure CheckNumberKeys (edt : TEdit; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 
@@ -261,6 +270,8 @@ type
     procedure PlotClearSimulationSeries;
     procedure PlotAddSeries(ASeries: TObject);
     procedure PlotRedraw;
+    procedure PlotBeginRebuild;
+    procedure PlotEndRebuild;
     procedure PlotRecolorSimulationSeries(const ANextColor: TFunc<TAlphaColor>);
     function  PlotGetSimulationSeriesInfo: TArray<TPlotSeriesColorInfo>;
     function  PlotGetPlotInfo: TPlotInfo;
@@ -280,10 +291,28 @@ implementation
 {$R *.fmx}
 
 uses
-  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uRoadRunner, ufPlotEditor, uMySplitter;
+  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uRoadRunner, ufPlotEditor, uMySplitter, uLanguageKeywords;
 
 const
   DEFAULT_SLIDER_HEIGHT = 322.0;
+
+  DefaultModel = '''
+      // Load a model from disk, type in a model,
+      // or pick one of the example models from
+      // the Examples menu
+
+      // Note // is used to indicate a comment
+
+      // eg
+
+      A -> B; k1*A
+      B -> C; k2*B
+      k1 = 0.35; k2 = 0.2
+      A = 10
+
+      // If you're not sure what to do, just
+      // click the simulate button to the left
+  ''';
 
 type
   TModelErrorState = record
@@ -367,6 +396,17 @@ begin
   PPointer(Splitter1)^ := TMySplitter;
   PPointer(Splitter2)^ := TMySplitter;
 
+  moAntimony.BackgroundColor := $FF1F1F1F;
+  moAntimony.textColor := $FFFFFFFF;
+  moAntimony.CaretColor := $FF808080;
+  moAntimony.FontSize := 16;
+  moAntimony.GutterColor := $FF272727;
+  moAntimony.GutterTextColor := $FF808080;
+  moAntimony.Highlighter.UseAntimony;
+  moAntimony.Highlighter.AddKeywords(AntimonyKeywords);
+
+  //moAntimony.SetText (DefaultModel);
+
   TabControl1.ActiveTab := tbPlot;
 
   FListOfLoadedDataFiles := TList<TLoadDataFile>.Create;
@@ -427,7 +467,8 @@ begin
   edtYMax.Text := '10';
 
   spFontSize.Value := 16;
-  moAntimony.Font.Size := spFontSize.Value;
+  //moAntimony.Font.Size := spFontSize.Value;
+  moAntimony.FontSize := spFontSize.Value;
 
   ShowAnalysisFrame(FFrameTimeCourse);   { default view }
 
@@ -502,7 +543,8 @@ end;
 
 function TfrmMain.GetAntimonyText: string;
 begin
-  Result := moAntimony.Text;
+  //Result := moAntimony.Text;
+  Result := moAntimony.GetText;
 end;
 
 
@@ -525,7 +567,8 @@ var sbmlStr : string;
 begin
   if SaveSBMLDialog.Execute then
     begin
-      uAntimonyAPI.getSBMLFromAntimony(moAntimony.Lines.Text);
+      //uAntimonyAPI.getSBMLFromAntimony(moAntimony.Lines.Text);
+      uAntimonyAPI.getSBMLFromAntimony(moAntimony.GetText);
       if modelErrorState.ok then
          TFile.WriteAllText(SaveSBMLDialog.FileName, modelErrorState.sbmlStr)
       else
@@ -580,7 +623,8 @@ begin
       SBMLString := TFile.ReadAllText(OpenSBMLDialog.FileName);
       if SBMLString = '' then exit;
       FSession.Unload;
-      moAntimony.text := uAntimonyAPI.getAntimonyFromSBML(SBMLString);
+      //moAntimony.text := uAntimonyAPI.getAntimonyFromSBML(SBMLString);
+      moAntimony.SetText (uAntimonyAPI.getAntimonyFromSBML(SBMLString));
       FSession.ClearDirty;
     end;
 end;
@@ -590,7 +634,9 @@ begin
  if OpenDialogAnt.Execute then
     begin
     FSession.Unload;
-    moAntimony.Text := TFile.ReadAllText(OpenDialogAnt.FileName);
+    //moAntimony.Text := TFile.ReadAllText(OpenDialogAnt.FileName);
+    moAntimony.SetText (TFile.ReadAllText(OpenDialogAnt.FileName));
+
     FCurrentFileName := ExtractFileName(OpenDialogAnt.FileName);
     Caption := 'Iridium II: ' + FCurrentFileName;
     FSession.ClearDirty;
@@ -599,7 +645,8 @@ end;
 
 procedure TfrmMain.mnuNewClick(Sender: TObject);
 begin
-  moAntimony.Text := '';
+  //moAntimony.Text := '';
+  moAntimony.SetText('');
   FSession.Unload;
   Plot.ClearSeries;
   FFrameTimeCourse.SetSimulationParameters(20, 200);
@@ -614,32 +661,32 @@ procedure TfrmMain.mnuSaveClick(Sender: TObject);
 begin
   if SaveDialogAnt.Execute then
      begin
-     TFile.WriteAllText(SaveDialogAnt.FileName, moAntimony.Text);
+     TFile.WriteAllText(SaveDialogAnt.FileName, moAntimony.GetText);
      FIsModifiedSinceLastSave := False;
      end;
 end;
 
-procedure TfrmMain.moAntimonyChangeTracking(Sender: TObject);
+procedure TfrmMain.moAntimony1ChangeTracking(Sender: TObject);
 begin
   FIsModifiedSinceLastSave := True;
   FSession.MarkDirty;
 end;
 
-procedure TfrmMain.moAntimonyPresentationNameChoosing(Sender: TObject;
+procedure TfrmMain.moAntimony1PresentationNameChoosing(Sender: TObject;
   var PresenterName: string);
 begin
   // The choice of the presentation class by the control
   //PresenterName := 'RichEditStyled';
 end;
 
-procedure TfrmMain.moAntimonyViewportPositionChange(Sender: TObject;
+procedure TfrmMain.moAntimony1ViewportPositionChange(Sender: TObject;
   const OldViewportPosition, NewViewportPosition: TPointF;
   const ContentSizeChanged: Boolean);
 begin
-  if FDragging and ContentSizeChanged then
-    moAntimony.ViewportPosition := FSavedViewport
-  else if not FDragging then
-    FSavedViewport := NewViewportPosition;
+  //if FDragging and ContentSizeChanged then
+  //  moAntimony.ViewportPosition := FSavedViewport
+  //else if not FDragging then
+  //  FSavedViewport := NewViewportPosition;
 end;
 
 procedure TfrmMain.edtXMaxExit(Sender: TObject);
@@ -743,6 +790,10 @@ procedure TfrmMain.SessionModelReloaded(Sender: TObject;
 begin
   if AParameterSetChanged then
   begin
+    { A structurally different model means series names no longer match the
+      stored per-analysis styling, so discard it rather than mis-applying it
+      to unrelated series. A compatible in-place edit keeps the styling. }
+    Plot.ClearAllSettings;
     FSliderFrame.ClearSliders;
     FSliderFrame.LoadParams(FSession.GetTunableNames,    { <-- refresh catalogue }
                             FSession.GetTunableValues);
@@ -763,6 +814,8 @@ begin
     decided at reload time by SessionModelReloaded. }
   if not FSession.IsLoaded then
   begin
+    { Model gone -> stored per-analysis plot styling is meaningless. }
+    Plot.ClearAllSettings;
     FSliderFrame.ClearSliders;
     { Also hide the panel itself so it doesn't linger from the previous model. }
     if FSliderFrame.ParamPanelVisible then
@@ -781,6 +834,17 @@ end;
 
 procedure TfrmMain.ShowAnalysisFrame(ATarget: TFrame);
 begin
+  { Capture the outgoing frame's current plot styling before we switch away.
+    Its series are still on the plot, so this snapshots any edits the user made
+    since its last re-plot. On return the incoming frame's PlotEndRebuild will
+    restore whichever styling it last saved. FSuppressPlotSnapshot then makes
+    the incoming frame's first PlotBeginRebuild skip its snapshot, so it does
+    not capture these leftover series under its own key. }
+  if (ATarget <> FActiveFrame) and (ActiveAnalysisKey <> '') then
+    Plot.SaveSettings(ActiveAnalysisKey);
+  if ATarget <> FActiveFrame then
+    FSuppressPlotSnapshot := True;
+
   FFrameTimeCourse.Visible    := False;
   FFrameSteadyState.Visible   := False;
   FFrameParameterScan.Visible := False;
@@ -825,7 +889,7 @@ end;
 
 procedure TfrmMain.spFontSizeChange(Sender: TObject);
 begin
-  moAntimony.Font.Size := spFontSize.Value;
+  moAntimony.FontSize := spFontSize.Value;
 end;
 
 procedure TfrmMain.Splitter2MouseDown(Sender: TObject; Button: TMouseButton;
@@ -834,7 +898,7 @@ begin
   moAntimony.Align := TAlignLayout.None;
   moAntimony.Visible := False;
   moAntimony.BeginUpdate;
-  FSavedViewport := moAntimony.ViewportPosition;
+  //HMS FSavedViewport := moAntimony.ViewportPosition;
 end;
 
 procedure TfrmMain.Splitter2Moved(Sender: TObject);
@@ -843,7 +907,7 @@ begin
   TThread.ForceQueue(nil,
     procedure
     begin
-      moAntimony.ViewportPosition := FSavedViewport;
+      //HMS moAntimony.ViewportPosition := FSavedViewport;
       moAntimony.Align := TAlignLayout.Client;
       moAntimony.EndUpdate;
       moAntimony.Visible := True;
@@ -914,14 +978,6 @@ begin
      Plot.ExportCSV(SaveCSVDialog.FileName);
 end;
 
-procedure TfrmMain.btnExportToPDFClick(Sender: TObject);
-begin
-  if SavePDFDialog.Execute then
-     begin
-     Plot.ExportToPdf(SavePDFDialog.FileName);
-     end;
-end;
-
 procedure TfrmMain.btnGeneratePythonClick(Sender: TObject);
 var
   Exporter: IPythonScriptExporter;
@@ -929,7 +985,7 @@ var
 begin
  if Supports(FActiveFrame, IPythonScriptExporter, Exporter) then
   begin
-    Script := Exporter.GetPythonScript(moAntimony.Text);
+    Script := Exporter.GetPythonScript(moAntimony.GetText);
     CopyTextToTextWindow (Script);
     { copy to clipboard / open save dialog / show in a memo / whatever }
   end
@@ -955,10 +1011,12 @@ begin
   if OpenDialog1.Execute then
      begin
      ClearSeries := False;
-     ClearDataKind := True;
+     if chkOverlayData.IsChecked then
+        ClearDataKind := False
+     else
+        ClearDataKind := True;
 
      FileName := ExtractFileName(OpenDialog1.FileName);
-     FireEvent := False;
      for i := 0 to FListOfLoadedDataFiles.Count - 1 do
          if FileName = FListOfLoadedDataFiles[i].FileName then
             begin
@@ -966,9 +1024,13 @@ begin
             exit;
             end;
 
-     Index := cboLoadedFilename.Items.Add(FileName);
-     cboLoadedFilename.ItemIndex := Index;
-     FireEvent := True;
+     FireEvent := False;
+     try
+       Index := cboLoadedFilename.Items.Add(FileName);
+       cboLoadedFilename.ItemIndex := Index;
+     finally
+       FireEvent := True;
+     end;
 
      // Note TStringList Series don't own the Series, so its ok to free the stringlist.
      Series := Plot.LoadData(OpenDialog1.FileName, False, True, ClearSeries, ClearDataKind);
@@ -978,15 +1040,15 @@ begin
          TPlotSeries (Series.Objects[i]).SeriesId := FileName + '_' + inttostr (i);
          TPlotSeries (Series.Objects[i]).LineVisible := False;
          TPlotSeries (Series.Objects[i]).MarkerStrokeWidth := 1.5;
-         TPlotSeries (Series.Objects[i]).MarkerFillColor := TPlotSeries (Series.Objects[i]).MarkerStrokeColor;
+         //TPlotSeries (Series.Objects[i]).MarkerFillColor := TPlotSeries (Series.Objects[i]).MarkerStrokeColor;
          TPlotSeries (Series.Objects[i]).MarkerSize := 4;
          end;
 
-     lblParameterName.Text := Series[0];
+     lblParameterName.Text := TPlotSeries (Series.Objects[0]).XLabel;
 
      LoadedDataFile := TLoadDataFile.Create;
      LoadedDataFile.FileName := FileName;
-     LoadedDataFile.ParameterName := Series[0];
+     LoadedDataFile.ParameterName := lblParameterName.Text;
      for i := 0 to Series.Count - 1 do
          LoadedDataFile.Series.Add(TPlotSeries (Series.Objects[i]).Clone);
      FListOfLoadedDataFiles.Add(LoadedDataFile);
@@ -1068,7 +1130,7 @@ begin
 
   Model := (cboExampleModels.Items.Objects[cboExampleModels.ItemIndex]) as TBuiltInModel;
   FSession.Unload;
-  moAntimony.Text := Model.ModelStr;
+  moAntimony.SetText (Model.ModelStr);
   FCurrentFileName := 'untitled.txt';
   Caption := 'Iridium II: ' + FCurrentFileName;
   FSession.ClearDirty;
@@ -1137,7 +1199,8 @@ end;
 
 procedure TfrmMain.chkShowLineNumbersChange(Sender: TObject);
 begin
- TRichEditStyled(moAntimony.Presentation).ShowGutter := chkShowLineNumbers.IsChecked;
+ moAntimony.GutterVisible := chkShowLineNumbers.IsChecked;
+ //TRichEditStyled(moAntimony.Presentation).ShowGutter := chkShowLineNumbers.IsChecked;
 end;
 
 { ── IAnalysisContext ─────────────────────────────────────────────────────── }
@@ -1160,6 +1223,39 @@ end;
 procedure TfrmMain.ShowSteadyStateTab;
 begin
   TabControl1.ActiveTab := tbSteadyState;
+end;
+
+function TfrmMain.ActiveAnalysisKey: string;
+begin
+  if FActiveFrame = FFrameTimeCourse then
+    Result := 'TimeCourse'
+  else if FActiveFrame = FFrameParameterScan then
+    Result := 'ParameterScan'
+  else if FActiveFrame = FFrameSteadyState then
+    Result := 'SteadyState'
+  else
+    Result := '';
+end;
+
+procedure TfrmMain.PlotBeginRebuild;
+begin
+  { Snapshot the plot's current styling under the active frame's key, unless a
+    frame switch just occurred (in which case the plot still shows the previous
+    frame's series and capturing them here would corrupt this frame's key). }
+  if not FSuppressPlotSnapshot then
+    if ActiveAnalysisKey <> '' then
+      Plot.SaveSettings(ActiveAnalysisKey);
+  FSuppressPlotSnapshot := False;
+end;
+
+procedure TfrmMain.PlotEndRebuild;
+begin
+  { Re-apply the active frame's saved styling to the just-rebuilt series
+    (matched by series name) and redraw. No-op the first time a frame plots,
+    before it has anything stored. }
+  if (ActiveAnalysisKey <> '') and Plot.HasSettings(ActiveAnalysisKey) then
+    Plot.RestoreSettings(ActiveAnalysisKey);
+  Plot.Redraw;
 end;
 
 procedure TfrmMain.PlotData(const AData: T2DMatrix;
@@ -1186,6 +1282,7 @@ var
   var J  : Integer;
   begin
     Series := TPlotSeries.Create(AData.columnHeader[AColIdx], claBlue);
+    Series.YLabel        := AData.columnHeader[AColIdx];
     Series.LineColor     := TColorManager.NextColor;
     Series.LineWidth     := 2.5;
     Series.MarkerVisible := False;
@@ -1267,11 +1364,11 @@ var
   Src:    string;
   TagPos: Integer;
 begin
-  Src := moAntimony.Text;
+  Src := moAntimony.GetText;
   TagPos := Pos(BLOCK_TAG, Src);
   if TagPos > 0 then
     Src := Copy(Src, 1, TagPos - 1).TrimRight;
-  moAntimony.Text := Src + sLinebreak + ABlock;
+  moAntimony.SetText (Src + sLinebreak + ABlock);
 end;
 
 

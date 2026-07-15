@@ -32,7 +32,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  uRoadRunner;
+  uRoadRunner, FMX.Dialogs;
 
 type
   TGetTextEvent = function: string of object;
@@ -278,8 +278,6 @@ begin
     Exit(False);
   end;
 
-
-
   try
     SbmlInfo := getSBMLFromAntimony(AnsiString(AntText));
     if not SbmlInfo.ok then
@@ -403,7 +401,9 @@ begin
     Result[I] := V[I];
   N := Length(V);
   for I := 0 to NB - 1 do
-    Result[N + I] := FRoadRunner.getBoundarySpeciesByIndex(I);
+     begin
+     Result[N + I] := FRoadRunner.getBoundarySpeciesByIndex(I);
+     end;
 end;
 
 end.

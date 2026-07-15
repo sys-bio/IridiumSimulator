@@ -41,14 +41,15 @@ uses
   SkPlotPaintBoxRegister in '..\PlottingComponent\Source\SkPlotPaintBoxRegister.pas',
   uColorManager in '..\PlottingComponent\Source\uColorManager.pas',
   uCSVReaderForPlotter in '..\PlottingComponent\Source\uCSVReaderForPlotter.pas',
-  ufPlotEditor in '..\PlottingComponent\Source\ufPlotEditor.pas' {FrmPlotEditor},
   uLabelledTrackBar in '..\PlottingComponent\Source\uLabelledTrackBar.pas',
   uMathParser in '..\PlottingComponent\Source\uMathParser.pas',
   uPlotDefaults in '..\PlottingComponent\Source\uPlotDefaults.pas',
   uPlotJsonUtils in '..\PlottingComponent\Source\uPlotJsonUtils.pas',
   uPlotMapper in '..\PlottingComponent\Source\uPlotMapper.pas',
   uPlotSeries in '..\PlottingComponent\Source\uPlotSeries.pas',
-  uMySplitter in 'uMySplitter.pas';
+  uMySplitter in 'uMySplitter.pas',
+  ufConfigureCVODE in 'ufConfigureCVODE.pas' {frmConfigCVODE},
+  ufConfigureSteadyState in 'ufConfigureSteadyState.pas' {frmConfigSteadyState};
 
 {$R *.res}
 
@@ -60,6 +61,5 @@ begin
   Application.Initialize;
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmAbout, frmAbout);
-  Application.CreateForm(TFrmPlotEditor, FrmPlotEditor);
   Application.Run;
 end.

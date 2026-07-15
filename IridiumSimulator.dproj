@@ -92,6 +92,7 @@
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <SanitizedProjectName>IridiumSimulator</SanitizedProjectName>
+        <DCC_UnitSearchPath>..\RhodyComponents\PlottingComponent\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_OSX64)'!=''">
         <DCC_UsePackage>fmx;DbxCommonDriver;bindengine;IndyIPCommon;FireDACCommonODBC;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;soapmidas;fmxFireDAC;dbexpress;DBXMySQLDriver;inet;fmxase;dbrtl;fmxdae;CustomIPTransport;DBXInterBaseDriver;IndySystem;bindcomp;FireDACCommon;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;dsnap;CloudService;fmxobj;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -153,6 +154,7 @@
         <DCC_DcuOutput>.\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_UnitSearchPath>..\RhodyComponents\RhoEditor\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -236,10 +238,6 @@
         <DCCReference Include="..\PlottingComponent\Source\SkPlotPaintBoxRegister.pas"/>
         <DCCReference Include="..\PlottingComponent\Source\uColorManager.pas"/>
         <DCCReference Include="..\PlottingComponent\Source\uCSVReaderForPlotter.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\ufPlotEditor.pas">
-            <Form>FrmPlotEditor</Form>
-            <FormType>fmx</FormType>
-        </DCCReference>
         <DCCReference Include="..\PlottingComponent\Source\uLabelledTrackBar.pas"/>
         <DCCReference Include="..\PlottingComponent\Source\uMathParser.pas"/>
         <DCCReference Include="..\PlottingComponent\Source\uPlotDefaults.pas"/>
@@ -247,6 +245,10 @@
         <DCCReference Include="..\PlottingComponent\Source\uPlotMapper.pas"/>
         <DCCReference Include="..\PlottingComponent\Source\uPlotSeries.pas"/>
         <DCCReference Include="uMySplitter.pas"/>
+        <DCCReference Include="ufConfigureCVODE.pas">
+            <Form>frmConfigCVODE</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -268,9 +270,13 @@
                     <Source Name="MainSource">IridiumSimulator.dpr</Source>
                 </Source>
                 <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\CustomTrackbarPackage.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\CustomTrackbarPackage.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\HexColorPickerFmxDT370.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\HexColorPickerFmxDT370.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\mbColorLibDXE8.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\mbColorLibDXE8.bpl not found</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\MyFmxComponents.bpl">(untitled)</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\HexaColorPickerDT.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\HexaColorPickerDT.bpl not found</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="5">

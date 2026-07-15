@@ -55,7 +55,7 @@ uses
   FMX.Controls.Presentation, FMX.Edit, FMX.EditBox, FMX.NumberBox,
   FMX.Objects, FMX.Layouts, FMX.ListBox,
   uRR2DSimpleMatrix,
-  uAnalysisTypes;
+  uAnalysisTypes, System.Skia, FMX.Skia;
 
 type
   { Observable categories surfaced in the Y-axis list. Enum order is the
@@ -107,6 +107,8 @@ type
     btnCopySliderValuesToModel: TButton;
     lblFilter: TLabel;
     cmbFilter: TComboBox;
+    btnConfigIntegrator: TSpeedButton;
+    SkSvgConfig: TSkSvg;
     procedure btnSimulateClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure btnSliders1Click(Sender: TObject);
@@ -116,6 +118,7 @@ type
     procedure btnCopySliderValuesToModelClick(Sender: TObject);
     procedure btnSimulateMouseLeave(Sender: TObject);
     procedure cmbFilterChange(Sender: TObject);
+    procedure btnConfigIntegratorClick(Sender: TObject);
   private
     FContext:            IAnalysisContext;
     FLastData:           T2DMatrix;
@@ -174,7 +177,7 @@ implementation
 {$R *.fmx}
 
 uses
-  uRoadRunner, uRRList, uAntimonyAPI, uCommonTypes;
+  uRoadRunner, uRRList, uAntimonyAPI, uCommonTypes, ufConfigureCVODE;
 
 const
   TIME_COLUMN_LABEL = 'time';
@@ -709,9 +712,13 @@ begin
   if SelectionNeedsRecompute then
     RunSimulation
   else
+  begin
+    FContext.PlotBeginRebuild;
     FContext.PlotData(FLastData,
                       GetSelectedXAxisName,
                       GetSelectedYAxisNames);
+    FContext.PlotEndRebuild;
+  end;
 end;
 
 function TFrameTimeCourse.SelectionNeedsRecompute: Boolean;
@@ -857,7 +864,9 @@ begin
     FLastData := Data;
     FHasData  := True;
 
+    FContext.PlotBeginRebuild;
     FContext.PlotData(Data, XName, YNames);
+    FContext.PlotEndRebuild;
     Result := True;
   except
     on E: Exception do
@@ -874,6 +883,17 @@ procedure TFrameTimeCourse.btnSimulateMouseLeave(Sender: TObject);
 begin
   TButton(Sender).Enabled := False;
   TButton(Sender).Enabled := True;
+end;
+
+procedure TFrameTimeCourse.btnConfigIntegratorClick(Sender: TObject);
+begin
+  frmConfigCVODE := TfrmConfigCVODE.Create(nil);
+  try
+    frmConfigCVODE.SetContext(FContext);
+    frmConfigCVODE.ShowModal;
+  finally
+    frmConfigCVODE.Free;
+  end;
 end;
 
 procedure TFrameTimeCourse.btnCopySliderValuesToModelClick(Sender: TObject);

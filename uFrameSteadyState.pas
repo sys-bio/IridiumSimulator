@@ -38,7 +38,10 @@ uses
   FMX.Platform,
   FMX.SpinBox,
   FMX.Objects,
-  uRoadRunner;
+  uRoadRunner, System.Skia, FMX.Skia;
+
+const
+  ZERO_FLUX_THRESHOLD = 1E-8;
 
 type
   TSteadyStateSection = record
@@ -62,12 +65,15 @@ type
     btnCopytoClipboard: TButton;
     btnTimeCourseSliders: TSpeedButton;
     Image1: TImage;
+    btnConfigSteadyStateSolver: TSpeedButton;
+    SkSvgConfig: TSkSvg;
     procedure btnComputeClick(Sender: TObject);
     procedure cbScalingChange(Sender: TObject);
     procedure btnSlidersClick(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure spnDecimalsChange(Sender: TObject);
     procedure btnCopytoClipboardClick(Sender: TObject);
+    procedure btnConfigSteadyStateSolverClick(Sender: TObject);
   private
     FContext: IAnalysisContext;
     FHasData: Boolean;
@@ -103,6 +109,8 @@ type
     procedure RecomputeAll;
     procedure RefetchScalingDependent;
     procedure ClearAllGrids;
+
+    function AnyFluxesZero (ZeroFluxThreshold : Double; out FluxId : String) : Boolean;
 
     function CSVEscape(const S: string): string;
     procedure WriteCSV(AWriter: TTextWriter);
@@ -168,6 +176,9 @@ type
 implementation
 
 {$R *.fmx}
+
+uses
+  ufConfigureSteadyState;
 
 const
   SECTION_HEIGHT     = 200;
@@ -638,6 +649,17 @@ begin
   RecomputeAll;
 end;
 
+procedure TFrameSteadyState.btnConfigSteadyStateSolverClick(Sender: TObject);
+begin
+  frmConfigSteadyState := TfrmConfigSteadyState.Create (nil);
+  try
+    frmConfigSteadyState.SetContext (FContext);
+    frmConfigSteadyState.ShowModal;
+  finally
+    frmConfigSteadyState.Free;
+  end;
+end;
+
 procedure TFrameSteadyState.btnCopytoClipboardClick(Sender: TObject);
 var
   Svc: IFMXClipboardService;
@@ -654,7 +676,23 @@ begin
     RefetchScalingDependent;
 end;
 
+function TFrameSteadyState.AnyFluxesZero (ZeroFluxThreshold : Double; out FluxId : String) : Boolean;
+var i : Integer;
+    nReactions : Integer;
+begin
+  nReactions := FContext.Session.RoadRunner.getNumberOfReactions;
+  for i := 0 to nReactions - 1 do
+      if abs (FContext.Session.RoadRunner.getReactionRates[i]) < ZeroFluxThreshold then
+         begin
+         FluxId := FContext.Session.RoadRunner.getReactionIds()[i];
+         exit (True);
+         end;
+  Exit (False);
+end;
+
+
 procedure TFrameSteadyState.RecomputeAll;
+var FluxId : String;
 begin
   if not EnsureSteadyState then
   begin
@@ -668,7 +706,10 @@ begin
   PopulateJacobian;
   PopulateEigenvalues;
   PopulateElasticities;
-  PopulateFluxCC;
+  if AnyFluxesZero (ZERO_FLUX_THRESHOLD, FluxId) then
+     showmessage ('Warning: The reaction flux ' + FluxId + ' is zero, the flux control coefficients will be undefined')
+  else
+     PopulateFluxCC;
   PopulateConcentrationCC;
   FHasData := True;
 
@@ -676,7 +717,8 @@ begin
   FitSectionToContent(FSecJacobian);
   FitSectionToContent(FSecEigenvalues);
   FitSectionToContent(FSecElasticities);
-  FitSectionToContent(FSecFluxCC);
+  if not AnyFluxesZero (ZERO_FLUX_THRESHOLD, FluxId) then
+     FitSectionToContent(FSecFluxCC);
   FitSectionToContent(FSecConcCC);
 
   if FContext <> nil then

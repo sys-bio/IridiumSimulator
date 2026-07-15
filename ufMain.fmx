@@ -113,22 +113,28 @@ object frmMain: TfrmMain
               Size.Width = 105.000000000000000000
               Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 23
+              TabOrder = 22
               Text = 'Autoscale X'
               OnChange = chkAutoscaleXChange
             end
             object chkAutoScaleY: TCheckBox
-              Position.X = 148.000000000000000000
+              Position.X = 133.000000000000000000
               Position.Y = 8.000000000000000000
-              TabOrder = 27
+              Size.Width = 115.000000000000000000
+              Size.Height = 19.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 26
               Text = 'Autoscale Y'
               OnChange = chkAutoScaleYChange
             end
             object lblXMin: TLabel
               Position.X = 10.000000000000000000
               Position.Y = 43.000000000000000000
-              Text = 'X Minimum:'
-              TabOrder = 22
+              Size.Width = 70.000000000000000000
+              Size.Height = 17.000000000000000000
+              Size.PlatformDefault = False
+              Text = 'X Min:'
+              TabOrder = 21
             end
             object lblYMin: TLabel
               Position.X = 132.000000000000000000
@@ -136,17 +142,17 @@ object frmMain: TfrmMain
               Size.Width = 71.000000000000000000
               Size.Height = 17.000000000000000000
               Size.PlatformDefault = False
-              Text = 'Y Minimum:'
-              TabOrder = 26
+              Text = 'Y Min:'
+              TabOrder = 25
             end
             object lblYMax: TLabel
               Position.X = 132.000000000000000000
               Position.Y = 72.000000000000000000
-              Size.Width = 80.000000000000000000
+              Size.Width = 37.000000000000000000
               Size.Height = 17.000000000000000000
               Size.PlatformDefault = False
-              Text = 'Y Maximum:'
-              TabOrder = 25
+              Text = 'Y Max:'
+              TabOrder = 24
             end
             object lblXMax: TLabel
               Position.X = 10.000000000000000000
@@ -154,17 +160,17 @@ object frmMain: TfrmMain
               Size.Width = 81.000000000000000000
               Size.Height = 18.000000000000000000
               Size.PlatformDefault = False
-              Text = 'X Maximum:'
-              TabOrder = 21
+              Text = 'X Max'
+              TabOrder = 20
             end
             object chkShowLegend: TCheckBox
               IsChecked = True
               Position.X = 10.000000000000000000
-              Position.Y = 101.000000000000000000
+              Position.Y = 96.000000000000000000
               Size.Width = 120.000000000000000000
               Size.Height = 19.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 4
+              TabOrder = 3
               Text = 'Show Legend'
               OnChange = chkShowLegendChange
             end
@@ -174,39 +180,31 @@ object frmMain: TfrmMain
               Size.Width = 90.000000000000000000
               Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 3
+              TabOrder = 2
               Text = 'Edit Graph'
               OnClick = btnEditGraphClick
             end
             object btnLoadCSV: TButton
+              Hint = 'Load an external csv data file '
               Position.X = 256.000000000000000000
-              Position.Y = 72.000000000000000000
-              Size.Width = 90.000000000000000000
-              Size.Height = 25.000000000000000000
-              Size.PlatformDefault = False
-              TabOrder = 31
-              Text = 'Load Data'
-              OnClick = btnLoadCSVClick
-            end
-            object btnClearData: TButton
-              Position.X = 256.000000000000000000
-              Position.Y = 105.000000000000000000
+              Position.Y = 40.000000000000000000
               Size.Width = 90.000000000000000000
               Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 30
-              Text = 'Clear Data'
-              OnClick = btnClearDataClick
+              Text = 'Load Data'
+              OnClick = btnLoadCSVClick
             end
-            object btnExportToPDF: TButton
+            object btnClearData: TButton
+              Hint = 'Clear all loaded data files'
               Position.X = 256.000000000000000000
-              Position.Y = 41.000000000000000000
+              Position.Y = 73.000000000000000000
               Size.Width = 90.000000000000000000
               Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 2
-              Text = 'Export To PDF'
-              OnClick = btnExportToPDFClick
+              TabOrder = 29
+              Text = 'Clear Data'
+              OnClick = btnClearDataClick
             end
             object OpenDialog1: TOpenDialog
               Filter = 'Any files|*.*|CSV files|*.csv'
@@ -214,20 +212,21 @@ object frmMain: TfrmMain
               Top = 694
             end
             object btnShowData: TButton
+              Hint = 'Display the plotted data in the text view'
               Position.X = 135.000000000000000000
               Position.Y = 105.000000000000000000
               Size.Width = 114.000000000000000000
               Size.Height = 25.000000000000000000
               Size.PlatformDefault = False
-              TabOrder = 33
+              TabOrder = 32
               Text = 'Show Raw Data'
               OnClick = btnShowDataClick
             end
             object edtXMin: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
-              TabOrder = 37
-              Position.X = 78.000000000000000000
-              Position.Y = 44.000000000000000000
+              TabOrder = 36
+              Position.X = 47.000000000000000000
+              Position.Y = 43.000000000000000000
               Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
@@ -236,9 +235,9 @@ object frmMain: TfrmMain
             end
             object edtXMax: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
-              TabOrder = 36
-              Position.X = 77.000000000000000000
-              Position.Y = 68.000000000000000000
+              TabOrder = 35
+              Position.X = 47.000000000000000000
+              Position.Y = 72.000000000000000000
               Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
@@ -247,8 +246,8 @@ object frmMain: TfrmMain
             end
             object edtYMin: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
-              TabOrder = 35
-              Position.X = 199.000000000000000000
+              TabOrder = 34
+              Position.X = 169.000000000000000000
               Position.Y = 42.000000000000000000
               Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
@@ -258,8 +257,8 @@ object frmMain: TfrmMain
             end
             object edtYMax: TEdit
               Touch.InteractiveGestures = [LongTap, DoubleTap]
-              TabOrder = 34
-              Position.X = 199.000000000000000000
+              TabOrder = 33
+              Position.X = 169.000000000000000000
               Position.Y = 72.000000000000000000
               Size.Width = 50.000000000000000000
               Size.Height = 22.000000000000000000
@@ -275,7 +274,7 @@ object frmMain: TfrmMain
               Size.Height = 128.000000000000000000
               Size.PlatformDefault = False
               Text = ' Select Data Set to Overlay'
-              TabOrder = 38
+              TabOrder = 37
               object Label3: TLabel
                 Position.X = 16.000000000000000000
                 Position.Y = 30.000000000000000000
@@ -311,6 +310,9 @@ object frmMain: TfrmMain
                 TabOrder = 46
               end
               object btnCopyToStorage: TButton
+                Hint = 
+                  'If you change colors etc and you want to preserve them between s' +
+                  'witching data files, click this.'
                 Position.X = 16.000000000000000000
                 Position.Y = 88.000000000000000000
                 Size.Width = 161.000000000000000000
@@ -320,6 +322,22 @@ object frmMain: TfrmMain
                 Text = 'Copy Current View to Data'
                 OnClick = btnCopyToStorageClick
               end
+            end
+            object Label5: TLabel
+              Position.X = 10.000000000000000000
+              Position.Y = 120.000000000000000000
+              Text = 'Right-click for export'
+              TabOrder = 38
+            end
+            object chkOverlayData: TCheckBox
+              Hint = 'Check this if you want multiple data files to be plotted at once'
+              Position.X = 256.000000000000000000
+              Position.Y = 107.000000000000000000
+              Size.Width = 96.000000000000000000
+              Size.Height = 19.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 39
+              Text = 'Overlay Data'
             end
           end
           object Plot: TSkPlotPaintBox
@@ -997,47 +1015,13 @@ object frmMain: TfrmMain
       Size.Height = 520.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 1
-      object moAntimony: TMemo
-        Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
-        DataDetectorTypes = []
-        HideSelectionOnExit = False
-        Lines.Strings = (
-          '// Load a model from disk, type in a model, '
-          '// or pick one of the example models from '
-          '// the Examples menu'
-          ''
-          '// Note // is used to indicate a comment'
-          ''
-          '// eg '
-          ''
-          'A -> B; k1*A'
-          'B -> C; k2*B'
-          'k1 = 0.35; k2 = 0.2'
-          'A = 10'
-          ''
-          '// If you'#39're not sure what to do, just'
-          '// click the simulate button to the left')
-        StyledSettings = [Style, FontColor]
-        TextSettings.Font.Family = 'Default'
-        TextSettings.Font.Size = 16.000000000000000000
-        OnChangeTracking = moAntimonyChangeTracking
-        Align = Client
-        Size.Width = 441.000000000000000000
-        Size.Height = 470.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 0
-        OnViewportPositionChange = moAntimonyViewportPositionChange
-        OnPresentationNameChoosing = moAntimonyPresentationNameChoosing
-        Viewport.Width = 427.000000000000000000
-        Viewport.Height = 462.000000000000000000
-      end
       object Layout7: TLayout
         Align = Bottom
         Position.Y = 470.000000000000000000
         Size.Width = 441.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 1
+        TabOrder = 0
         object chkShowLineNumbers: TCheckBox
           IsChecked = True
           Position.X = 208.000000000000000000
@@ -1069,6 +1053,51 @@ object frmMain: TfrmMain
           Text = 'Font Size:'
           TabOrder = 0
         end
+      end
+      object moAntimony: TSkiaCodeEditor
+        Align = Client
+        Size.Width = 441.000000000000000000
+        Size.Height = 470.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Lines.Strings = (
+          '// Load a model from disk, type in a model,'
+          '// or pick one of the example models from'
+          '// the Examples menu'
+          ''
+          '// Note // is used to indicate a comment'
+          ''
+          '// eg'
+          ''
+          'A -> B; k1*A'
+          'B -> C; k2*B'
+          'k1 = 0.35; k2 = 0.2'
+          'A = 10'
+          ''
+          '// If you'#39're not sure what to do, just'
+          '// click the simulate button to the left')
+        Highlighter.Language = slAntimony
+        Highlighter.KeywordColor = claCornflowerblue
+        Highlighter.StringColor = xFFA31515
+        Highlighter.CommentColor = claLightgreen
+        Highlighter.NumberColor = claCoral
+        FontSize = 16.000000000000000000
+        FontFamily = 'Segoe UI '
+        BackgroundColor = xFF1F1F1F
+        TextColor = claWhite
+        GutterColor = xFF272727
+        GutterTextColor = claGray
+        GutterLineColor = claGray
+        GutterLineThickness = 1.000000000000000000
+        CaretColor = claGray
+        SelectionColor = x400078D7
+        FindMatchColor = xA0FF9800
+        FindHighlightColor = x40FFC107
+        CurrentLineColor = x18808080
+        BracketMatchColor = xA0A0A0A0
+        TooltipColor = xFF2D2D30
+        TooltipTextColor = xFFF0F0F0
+        TooltipBorderColor = xFF6E6E70
       end
     end
   end

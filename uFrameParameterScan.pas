@@ -706,6 +706,10 @@ begin
      end;
 
   try
+    { Snapshot current plot styling before we destroy this scan's series, so
+      the user's edits survive the rebuild and a later return to this frame. }
+    FContext.PlotBeginRebuild;
+
     { ── 5. Scan loop ── }
     { For overlay mode, clear the plot first so traces don't accumulate
       across multiple Run Scan clicks. }
@@ -780,6 +784,9 @@ begin
       FContext.PlotData(ResultMatrix, ParamColName, YNames);
       FreeAndNil(ResultMatrix);
     end;
+
+    { Re-apply this frame's saved styling to the freshly built series. }
+    FContext.PlotEndRebuild;
 
     FHasData := True;
 

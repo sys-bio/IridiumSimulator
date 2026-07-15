@@ -367,8 +367,8 @@ function getFeedbackModel : string;
 begin
   result := sLineBreak +
 
-  '// A negative-feeback oscillator' + sLineBreak +
-  '// I think this orginally came from a' + sLinebreak +
+  '// A negative-feedback oscillator' + sLineBreak +
+  '// I think this originally came from a' + sLinebreak +
   '// model by Athel Cornish-Bowden' + sLinebreak + sLinebreak +
 
   '// Reactions:' + sLineBreak +

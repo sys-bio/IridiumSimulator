@@ -1,0 +1,120 @@
+object frmConfigSteadyState: TfrmConfigSteadyState
+  Left = 0
+  Top = 0
+  Caption = 'Configure Steady State Solver'
+  ClientHeight = 734
+  ClientWidth = 756
+  Position = MainFormCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object pnlTop: TLayout
+    Align = Top
+    Size.Width = 756.000000000000000000
+    Size.Height = 124.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object lblSolver: TLabel
+      Position.X = 16.000000000000000000
+      Position.Y = 14.000000000000000000
+      Size.Width = 72.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Solver:'
+      TabOrder = 0
+    end
+    object cboSolver: TComboBox
+      Position.X = 88.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 220.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      OnChange = cboSolverChange
+    end
+    object lblDescription: TLabel
+      Anchors = [akLeft, akTop, akRight]
+      StyledSettings = [Family, Style]
+      Position.X = 16.000000000000000000
+      Position.Y = 46.000000000000000000
+      Size.Width = 728.000000000000000000
+      Size.Height = 70.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claWhite
+      TextSettings.Trimming = None
+      TabOrder = 2
+    end
+  end
+  object sbParams: TVertScrollBox
+    Align = Client
+    Size.Width = 756.000000000000000000
+    Size.Height = 558.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Viewport.Width = 756.000000000000000000
+    Viewport.Height = 558.000000000000000000
+  end
+  object pnlBottom: TLayout
+    Align = Bottom
+    Position.Y = 682.000000000000000000
+    Size.Width = 756.000000000000000000
+    Size.Height = 52.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object btnOK: TButton
+      Align = Right
+      Margins.Top = 11.000000000000000000
+      Margins.Right = 12.000000000000000000
+      Margins.Bottom = 11.000000000000000000
+      Position.X = 654.000000000000000000
+      Position.Y = 11.000000000000000000
+      Size.Width = 90.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'OK'
+      OnClick = btnOKClick
+    end
+    object btnCancel: TButton
+      Align = Right
+      Margins.Top = 11.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Margins.Bottom = 11.000000000000000000
+      Position.X = 556.000000000000000000
+      Position.Y = 11.000000000000000000
+      Size.Width = 90.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Cancel'
+      OnClick = btnCancelClick
+    end
+    object btnReset: TButton
+      Align = Left
+      Margins.Left = 16.000000000000000000
+      Margins.Top = 11.000000000000000000
+      Margins.Bottom = 11.000000000000000000
+      Position.X = 16.000000000000000000
+      Position.Y = 11.000000000000000000
+      Size.Width = 130.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Text = 'Restore Defaults'
+      OnClick = btnResetClick
+    end
+    object lblStatus: TLabel
+      Align = Left
+      StyledSettings = [Family, Style]
+      Margins.Left = 12.000000000000000000
+      Position.X = 158.000000000000000000
+      Size.Width = 347.000000000000000000
+      Size.Height = 52.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.FontColor = claGhostwhite
+      TabOrder = 3
+    end
+  end
+end
