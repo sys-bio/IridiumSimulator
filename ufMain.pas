@@ -57,7 +57,7 @@ uses
   FMX.Layers3D, uSkiaCodeEditor;
 
 const
-    VERSION = '0.980            ';
+    VERSION = '0.982            ';
 
 type
   TfrmMain = class(TForm, IAnalysisContext)
@@ -437,7 +437,7 @@ begin
      end;
   if not uRoadRunner.loadRoadRunner(errMsgAnsi) then
      begin
-     Showmessage ('Unable to find the libRoadRunner library. This is usually the result of a bad installation.');
+     Showmessage ('Unable to find the libRoadRunner library. This is usually the result of a bad installation: ' + errMsgAnsi + ')');
      Halt;
      end;
 

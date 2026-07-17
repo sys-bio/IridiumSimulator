@@ -63,6 +63,8 @@ type
     FOriginalSolver: string;
     FLoading:       Boolean;           // suppresses combo OnChange during setup
 
+    function ReadParamAsText (const AName: string; AType: Integer;
+                          const AFmt: TFormatSettings): string;
     procedure BuildSolverList;
     procedure BuildParamEditors;
     procedure ClearParamEditors;
@@ -127,19 +129,19 @@ end;
 { Current engine value of a parameter rendered as display text, dispatched on
   its type. Doubles use invariant formatting so scientific tolerances round
   trip cleanly. }
-function ReadParamAsText (const AName: string; AType: Integer;
+function TfrmConfigSteadyState.ReadParamAsText (const AName: string; AType: Integer;
                           const AFmt: TFormatSettings): string;
 begin
   case AType of
     PARAM_TYPE_INT32,
-    PARAM_TYPE_INT64:  Result := IntToStr (getSteadyStateSolverParameterInt (AName));
+    PARAM_TYPE_INT64:  Result := IntToStr (RR.getSteadyStateSolverParameterInt (AName));
     PARAM_TYPE_UINT32,
-    PARAM_TYPE_UINT64: Result := UIntToStr (getSteadyStateSolverParameterUInt (AName));
+    PARAM_TYPE_UINT64: Result := UIntToStr (RR.getSteadyStateSolverParameterUInt (AName));
     PARAM_TYPE_FLOAT,
-    PARAM_TYPE_DOUBLE: Result := FloatToStr (getSteadyStateSolverParameterDouble (AName), AFmt);
+    PARAM_TYPE_DOUBLE: Result := FloatToStr (RR.getSteadyStateSolverParameterDouble (AName), AFmt);
     PARAM_TYPE_DBLVEC: Result := '(double vector - edit not supported)';
     PARAM_TYPE_EMPTY:  Result := '';
-  else                 Result := getSteadyStateSolverParameterString (AName);
+  else                 Result := RR.getSteadyStateSolverParameterString (AName);
   end;
 end;
 
@@ -170,7 +172,7 @@ begin
     Exit;
     end;
 
-  FOriginalSolver := getCurrentSteadyStateSolverName;
+  FOriginalSolver := RR.getCurrentSteadyStateSolverName;
   BuildSolverList;
   BuildParamEditors;
 end;
@@ -198,7 +200,7 @@ begin
     finally
       Names.Free;
     end;
-    cboSolver.ItemIndex := cboSolver.Items.IndexOf (getCurrentSteadyStateSolverName);
+    cboSolver.ItemIndex := cboSolver.Items.IndexOf (RR.getCurrentSteadyStateSolverName);
   finally
     FLoading := False;
   end;
@@ -206,7 +208,7 @@ end;
 
 procedure TfrmConfigSteadyState.UpdateSolverDescription;
 begin
-  lblDescription.Text := getCurrentSteadyStateSolverName + ' - ' + getSteadyStateSolverDescription;
+  lblDescription.Text := RR.getCurrentSteadyStateSolverName + ' - ' + RR.getSteadyStateSolverDescription;
 end;
 
 { Rebuild the editor rows for whatever solver is currently active. Iterate by
@@ -220,13 +222,13 @@ begin
   ClearParamEditors;
   UpdateSolverDescription;
 
-  Count := getNumberOfSteadyStateSolverParameters;
+  Count := RR.getNumberOfSteadyStateSolverParameters;
   for I := 0 to Count - 1 do
     begin
-    Name := getCurrentSteadyStateNthParameterName (I);
+    Name := RR.getCurrentSteadyStateNthParameterName (I);
     AddParamRow (Name,
-                 getCurrentSteadyStateNthParameterDisplayName (I),
-                 getSteadyStateSolverParameterType (Name));
+                 RR.getCurrentSteadyStateNthParameterDisplayName (I),
+                 RR.getSteadyStateSolverParameterType (Name));
     end;
 end;
 
@@ -278,7 +280,7 @@ begin
       Chk.Align     := TAlignLayout.Right;
       Chk.Width     := 220;
       Chk.Text      := '';
-      Chk.IsChecked := getSteadyStateSolverParameterBoolean (AName);
+      Chk.IsChecked := RR.getSteadyStateSolverParameterBoolean (AName);
       Editor := Chk;
       end
     else
@@ -307,9 +309,9 @@ begin
     NameLbl.TextSettings.Font.Style := [TFontStyle.fsBold];
     NameLbl.Text := Caption + '   (' + TypeName (AType) + ')';
 
-    Desc := getSteadyStateSolverParameterDescription (AName);
+    Desc := RR.getSteadyStateSolverParameterDescription (AName);
     if Trim (Desc) = '' then
-      Desc := getSteadyStateSolverParameterHint (AName);
+      Desc := RR.getSteadyStateSolverParameterHint (AName);
 
     DescLbl := TLabel.Create (Self);
     DescLbl.Parent := Row;
@@ -351,7 +353,7 @@ begin
     Rec := FRows[I];
     try
       if Rec.PType = PARAM_TYPE_BOOL then
-        TCheckBox(Rec.Editor).IsChecked := getSteadyStateSolverParameterBoolean (Rec.Name)
+        TCheckBox(Rec.Editor).IsChecked := RR.getSteadyStateSolverParameterBoolean (Rec.Name)
       else
         TEdit(Rec.Editor).Text := ReadParamAsText (Rec.Name, Rec.PType, FFmt);
     except
@@ -378,24 +380,24 @@ begin
       try
         case Rec.PType of
           PARAM_TYPE_BOOL:
-            setSteadyStateSolverParameterBoolean (Rec.Name, TCheckBox(Rec.Editor).IsChecked);
+            RR.setSteadyStateSolverParameterBoolean (Rec.Name, TCheckBox(Rec.Editor).IsChecked);
           PARAM_TYPE_INT32, PARAM_TYPE_INT64:
             begin
               Iv := StrToInt (Trim (TEdit(Rec.Editor).Text));
               if Iv < 0 then raise Exception.Create ('must be a non-negative number');
-              setSteadyStateSolverParameterInt (Rec.Name, Iv);
+              RR.setSteadyStateSolverParameterInt (Rec.Name, Iv);
             end;
           PARAM_TYPE_UINT32, PARAM_TYPE_UINT64:
             { StrToUInt already rejects negatives. }
-            setSteadyStateSolverParameterUInt (Rec.Name, StrToUInt (Trim (TEdit(Rec.Editor).Text)));
+            RR.setSteadyStateSolverParameterUInt (Rec.Name, StrToUInt (Trim (TEdit(Rec.Editor).Text)));
           PARAM_TYPE_FLOAT, PARAM_TYPE_DOUBLE:
             begin
               Dv := StrToFloat (Trim (TEdit(Rec.Editor).Text), FFmt);
               if Dv < 0 then raise Exception.Create ('must be a non-negative number');
-              setSteadyStateSolverParameterDouble (Rec.Name, Dv);
+              RR.setSteadyStateSolverParameterDouble (Rec.Name, Dv);
             end;
           PARAM_TYPE_STRING:
-            setSteadyStateSolverParameterString (Rec.Name, TEdit(Rec.Editor).Text);
+            RR.setSteadyStateSolverParameterString (Rec.Name, TEdit(Rec.Editor).Text);
         else
           { empty / char / uchar / double-vector: shown read-only, not written. }
           Continue;
@@ -426,7 +428,7 @@ begin
 
   { Switching solver is applied live - the C API only exposes parameters for
     the current solver. }
-  setSteadyStateSolver (cboSolver.Items[cboSolver.ItemIndex]);
+  RR.setSteadyStateSolver (cboSolver.Items[cboSolver.ItemIndex]);
   BuildParamEditors;
   lblStatus.Text := '';
 end;
@@ -437,7 +439,7 @@ begin
     into the editors so the user sees what changed. Note: this writes to the
     engine immediately (like the solver switch), so Cancel won't undo it. }
   try
-    resetSteadyStateSolverParameters;
+    RR.resetSteadyStateSolverParameters;
     RefreshEditorsFromEngine;
     lblStatus.Text := 'Restored defaults.';
   except
@@ -459,8 +461,8 @@ begin
     solver selection is applied live, so restore it if the user changed it. }
   try
     if (FOriginalSolver <> '') and
-       (getCurrentSteadyStateSolverName <> FOriginalSolver) then
-      setSteadyStateSolver (FOriginalSolver);
+       (RR.getCurrentSteadyStateSolverName <> FOriginalSolver) then
+      RR.setSteadyStateSolver (FOriginalSolver);
   except
     on E: Exception do ;
   end;

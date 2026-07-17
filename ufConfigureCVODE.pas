@@ -27,7 +27,8 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
   FMX.Controls.Presentation, FMX.ScrollBox, FMX.StdCtrls, FMX.Edit, FMX.ListBox,
   FMX.Objects,
-  uRoadRunner, uAnalysisTypes;
+  uRoadRunner,
+  uAnalysisTypes;
 
 type
   { One editable integrator parameter and the control bound to it. }
@@ -62,6 +63,8 @@ type
     FOriginalIntegrator: string;
     FLoading:            Boolean;           // suppresses combo OnChange during setup
 
+    function ReadParamAsText (const AName: string; AType: Integer;
+                          const AFmt: TFormatSettings): string;
     procedure BuildIntegratorList;
     procedure BuildParamEditors;
     procedure ClearParamEditors;
@@ -135,19 +138,19 @@ end;
 { Current engine value of a parameter rendered as display text, dispatched on
   its type. Doubles use invariant formatting so scientific tolerances round
   trip cleanly. }
-function ReadParamAsText (const AName: string; AType: Integer;
+function TfrmConfigCVODE.ReadParamAsText (const AName: string; AType: Integer;
                           const AFmt: TFormatSettings): string;
 begin
   case AType of
     PARAM_TYPE_INT32,
-    PARAM_TYPE_INT64:  Result := IntToStr (getIntegratorParameterInt (AName));
+    PARAM_TYPE_INT64:  Result := IntToStr (RR.getIntegratorParameterInt (AName));
     PARAM_TYPE_UINT32,
-    PARAM_TYPE_UINT64: Result := UIntToStr (getIntegratorParameterUInt (AName));
+    PARAM_TYPE_UINT64: Result := UIntToStr (RR.getIntegratorParameterUInt (AName));
     PARAM_TYPE_FLOAT,
-    PARAM_TYPE_DOUBLE: Result := FloatToStr (getIntegratorParameterDouble (AName), AFmt);
+    PARAM_TYPE_DOUBLE: Result := FloatToStr (RR.getIntegratorParameterDouble (AName), AFmt);
     PARAM_TYPE_DBLVEC: Result := '(double vector - edit not supported)';
     PARAM_TYPE_EMPTY:  Result := '';
-  else                 Result := getIntegratorParameterString (AName);
+  else                 Result := RR.getIntegratorParameterString (AName);
   end;
 end;
 
@@ -178,7 +181,7 @@ begin
     Exit;
     end;
 
-  FOriginalIntegrator := getCurrentIntegratorName;
+  FOriginalIntegrator := RR.getCurrentIntegratorName;
   BuildIntegratorList;
   BuildParamEditors;
 end;
@@ -206,7 +209,7 @@ begin
     finally
       Names.Free;
     end;
-    cboIntegrator.ItemIndex := cboIntegrator.Items.IndexOf (getCurrentIntegratorName);
+    cboIntegrator.ItemIndex := cboIntegrator.Items.IndexOf (RR.getCurrentIntegratorName);
   finally
     FLoading := False;
   end;
@@ -214,7 +217,7 @@ end;
 
 procedure TfrmConfigCVODE.UpdateIntegratorDescription;
 begin
-  lblDescription.Text := getCurrentIntegratorName + ' - ' + getIntegratorDescription;
+  lblDescription.Text := RR.getCurrentIntegratorName + ' - ' + RR.getIntegratorDescription;
 end;
 
 { Rebuild the editor rows for whatever integrator is currently active. Iterate
@@ -228,13 +231,13 @@ begin
   ClearParamEditors;
   UpdateIntegratorDescription;
 
-  Count := getNumberOfIntegratorParameters;
+  Count := RR.getNumberOfIntegratorParameters;
   for I := 0 to Count - 1 do
     begin
-    Name := getCurrentIntegratorNthParameterName (I);
+    Name := RR.getCurrentIntegratorNthParameterName (I);
     AddParamRow (Name,
-                 getCurrentIntegratorNthParameterDisplayName (I),
-                 getIntegratorParameterType (Name));
+                 RR.getCurrentIntegratorNthParameterDisplayName (I),
+                 RR.getIntegratorParameterType (Name));
     end;
 end;
 
@@ -286,7 +289,7 @@ begin
       Chk.Align     := TAlignLayout.Right;
       Chk.Width     := 220;
       Chk.Text      := '';
-      Chk.IsChecked := getIntegratorParameterBoolean (AName);
+      Chk.IsChecked := RR.getIntegratorParameterBoolean (AName);
       Editor := Chk;
       end
     else
@@ -315,9 +318,9 @@ begin
     NameLbl.TextSettings.Font.Style := [TFontStyle.fsBold];
     NameLbl.Text := Caption + '   (' + TypeName (AType) + ')';
 
-    Desc := getIntegratorParameterDescription (AName);
+    Desc := RR.getIntegratorParameterDescription (AName);
     if Trim (Desc) = '' then
-      Desc := getIntegratorParameterHint (AName);
+      Desc := RR.getIntegratorParameterHint (AName);
 
     DescLbl := TLabel.Create (Self);
     DescLbl.Parent := Row;
@@ -359,7 +362,7 @@ begin
     Rec := FRows[I];
     try
       if Rec.PType = PARAM_TYPE_BOOL then
-        TCheckBox(Rec.Editor).IsChecked := getIntegratorParameterBoolean (Rec.Name)
+        TCheckBox(Rec.Editor).IsChecked := RR.getIntegratorParameterBoolean (Rec.Name)
       else
         TEdit(Rec.Editor).Text := ReadParamAsText (Rec.Name, Rec.PType, FFmt);
     except
@@ -386,24 +389,24 @@ begin
       try
         case Rec.PType of
           PARAM_TYPE_BOOL:
-            setIntegratorParameterBoolean (Rec.Name, TCheckBox(Rec.Editor).IsChecked);
+            RR.setIntegratorParameterBoolean (Rec.Name, TCheckBox(Rec.Editor).IsChecked);
           PARAM_TYPE_INT32, PARAM_TYPE_INT64:
             begin
               Iv := StrToInt (Trim (TEdit(Rec.Editor).Text));
               if Iv < 0 then raise Exception.Create ('must be a non-negative number');
-              setIntegratorParameterInt (Rec.Name, Iv);
+              RR.setIntegratorParameterInt (Rec.Name, Iv);
             end;
           PARAM_TYPE_UINT32, PARAM_TYPE_UINT64:
             { StrToUInt already rejects negatives. }
-            setIntegratorParameterUInt (Rec.Name, StrToUInt (Trim (TEdit(Rec.Editor).Text)));
+            RR.setIntegratorParameterUInt (Rec.Name, StrToUInt (Trim (TEdit(Rec.Editor).Text)));
           PARAM_TYPE_FLOAT, PARAM_TYPE_DOUBLE:
             begin
               Dv := StrToFloat (Trim (TEdit(Rec.Editor).Text), FFmt);
               if Dv < 0 then raise Exception.Create ('must be a non-negative number');
-              setIntegratorParameterDouble (Rec.Name, Dv);
+              RR.setIntegratorParameterDouble (Rec.Name, Dv);
             end;
           PARAM_TYPE_STRING:
-            setIntegratorParameterString (Rec.Name, TEdit(Rec.Editor).Text);
+            RR.setIntegratorParameterString (Rec.Name, TEdit(Rec.Editor).Text);
         else
           { empty / char / uchar / double-vector: shown read-only, not written. }
           Continue;
@@ -434,7 +437,7 @@ begin
 
   { Switching integrator is applied live - the C API only exposes parameters
     for the current integrator. }
-  setIntegrator (cboIntegrator.Items[cboIntegrator.ItemIndex]);
+  RR.setIntegrator (cboIntegrator.Items[cboIntegrator.ItemIndex]);
   BuildParamEditors;
   lblStatus.Text := '';
 end;
@@ -445,7 +448,7 @@ begin
     into the editors so the user sees what changed. Note: this writes to the
     engine immediately (like the integrator switch), so Cancel won't undo it. }
   try
-    resetIntegratorParameters;
+    RR.resetIntegratorParameters;
     RefreshEditorsFromEngine;
     lblStatus.Text := 'Restored defaults.';
   except
@@ -467,8 +470,8 @@ begin
     integrator selection is applied live, so restore it if the user changed it. }
   try
     if (FOriginalIntegrator <> '') and
-       (getCurrentIntegratorName <> FOriginalIntegrator) then
-      setIntegrator (FOriginalIntegrator);
+       (RR.getCurrentIntegratorName <> FOriginalIntegrator) then
+      RR.setIntegrator (FOriginalIntegrator);
   except
     on E: Exception do ;
   end;
