@@ -63,8 +63,12 @@ type
     EditFilter:     TEdit;
     ListBoxParams:  TListBox;
     Layout1: TLayout;
-    btnAddAllParameters: TButton;
     btnResetAllParameters: TButton;
+    btnAddAllParameters: TButton;
+    chkPosition: TCheckBox;
+    btnDeleteAll: TButton;
+    procedure btnDeleteAllClick(Sender: TObject);
+    procedure chkPositionChange(Sender: TObject);
   private
     FRows:            TArray<TSliderRow>;
     FOwned:           TObjectList<TComponent>;
@@ -86,7 +90,12 @@ type
 
     { -- internal helpers -- }
     procedure RebuildListBox(const AFilter: string);
-    procedure AddSliderRow(const AName: string; const AInitValue: Double);
+    { AAtTop puts the new row above the existing ones and scrolls it into
+      view — for rows the user just picked, which they mean to use straight
+      away. Bulk builds leave it False so the rows keep model order. }
+    procedure AddSliderRow(const AName: string; const AInitValue: Double;
+                           AAtTop: Boolean = False);
+    function  SeedRowY(AAtTop: Boolean): Single;
     procedure RemoveSliderRow(const AParamName: string);
     function  RowIndexOf(const AParamName: string): Integer;
     function  InitialValueOf(const AName: string): Double;
@@ -423,8 +432,40 @@ end;
 
 { -- slider row construction --------------------------------------------- }
 
+{ Y coordinate that will sort a brand-new row above (AAtTop) or below every
+  existing row when the scrollbox realigns its top-aligned children. Only the
+  ordering matters — the realign overwrites the value with the real position.
+
+  During a bulk build the rows sit inside BeginUpdate/EndUpdate and have not
+  been arranged yet, so their Y values are the seeds handed out here; walking
+  the live layouts (rather than assuming a fixed row pitch) keeps the sequence
+  strictly increasing in that case too. }
+function TFrameSliderContainer.SeedRowY(AAtTop: Boolean): Single;
+var
+  I: Integer;
+begin
+  if Length(FRows) = 0 then
+    Exit(0);
+
+  Result := FRows[0].Layout.Position.Y;
+  if AAtTop then
+  begin
+    for I := 1 to High(FRows) do
+      Result := Min(Result, FRows[I].Layout.Position.Y);
+    Result := Result - 1;
+  end
+  else
+  begin
+    Result := Result + FRows[0].Layout.Height;
+    for I := 1 to High(FRows) do
+      Result := Max(Result,
+                    FRows[I].Layout.Position.Y + FRows[I].Layout.Height);
+    Result := Result + 1;
+  end;
+end;
+
 procedure TFrameSliderContainer.AddSliderRow(const AName: string;
-  const AInitValue: Double);
+  const AInitValue: Double; AAtTop: Boolean);
 var
   Row:      TSliderRow;
   RangeMax: Single;
@@ -455,8 +496,12 @@ begin
 
   Row.ParamName := AName;
 
-  { -- outer layout -- }
+  { -- outer layout --
+    Y is seeded before the layout is parented: parenting is what triggers the
+    scrollbox's realign, and that realign is what reads Y to decide the row's
+    place in the stack (see the note further down). }
   Row.Layout                := TLayout.Create(Self);
+  Row.Layout.Position.Y     := SeedRowY(AAtTop);
   Row.Layout.Parent         := VertScrollBox1;
   Row.Layout.Align          := TAlignLayout.Top;
   Row.Layout.Height         := ROW_H;
@@ -519,6 +564,20 @@ begin
   { cross-link label <-> trackbar for event handlers }
   Row.Track.TagObject := Row.Lbl;
   Row.Lbl.TagObject   := Row.Track;
+
+  { FMX stacks top-aligned siblings by their *current* Position.Y, not by
+    child index (AlignObjects/InsertBefore in FMX.Types sorts on Top and only
+    falls back to child order for exact ties). A freshly created layout sits at
+    Y = 0, which ties with the topmost existing row and lands the new slider
+    second from the top — never at the bottom. So seed Y just outside the
+    range the existing rows occupy (SeedRowY, above) and let the realign snap
+    it into place. FRows keeps insertion order regardless — nothing depends on
+    it matching the visual order. }
+  if AAtTop then
+  begin
+    Row.Layout.Index := 0;   { tie-break, in case every row still sits at Y = 0 }
+    VertScrollBox1.ViewportPosition := PointF(0, 0);
+  end;
 
   FOwned.Add(Row.Layout);
 
@@ -617,6 +676,14 @@ begin
 end;
 
 
+procedure TFrameSliderContainer.btnDeleteAllClick(Sender: TObject);
+begin
+  { Quick way to clear the whole set so the user can pick a fresh one.
+    ClearSliders removes every row (and any lock) but leaves OnSliderChanged
+    bound, so adding new sliders afterwards works without re-attaching. }
+  ClearSliders;
+end;
+
 procedure TFrameSliderContainer.BuildSliders(
   const AParamNames:    TArray<string>;
   const AInitialValues: TArray<Double>;
@@ -645,6 +712,13 @@ begin
   end;
 
   RebuildListBox(EditFilter.Text);
+end;
+
+procedure TFrameSliderContainer.chkPositionChange(Sender: TObject);
+begin
+  { No action needed: DoListBoxItemClick reads chkPosition.IsChecked at the
+    moment a slider is added. Off (default) = add at bottom, on = add at top.
+    Existing rows are left where they are. }
 end;
 
 procedure TFrameSliderContainer.RefreshValues(const ANames:  TArray<string>;
@@ -684,22 +758,31 @@ procedure TFrameSliderContainer.DoListBoxItemClick(
 var
   Name:   string;
   Filter: string;
+  AtTop:  Boolean;
 begin
   Name := Item.Text;
   if IsActive(Name) then Exit;
   if (FLockedParam <> '') and SameText(Name, FLockedParam) then
     Exit;
 
-  AddSliderRow(Name, InitialValueOf(Name));
+  { chkPosition off (the default) adds at the bottom; on adds at the top.
+    AddSliderRow scrolls a top-added row into view itself; for a bottom-added
+    row we scroll to the end below, so a freshly picked slider is never left
+    off-screen either way. }
+  AtTop := chkPosition.IsChecked;
+  AddSliderRow(Name, InitialValueOf(Name), AtTop);
 
   { Defer the listbox rebuild — Clear() would free the TListBoxItem still
     referenced by the FMX MouseUp handler that's about to run, crashing
     on macOS where the allocator is stricter than Windows'. Same pattern
-    as DoRemoveBtnClick. }
+    as DoRemoveBtnClick. The scroll-to-end is deferred too, so it runs after
+    the new row's layout has settled and the content height is up to date. }
   Filter := EditFilter.Text;
   TThread.ForceQueue(nil, procedure
   begin
     RebuildListBox(Filter);
+    if not AtTop then
+      VertScrollBox1.ViewportPosition := PointF(0, VertScrollBox1.ContentBounds.Height);
   end);
 end;
 

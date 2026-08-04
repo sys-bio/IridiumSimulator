@@ -47,23 +47,46 @@ object FrameSliderContainer: TFrameSliderContainer
       Size.Height = 74.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 2
+      object btnResetAllParameters: TButton
+        Hint = 'Reset all sliders back to the original values.'
+        Position.X = 6.000000000000000000
+        Position.Y = 40.000000000000000000
+        Size.Width = 81.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Reset All'
+      end
       object btnAddAllParameters: TButton
-        Position.X = 32.000000000000000000
+        Hint = 'Add all parameters as sliders.'
+        Position.X = 6.000000000000000000
         Position.Y = 8.000000000000000000
-        Size.Width = 121.000000000000000000
+        Size.Width = 81.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        Text = 'Add All Parameters'
+        Text = 'Add All'
       end
-      object btnResetAllParameters: TButton
-        Position.X = 32.000000000000000000
+      object chkPosition: TCheckBox
+        Position.X = 93.000000000000000000
+        Position.Y = 11.000000000000000000
+        Size.Width = 82.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Add to top'
+        OnChange = chkPositionChange
+      end
+      object btnDeleteAll: TButton
+        Hint = 'Reset all sliders back to the original values.'
+        Position.X = 93.000000000000000000
         Position.Y = 40.000000000000000000
-        Size.Width = 121.000000000000000000
+        Size.Width = 78.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        Text = 'Reset All Sliders'
+        Text = 'Delete All'
+        OnClick = btnDeleteAllClick
       end
     end
   end

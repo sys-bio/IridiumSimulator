@@ -4,7 +4,7 @@
         <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>135171</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -233,16 +233,16 @@
             <Form>frmAbout</Form>
             <FormType>fmx</FormType>
         </DCCReference>
-        <DCCReference Include="..\PlottingComponent\Source\SkPlotPaintBox.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\SkPlotPaintBoxRegister.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uColorManager.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uCSVReaderForPlotter.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uLabelledTrackBar.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uMathParser.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uPlotDefaults.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uPlotJsonUtils.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uPlotMapper.pas"/>
-        <DCCReference Include="..\PlottingComponent\Source\uPlotSeries.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\SkPlotPaintBox.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\SkPlotPaintBoxRegister.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uColorManager.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uCSVReaderForPlotter.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uLabelledTrackBar.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uMathParser.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotDefaults.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotJsonUtils.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotMapper.pas"/>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotSeries.pas"/>
         <DCCReference Include="uMySplitter.pas"/>
         <DCCReference Include="ufConfigureCVODE.pas">
             <Form>frmConfigCVODE</Form>
@@ -306,6 +306,18 @@
                 <DeployFile LocalName="$(BDS)\bin\delphi_PROJECTICNS.icns" Configuration="Release" Class="ProjectOSXResource">
                     <Platform Name="OSXARM64">
                         <RemoteName>IridiumSimulator.icns</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="All Platforms\Release\IridiumSimulator" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="All Platforms">
+                        <RemoteName>IridiumSimulator</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="OSXARM64\Debug\IridiumSimulator.dSYM" Configuration="Debug" Class="ProjectOSXDebug">
+                    <Platform Name="OSXARM64">
+                        <RemoteName>IridiumSimulator</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

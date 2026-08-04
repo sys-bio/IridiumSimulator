@@ -75,7 +75,6 @@ type
     edtScanNPoints: TEdit;
     edtSampleTime: TEdit;
     chkProgressBar: TCheckBox;
-    btnExportPython: TButton;
 
     procedure rbRangeModeChange(Sender: TObject);
     procedure rbOutputMeasureChange(Sender: TObject);
@@ -106,7 +105,6 @@ type
     procedure edtSampleTimeKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: WideChar; Shift: TShiftState);
     procedure edtSampleTimeExit(Sender: TObject);
-    procedure btnExportPythonClick(Sender: TObject);
 
   private
     FContext:          IAnalysisContext;
@@ -158,6 +156,13 @@ type
     procedure SetContext(const AContext: IAnalysisContext);
     procedure UpdateScanParameterLock;
     procedure AttachToSliders;
+    procedure RefreshFromModelIfStale;
+
+    { Replace the checked observables with those in ANames (matched against the
+      four observable lists; names not present here are ignored). Used by the
+      shell to seed the scan selection from the time-course selection on this
+      panel's first appearance. }
+    procedure SetCheckedObservables(const ANames: TArray<string>);
   end;
 
 implementation
@@ -645,10 +650,24 @@ var
 begin
   ColorList.Restart;
   { ── 1. Validate ── }
-  if (FContext = nil) or (not FContext.Session.IsLoaded) then
-  begin
-    ShowMessage('Please load a model first by running a time course simulation.');
-    Exit;
+  if FContext = nil then Exit;
+
+  { Load (or reload, if the source was edited) the model on demand so the user
+    doesn't have to visit the time-course panel first. A successful load fires
+    the session's reloaded event, which populates the parameter combo and the
+    observable lists below. }
+  try
+    if not FContext.Session.EnsureLoaded then
+    begin
+      ShowMessage('Cannot load model: ' + FContext.Session.LastError);
+      Exit;
+    end;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Model load failed: ' + E.Message);
+      Exit;
+    end;
   end;
 
   if cbParameter.ItemIndex < 0 then
@@ -678,7 +697,46 @@ begin
   SampleTime := strtofloat (edtSampleTime.Text);
   NSimPoints := Max(2, strtoint (edtNumPoints.Text));
 
+  { The sample time only means anything for the endpoint measure, and it has to
+    fall inside the simulated interval. ExtractScalar picks the row with the
+    closest time, so a sample time past the end would silently clamp to the last
+    point; extend the run instead so the requested time is actually simulated.
+    A sample time before the start can't be fixed this way, so it's an error. }
+  if Measure = omEndpoint then
+  begin
+    if SampleTime > TEnd then
+    begin
+      TEnd := SampleTime;
+      edtTimeEnd.Text := FloatToStr(TEnd);
+    end;
+    if SampleTime < TStart then
+    begin
+      ShowMessage(Format('Sample time (%g) is less than the simulation ' +
+        'start time (%g). Choose a sample time within the simulation interval.',
+        [SampleTime, TStart]));
+      Exit;
+    end;
+  end;
+
   RR := FContext.Session.RoadRunner;
+
+  { Tell RoadRunner which columns to return. simulateEx otherwise yields only
+    its default selection (time + floating species), so observables that are
+    reaction fluxes, boundary species, or rates of change — e.g. scanning A and
+    watching the flux J1 — never appear in the result matrix and the scan looks
+    empty. Mirror the time-course frame: time first, then every selected
+    observable, deduplicated. }
+  var Selection := TStringList.Create;
+  try
+    Selection.CaseSensitive := True;   { SBML ids are case-sensitive }
+    Selection.Add(TIME_COLUMN_LABEL);
+    for var N := 0 to High(FSelectedObsNames) do
+      if Selection.IndexOf(FSelectedObsNames[N]) < 0 then
+        Selection.Add(FSelectedObsNames[N]);
+    RR.setTimeCourseSelectionListEx(Selection);
+  finally
+    Selection.Free;
+  end;
 
   { ── 3. Save original parameter value ── }
   OrigParamVal := RR.getValue(AnsiString(ParamName));
@@ -788,6 +846,17 @@ begin
     { Re-apply this frame's saved styling to the freshly built series. }
     FContext.PlotEndRebuild;
 
+    { Set the x-axis title AFTER PlotEndRebuild. The styling snapshot it restores
+      carries the previous run's x-axis title — so a time-course-overlay scan's
+      'time' would clobber the parameter name on a following endpoint scan, and
+      vice versa. The scan x-axis is mode-derived and always authoritative here:
+      time for overlay traces, the scanned parameter for scalar measures. }
+    if Measure = omTimeCourseOverlay then
+      FContext.PlotSetXAxisTitle(TIME_COLUMN_LABEL)
+    else
+      FContext.PlotSetXAxisTitle(ParamName);
+    FContext.PlotRedraw;
+
     FHasData := True;
 
   except
@@ -893,13 +962,19 @@ begin
 end;
 
 procedure TFrameParameterScan.edtSampleTimeExit(Sender: TObject);
-var Value : Double;
+var Value, TEnd : Double;
 begin
  if not TryStrToFloat(edtSampleTime.Text.Trim, Value) then
      begin
      showmessage ('Sample time value not entered correctly');
      edtSampleTime.SetFocus;
+     Exit;
      end;
+
+ { Sampling past the end of the run is a request for a longer run, so push the
+   end time out to match rather than silently sampling the last point. }
+ if TryStrToFloat(edtTimeEnd.Text.Trim, TEnd) and (Value > TEnd) then
+    edtTimeEnd.Text := FloatToStr(Value);
 end;
 
 procedure TFrameParameterScan.edtSampleTimeKeyDown(Sender: TObject;
@@ -1018,11 +1093,6 @@ end;
 
 { ── Reset ────────────────────────────────────────────────────────────────── }
 
-procedure TFrameParameterScan.btnExportPythonClick(Sender: TObject);
-begin
-   FContext.CopyTextToTextWindow (GetPythonScript(FContext.Session.GetCurrentAntimonyText));
-end;
-
 procedure TFrameParameterScan.btnResetScanClick(Sender: TObject);
 begin
   FHasData               := False;
@@ -1030,6 +1100,52 @@ begin
   pbScanProgress.Visible := False;
 end;
 
+
+{ Called when this frame becomes the visible analysis. Edits made in the editor
+  while another panel was showing leave the parameter combo and the observable
+  lists describing the previous model, so re-parse and let SessionModelReloaded
+  repopulate them.
+
+  Failure is deliberately silent: switching to this panel with a half-typed
+  model should not pop a dialog. The lists simply keep their previous contents,
+  and btnRunScanClick reports the parse error when the user actually runs. }
+procedure TFrameParameterScan.RefreshFromModelIfStale;
+begin
+  if FContext = nil then Exit;
+  if not FContext.Session.IsDirty then Exit;
+
+  try
+    FContext.Session.EnsureLoaded;
+  except
+    { Reported at Run Scan time, not on a tab switch. }
+  end;
+end;
+
+
+procedure TFrameParameterScan.SetCheckedObservables(const ANames: TArray<string>);
+
+  function Wanted(const AName: string): Boolean;
+  var N: string;
+  begin
+    for N in ANames do
+      if N = AName then Exit(True);
+    Result := False;
+  end;
+
+  procedure ApplyTo(AList: TListBox);
+  var I: Integer;
+  begin
+    for I := 0 to AList.Count - 1 do
+      AList.ListItems[I].IsChecked := Wanted(AList.ListItems[I].Text);
+  end;
+
+begin
+  ApplyTo(lstFloating);
+  ApplyTo(lstBoundary);
+  ApplyTo(lstFluxes);
+  ApplyTo(lstRatesOfChange);
+  UpdateSelectedObsLabel;   { rebuild FSelectedObsNames from the new checks }
+end;
 
 procedure TFrameParameterScan.AttachToSliders;
 begin

@@ -58,6 +58,11 @@ type
     procedure PlotAddSeries(ASeries: TObject);
     procedure PlotRedraw;
 
+    { Set the x-axis title. PlotData sets it from the X column automatically;
+      the manual PlotAddSeries path (e.g. a parameter scan's time-course
+      overlay) has no X column to infer from and must set it explicitly. }
+    procedure PlotSetXAxisTitle(const ATitle: string);
+
     { Per-analysis plot-styling persistence. A frame must bracket every
       operation that clears and rebuilds its series (whether via PlotData or
       via PlotClearSimulationSeries + PlotAddSeries) between these two calls:
@@ -95,7 +100,12 @@ type
 
     procedure CopyTextToTextWindow (AString : String);
 
-    procedure AppendToAntimonySource(const ABlock: string);
+    { Add a tagged block to the Antimony editor. AReplace = False (default)
+      appends the block, leaving any earlier tagged blocks in place. AReplace =
+      True first removes the previous tagged block(s), so the editor keeps only
+      the latest. }
+    procedure AppendToAntimonySource(const ABlock: string;
+                                     AReplace: Boolean = False);
 
     function  GetSteadyStateHost: TScrollBox;
     procedure ShowSteadyStateTab;

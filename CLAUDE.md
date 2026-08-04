@@ -49,8 +49,10 @@ paths in the `.dpr` — these are **not** in this repository:
 - `..\..\CommonCode\libRoadRunner\` — the RoadRunner Pascal wrapper and numeric libs
   (`uRoadRunner.pas`, `uRoadRunner.API.pas`, `uMatrix.pas`, `uRR2DSimpleMatrix.pas`, etc.).
   This is registered as an additional working directory.
-- `..\PlottingComponent\Source\` — the Skia-based plotting component
-  (`SkPlotPaintBox`, `uPlotSeries`, `ufPlotEditor`, etc.).
+- `..\RhodyComponents\PlottingComponent\Source\` — the Skia-based plotting component
+  (`SkPlotPaintBox`, `uPlotSeries`, `ufPlotEditor`, etc.). Shared with other
+  applications, so a change here affects them too. `..\RhodyComponents\RhoEditor\Source\`
+  resolves through `DCC_UnitSearchPath` rather than an explicit reference.
 - `..\T3DBarGraph-main\U3DBarGraph.pas` — the 3D bar-graph component (control-coefficient plots).
 
 The in-repo `RichMemo\` folder is the syntax-highlighting Antimony code editor
@@ -102,7 +104,35 @@ deliberately decoupled so frames never reference the main form directly.
   `IAnalysisContext` and implement it in `TfrmMain`.
 - Listener registration is idempotent and dispatch is snapshot-based, so adding/removing
   listeners during a callback is safe.
+- **A compute button loads the model itself.** Handlers that need a model call
+  `Session.EnsureLoaded` (and report `Session.LastError` on failure) rather than testing
+  `Session.IsLoaded` and telling the user to go run something else first. `EnsureLoaded`
+  also covers the dirty-source case, and its reloaded event repopulates the frame's
+  selectors, so validation that follows finds sane defaults.
 - The app version string is `VERSION` in `ufMain.pas`.
+
+### Plot series kinds
+
+Every `TPlotSeries` carries a `SeriesKind`: `skSimulation` (computed output, owned by
+whichever analysis produced it) or `skData` (a CSV overlay the user loaded). The kind is
+what makes overlays durable, so treat it as identity, not styling:
+
+- `PlotData` / `PlotClearSimulationSeries` clear **only** `skSimulation`. Loaded data
+  survives every re-simulation, including slider-driven ones, and goes away only via
+  Clear Data or a model swap.
+- `TfrmMain.btnLoadCSVClick` is what stamps `skData` — `SkPlotPaintBox.LoadData` creates
+  series with the `skSimulation` default and the host re-labels them afterwards.
+- Styling snapshots (`PlotBeginRebuild` / `PlotEndRebuild` → `SaveSettings` /
+  `RestoreSettings`) serialise `seriesKind` alongside the visual properties, and
+  `LoadStyleFromJson` writes it back. Entries are therefore matched to live series by
+  **name + kind**, each series consumed once. Matching on name alone is a trap: a data
+  overlay and its simulated counterpart usually share a name, and applying the simulation
+  entry to the data series silently re-labels it `skSimulation`, after which the next
+  `ClearSeriesKind(skSimulation)` deletes the user's data.
+- Swapping the model (File ▸ Load, Import SBML, New, Examples dropdown) clears the whole
+  plot through `TfrmMain.ClearPlotAndLoadedData` — nothing on the old plot describes the
+  new model. `FListOfLoadedDataFiles` owns its `TLoadDataFile` entries, which own their
+  cloned series, so empty it via `ClearLoadedDataFiles`, never a bare `.Clear`.
 
 ### Notes when editing
 

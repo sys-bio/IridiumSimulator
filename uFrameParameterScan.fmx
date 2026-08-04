@@ -1,24 +1,24 @@
 object FrameParameterScan: TFrameParameterScan
-  Size.Width = 320.000000000000000000
-  Size.Height = 900.000000000000000000
+  Size.Width = 322.000000000000000000
+  Size.Height = 864.000000000000000000
   Size.PlatformDefault = False
   object ScrollBox1: TVertScrollBox
     Align = Client
-    Size.Width = 320.000000000000000000
-    Size.Height = 900.000000000000000000
+    Size.Width = 322.000000000000000000
+    Size.Height = 864.000000000000000000
     Size.PlatformDefault = False
-    Viewport.Width = 320.000000000000000000
-    Viewport.Height = 900.000000000000000000
+    Viewport.Width = 322.000000000000000000
+    Viewport.Height = 864.000000000000000000
     object Layout1: TLayout
       Align = Top
-      Size.Width = 320.000000000000000000
-      Size.Height = 43.000000000000000000
+      Size.Width = 322.000000000000000000
+      Size.Height = 36.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       object lblParameterScan: TLabel
         StyledSettings = [Family, Style]
         Position.X = 16.000000000000000000
-        Position.Y = 16.000000000000000000
+        Position.Y = 11.000000000000000000
         TextSettings.Font.Size = 16.000000000000000000
         TextSettings.FontColor = claCornsilk
         Text = 'Parameter Scan'
@@ -33,9 +33,9 @@ object FrameParameterScan: TFrameParameterScan
       Margins.Right = 5.000000000000000000
       Margins.Bottom = 5.000000000000000000
       Position.X = 5.000000000000000000
-      Position.Y = 434.000000000000000000
-      Size.Width = 310.000000000000000000
-      Size.Height = 65.000000000000000000
+      Position.Y = 173.000000000000000000
+      Size.Width = 312.000000000000000000
+      Size.Height = 59.000000000000000000
       Size.PlatformDefault = False
       Text = ' Parameter to Scan '
       TextSettings.FontColor = claCornsilk
@@ -120,13 +120,13 @@ object FrameParameterScan: TFrameParameterScan
       Margins.Right = 5.000000000000000000
       Margins.Bottom = 5.000000000000000000
       Position.X = 5.000000000000000000
-      Position.Y = 504.000000000000000000
-      Size.Width = 310.000000000000000000
-      Size.Height = 129.000000000000000000
+      Position.Y = 36.000000000000000000
+      Size.Width = 312.000000000000000000
+      Size.Height = 127.000000000000000000
       Size.PlatformDefault = False
       Text = ' Scan Type '
       TextSettings.FontColor = claCornsilk
-      TabOrder = 2
+      TabOrder = 4
       object rbLinear: TRadioButton
         GroupName = 'ScanRange'
         IsChecked = True
@@ -200,9 +200,12 @@ object FrameParameterScan: TFrameParameterScan
           Text = '0.1'
           Position.X = 19.000000000000000000
           Position.Y = 32.000000000000000000
+          Hint = 'Start value for the parameter we wish to scan'
           Size.Width = 64.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
+          ParentShowHint = False
+          ShowHint = True
           OnKeyDown = edtScanStartKeyDown
           OnExit = edtScanStartExit
         end
@@ -212,9 +215,12 @@ object FrameParameterScan: TFrameParameterScan
           Text = '1.0'
           Position.X = 107.000000000000000000
           Position.Y = 32.000000000000000000
+          Hint = 'End value for the parameter we wish to scan'
           Size.Width = 64.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
+          ParentShowHint = False
+          ShowHint = True
           OnKeyDown = edtScanEndKeyDown
           OnExit = edtScanEndExit
         end
@@ -224,9 +230,12 @@ object FrameParameterScan: TFrameParameterScan
           Text = '12'
           Position.X = 193.000000000000000000
           Position.Y = 32.000000000000000000
+          Hint = 'Number of parameter values to use in the scan'
           Size.Width = 64.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
+          ParentShowHint = False
+          ShowHint = True
           OnKeyDown = edtScanNPointsKeyDown
           OnExit = edtScanNPointsExit
         end
@@ -266,13 +275,13 @@ object FrameParameterScan: TFrameParameterScan
       Margins.Right = 5.000000000000000000
       Margins.Bottom = 5.000000000000000000
       Position.X = 5.000000000000000000
-      Position.Y = 638.000000000000000000
-      Size.Width = 310.000000000000000000
-      Size.Height = 122.000000000000000000
+      Position.Y = 375.000000000000000000
+      Size.Width = 312.000000000000000000
+      Size.Height = 103.000000000000000000
       Size.PlatformDefault = False
-      Text = 'V'
+      Text = 'Time Duration'
       TextSettings.FontColor = claCornsilk
-      TabOrder = 3
+      TabOrder = 5
       object lblTimeStart: TLabel
         Position.X = 16.000000000000000000
         Position.Y = 24.000000000000000000
@@ -303,7 +312,7 @@ object FrameParameterScan: TFrameParameterScan
       object lblSampleTime: TLabel
         Hint = 'Time at which the endpoint value is sampled'
         Position.X = 37.000000000000000000
-        Position.Y = 81.000000000000000000
+        Position.Y = 73.000000000000000000
         Size.Width = 82.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
@@ -353,7 +362,7 @@ object FrameParameterScan: TFrameParameterScan
         TabOrder = 33
         Text = '20.0'
         Position.X = 116.000000000000000000
-        Position.Y = 80.000000000000000000
+        Position.Y = 72.000000000000000000
         Enabled = False
         Size.Width = 65.000000000000000000
         Size.Height = 22.000000000000000000
@@ -364,19 +373,20 @@ object FrameParameterScan: TFrameParameterScan
     end
     object layoutRunControls: TLayout
       Align = Top
+      Anchors = [akLeft, akTop]
       Margins.Left = 5.000000000000000000
       Margins.Right = 5.000000000000000000
       Margins.Bottom = 5.000000000000000000
       Position.X = 5.000000000000000000
-      Position.Y = 239.000000000000000000
-      Size.Width = 310.000000000000000000
-      Size.Height = 49.000000000000000000
+      Position.Y = 237.000000000000000000
+      Size.Width = 312.000000000000000000
+      Size.Height = 46.000000000000000000
       Size.PlatformDefault = False
-      TabOrder = 6
+      TabOrder = 8
       object btnRunScan: TButton
         StyledSettings = [Family, Style]
         Position.X = 8.000000000000000000
-        Position.Y = 10.000000000000000000
+        Position.Y = 7.000000000000000000
         Size.Width = 80.000000000000000000
         Size.Height = 30.000000000000000000
         Size.PlatformDefault = False
@@ -389,7 +399,7 @@ object FrameParameterScan: TFrameParameterScan
       end
       object btnResetScan: TButton
         Position.X = 94.000000000000000000
-        Position.Y = 10.000000000000000000
+        Position.Y = 7.000000000000000000
         Size.Width = 80.000000000000000000
         Size.Height = 30.000000000000000000
         Size.PlatformDefault = False
@@ -406,28 +416,10 @@ object FrameParameterScan: TFrameParameterScan
         Size.PlatformDefault = False
         Visible = False
       end
-      object cboColorpalette: TComboBox
-        Position.X = 91.000000000000000000
-        Position.Y = 525.000000000000000000
-        Size.Width = 142.000000000000000000
-        Size.Height = 26.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 2
-        OnChange = cboColorpaletteChange
-      end
-      object Label1: TLabel
-        Position.X = 13.000000000000000000
-        Position.Y = 528.000000000000000000
-        Size.Width = 77.000000000000000000
-        Size.Height = 17.000000000000000000
-        Size.PlatformDefault = False
-        Text = 'Color Palette:'
-        TabOrder = 3
-      end
       object chkProgressBar: TCheckBox
         Position.X = 209.000000000000000000
-        Position.Y = 16.000000000000000000
-        TabOrder = 4
+        Position.Y = 13.000000000000000000
+        TabOrder = 2
         Text = 'Progress Bar'
       end
     end
@@ -442,31 +434,33 @@ object FrameParameterScan: TFrameParameterScan
       Margins.Right = 5.000000000000000000
       Margins.Bottom = 5.000000000000000000
       Position.X = 5.000000000000000000
-      Position.Y = 43.000000000000000000
-      Size.Width = 310.000000000000000000
-      Size.Height = 191.000000000000000000
+      Position.Y = 483.000000000000000000
+      Size.Width = 312.000000000000000000
+      Size.Height = 320.000000000000000000
       Size.PlatformDefault = False
       Text = ' Observables (check to select) '
       TextSettings.FontColor = claCornsilk
-      TabOrder = 5
+      TabOrder = 7
       object TabControl1: TTabControl
-        Align = Client
-        Size.Width = 286.000000000000000000
-        Size.Height = 157.000000000000000000
+        Anchors = [akLeft, akTop, akBottom]
+        Position.X = 12.000000000000000000
+        Position.Y = 22.000000000000000000
+        Size.Width = 287.000000000000000000
+        Size.Height = 282.000000000000000000
         Size.PlatformDefault = False
         TabHeight = 28.000000000000000000
         TabIndex = 0
         TabOrder = 0
         TabPosition = Top
         Sizes = (
-          286s
-          129s
-          286s
-          129s
-          286s
-          129s
-          286s
-          129s)
+          287s
+          254s
+          287s
+          254s
+          287s
+          254s
+          287s
+          254s)
         object tabFloating: TTabItem
           CustomIcon = <
             item
@@ -482,8 +476,9 @@ object FrameParameterScan: TFrameParameterScan
           ExplicitSize.cy = 50.000000000000000000
           object lstFloating: TListBox
             Align = Client
-            Size.Width = 286.000000000000000000
-            Size.Height = 129.000000000000000000
+            Anchors = [akLeft, akTop, akBottom]
+            Size.Width = 287.000000000000000000
+            Size.Height = 254.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -492,8 +487,8 @@ object FrameParameterScan: TFrameParameterScan
             DefaultItemStyles.GroupFooterStyle = ''
             ShowCheckboxes = True
             OnChangeCheck = lstObservableCheckChanged
-            Viewport.Width = 282.000000000000000000
-            Viewport.Height = 125.000000000000000000
+            Viewport.Width = 283.000000000000000000
+            Viewport.Height = 250.000000000000000000
           end
         end
         object tabBoundary: TTabItem
@@ -510,9 +505,9 @@ object FrameParameterScan: TFrameParameterScan
           ExplicitSize.cx = 50.000000000000000000
           ExplicitSize.cy = 50.000000000000000000
           object lstBoundary: TListBox
-            Align = Client
-            Size.Width = 286.000000000000000000
-            Size.Height = 129.000000000000000000
+            Anchors = [akLeft, akTop, akBottom]
+            Size.Width = 344.000000000000000000
+            Size.Height = 358.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -521,8 +516,8 @@ object FrameParameterScan: TFrameParameterScan
             DefaultItemStyles.GroupFooterStyle = ''
             ShowCheckboxes = True
             OnChangeCheck = lstObservableCheckChanged
-            Viewport.Width = 288.000000000000000000
-            Viewport.Height = 151.000000000000000000
+            Viewport.Width = 340.000000000000000000
+            Viewport.Height = 249.000000000000000000
           end
         end
         object tabFluxes: TTabItem
@@ -540,8 +535,8 @@ object FrameParameterScan: TFrameParameterScan
           ExplicitSize.cy = 50.000000000000000000
           object lstFluxes: TListBox
             Align = Client
-            Size.Width = 286.000000000000000000
-            Size.Height = 129.000000000000000000
+            Size.Width = 287.000000000000000000
+            Size.Height = 254.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -569,8 +564,8 @@ object FrameParameterScan: TFrameParameterScan
           ExplicitSize.cy = 50.000000000000000000
           object lstRatesOfChange: TListBox
             Align = Client
-            Size.Width = 286.000000000000000000
-            Size.Height = 129.000000000000000000
+            Size.Width = 287.000000000000000000
+            Size.Height = 254.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -592,13 +587,13 @@ object FrameParameterScan: TFrameParameterScan
       Margins.Right = 5.000000000000000000
       Margins.Bottom = 5.000000000000000000
       Position.X = 5.000000000000000000
-      Position.Y = 293.000000000000000000
-      Size.Width = 310.000000000000000000
-      Size.Height = 131.000000000000000000
+      Position.Y = 288.000000000000000000
+      Size.Width = 312.000000000000000000
+      Size.Height = 82.000000000000000000
       Size.PlatformDefault = False
       Text = ' Output Measure '
       TextSettings.FontColor = claCornsilk
-      TabOrder = 4
+      TabOrder = 6
       object rbEndpoint: TRadioButton
         GroupName = 'OutputMeasure'
         Position.X = 12.000000000000000000
@@ -612,8 +607,8 @@ object FrameParameterScan: TFrameParameterScan
       end
       object rbPeakValue: TRadioButton
         GroupName = 'OutputMeasure'
-        Position.X = 12.000000000000000000
-        Position.Y = 76.000000000000000000
+        Position.X = 200.000000000000000000
+        Position.Y = 29.000000000000000000
         Size.Width = 120.000000000000000000
         Size.Height = 19.000000000000000000
         Size.PlatformDefault = False
@@ -623,8 +618,8 @@ object FrameParameterScan: TFrameParameterScan
       end
       object rbTimeToPeak: TRadioButton
         GroupName = 'OutputMeasure'
-        Position.X = 12.000000000000000000
-        Position.Y = 100.000000000000000000
+        Position.X = 200.000000000000000000
+        Position.Y = 56.000000000000000000
         Size.Width = 120.000000000000000000
         Size.Height = 19.000000000000000000
         Size.PlatformDefault = False
@@ -645,15 +640,23 @@ object FrameParameterScan: TFrameParameterScan
         OnChange = rbOutputMeasureChange
       end
     end
-    object btnExportPython: TButton
-      Position.X = 138.000000000000000000
-      Position.Y = 798.000000000000000000
-      Size.Width = 100.000000000000000000
-      Size.Height = 25.000000000000000000
+    object cboColorpalette: TComboBox
+      Position.X = 126.000000000000000000
+      Position.Y = 806.000000000000000000
+      Size.Width = 142.000000000000000000
+      Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
-      TabOrder = 7
-      Text = 'Export Python'
-      OnClick = btnExportPythonClick
+      TabOrder = 2
+      OnChange = cboColorpaletteChange
+    end
+    object Label1: TLabel
+      Position.X = 43.000000000000000000
+      Position.Y = 810.000000000000000000
+      Size.Width = 77.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Color Palette:'
+      TabOrder = 3
     end
   end
 end

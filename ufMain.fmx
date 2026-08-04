@@ -17,21 +17,21 @@ object frmMain: TfrmMain
   DesignerMasterStyle = 0
   object Layout1: TLayout
     Align = Bottom
-    Position.Y = 900.000000000000000000
+    Position.Y = 909.000000000000000000
     Size.Width = 1448.000000000000000000
-    Size.Height = 50.000000000000000000
+    Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     object pnlExampleModels: TLayout
       Align = Left
       Size.Width = 457.000000000000000000
-      Size.Height = 50.000000000000000000
+      Size.Height = 41.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       object cboExampleModels: TComboBox
         DropDownCount = 16
         Position.X = 118.000000000000000000
-        Position.Y = 14.000000000000000000
+        Position.Y = 8.000000000000000000
         Size.Width = 315.000000000000000000
         Size.Height = 26.000000000000000000
         Size.PlatformDefault = False
@@ -40,7 +40,7 @@ object frmMain: TfrmMain
       end
       object Label2: TLabel
         Position.X = 20.000000000000000000
-        Position.Y = 17.000000000000000000
+        Position.Y = 11.000000000000000000
         Size.Width = 97.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
@@ -54,21 +54,21 @@ object frmMain: TfrmMain
     Position.X = 774.000000000000000000
     Position.Y = 50.000000000000000000
     Size.Width = 674.000000000000000000
-    Size.Height = 850.000000000000000000
+    Size.Height = 859.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
     object Layout2: TLayout
       Align = Right
       Position.X = 610.909912109375000000
       Size.Width = 63.090087890625000000
-      Size.Height = 850.000000000000000000
+      Size.Height = 859.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
     end
     object TabControl1: TTabControl
       Align = Client
       Size.Width = 610.909912109375000000
-      Size.Height = 850.000000000000000000
+      Size.Height = 859.000000000000000000
       Size.PlatformDefault = False
       TabIndex = 0
       TabOrder = 1
@@ -76,11 +76,11 @@ object frmMain: TfrmMain
       OnChange = TabControl1Change
       Sizes = (
         610.909912109375s
-        824s
+        833s
         610.909912109375s
-        824s
+        833s
         610.909912109375s
-        824s)
+        833s)
       object tbPlot: TTabItem
         CustomIcon = <
           item
@@ -97,12 +97,12 @@ object frmMain: TfrmMain
         object Layout8: TLayout
           Align = Client
           Size.Width = 610.909912109375000000
-          Size.Height = 824.000000000000000000
+          Size.Height = 833.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 1
           object Layout5: TLayout
             Align = Bottom
-            Position.Y = 680.000000000000000000
+            Position.Y = 689.000000000000000000
             Size.Width = 610.909912109375000000
             Size.Height = 144.000000000000000000
             Size.PlatformDefault = False
@@ -344,8 +344,9 @@ object frmMain: TfrmMain
             Align = Client
             HitTest = True
             Size.Width = 610.909912109375000000
-            Size.Height = 680.000000000000000000
+            Size.Height = 689.000000000000000000
             Size.PlatformDefault = False
+            PickTolerance = 8.000000000000000000
             AxisLimits.MaxX = 1.000000000000000000
             AxisLimits.MaxY = 1.000000000000000000
             AxisStyle.LogX = False
@@ -399,15 +400,15 @@ object frmMain: TfrmMain
           TextSettings.Font.Family = 'Courier New'
           Align = Client
           Size.Width = 610.909912109375000000
-          Size.Height = 709.000000000000000000
+          Size.Height = 718.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
           Viewport.Width = 596.900000000000000000
-          Viewport.Height = 701.000000000000000000
+          Viewport.Height = 710.000000000000000000
         end
         object Layout9: TLayout
           Align = Bottom
-          Position.Y = 709.000000000000000000
+          Position.Y = 718.000000000000000000
           Size.Width = 610.909912109375000000
           Size.Height = 115.000000000000000000
           Size.PlatformDefault = False
@@ -475,11 +476,11 @@ object frmMain: TfrmMain
         object sbSteadyState: TScrollBox
           Align = Client
           Size.Width = 610.909912109375000000
-          Size.Height = 824.000000000000000000
+          Size.Height = 833.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
           Viewport.Width = 610.900000000000000000
-          Viewport.Height = 824.000000000000000000
+          Viewport.Height = 833.000000000000000000
         end
       end
     end
@@ -988,12 +989,12 @@ object frmMain: TfrmMain
   object Layout6: TLayout
     Align = Client
     Size.Width = 441.000000000000000000
-    Size.Height = 850.000000000000000000
+    Size.Height = 859.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
     object SliderContainer: TLayout
       Align = Bottom
-      Position.Y = 528.000000000000000000
+      Position.Y = 537.000000000000000000
       Size.Width = 441.000000000000000000
       Size.Height = 322.000000000000000000
       Size.PlatformDefault = False
@@ -1003,7 +1004,7 @@ object frmMain: TfrmMain
       Align = Bottom
       Cursor = crVSplit
       MinSize = 20.000000000000000000
-      Position.Y = 520.000000000000000000
+      Position.Y = 529.000000000000000000
       Size.Width = 441.000000000000000000
       Size.Height = 8.000000000000000000
       Size.PlatformDefault = False
@@ -1012,12 +1013,12 @@ object frmMain: TfrmMain
     object LayoutEditorPanel: TLayout
       Align = Client
       Size.Width = 441.000000000000000000
-      Size.Height = 520.000000000000000000
+      Size.Height = 529.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 1
       object Layout7: TLayout
         Align = Bottom
-        Position.Y = 470.000000000000000000
+        Position.Y = 479.000000000000000000
         Size.Width = 441.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
@@ -1057,7 +1058,7 @@ object frmMain: TfrmMain
       object moAntimony: TSkiaCodeEditor
         Align = Client
         Size.Width = 441.000000000000000000
-        Size.Height = 470.000000000000000000
+        Size.Height = 479.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         Lines.Strings = (
@@ -1105,7 +1106,7 @@ object frmMain: TfrmMain
     Align = Left
     Position.Y = 50.000000000000000000
     Size.Width = 324.000000000000000000
-    Size.Height = 850.000000000000000000
+    Size.Height = 859.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 4
   end
@@ -51648,7 +51649,7 @@ object frmMain: TfrmMain
     Position.X = 765.000000000000000000
     Position.Y = 50.000000000000000000
     Size.Width = 9.000000000000000000
-    Size.Height = 850.000000000000000000
+    Size.Height = 859.000000000000000000
     Size.PlatformDefault = False
   end
 end

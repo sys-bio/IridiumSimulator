@@ -31,6 +31,7 @@ uses
   FMX.Memo.Types, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo,
   FMX.StdCtrls, FMX.Layouts,
   System.Skia, FMX.Skia,
+  System.JSON,
   Generics.Collections,
   SkPlotPaintBox,
   uRR2DSimpleMatrix,
@@ -54,10 +55,10 @@ uses
   FMX.SpinBox, FMX.TabControl,
   FMX.ListBox,
   System.Math.Vectors, FMX.Controls3D,
-  FMX.Layers3D, uSkiaCodeEditor;
+  FMX.Layers3D, uSkiaCodeEditor, uPlotAnnotation;
 
 const
-    VERSION = '0.982            ';
+    VERSION = '0.985';
 
 type
   TfrmMain = class(TForm, IAnalysisContext)
@@ -241,6 +242,35 @@ type
 
     FListOfLoadedDataFiles : TList<TLoadDataFile>;
 
+    { False until the parameter-scan panel is first shown for the current model,
+      at which point its observables are seeded from the time-course selection —
+      once only. Set back to False on a structural model reload so the next
+      model seeds afresh. }
+    FScanObservablesSeeded : Boolean;
+
+    { Stable colour per simulation observable. A series' colour is decided the
+      first time that name is plotted and remembered here, so it never depends
+      on the observable's position in the (alphabetically sorted) selection set.
+      Without this, adding/removing one species re-indexed the palette for every
+      other one, producing repeated colours and a curve changing colour when it
+      was unchecked and rechecked. Reset on a structural model reload. }
+    FSimColorByName : TDictionary<string, TAlphaColor>;
+
+    { Drop every series on the plot — simulation output and loaded overlay data
+      alike — plus the loaded-data bookkeeping. For use when the model itself
+      changes and nothing on the old plot still describes it. }
+    procedure ClearPlotAndLoadedData;
+    procedure ClearLoadedDataFiles;
+
+    { Loaded data overlays are global — independent of the analysis panel. They
+      persist on the plot across panel switches; only the user clears them (Clear
+      Data / a model change) or chooses which is shown (the filename dropdown). }
+    procedure SyncOverlayStyleToStorage;
+
+    { Drop the per-analysis plot-styling snapshots (but not DEFAULT_STYLE_KEY),
+      for use when the model changes and the old panel styling no longer applies. }
+    procedure ClearPanelStyleSnapshots;
+
     procedure CreateSession;
     procedure CreateSliderContainer;
     procedure CreateAnalysisFrames;
@@ -256,7 +286,8 @@ type
     procedure ShowAnalysisFrame(ATarget: TFrame);
 
     procedure SessionModelReloaded(Sender: TObject;  AParameterSetChanged: Boolean);
-    procedure AppendToAntimonySource(const ABlock: string);
+    procedure AppendToAntimonySource(const ABlock: string;
+                                     AReplace: Boolean = False);
 
     { IAnalysisContext }
     function  GetSession: TModelSession;
@@ -267,6 +298,7 @@ type
     procedure PlotData(const AData: T2DMatrix;
                        const AXAxisName: string;
                        const AYAxisNames: TArray<string>);
+    procedure PlotSetXAxisTitle(const ATitle: string);
     procedure PlotClearSimulationSeries;
     procedure PlotAddSeries(ASeries: TObject);
     procedure PlotRedraw;
@@ -295,6 +327,13 @@ uses
 
 const
   DEFAULT_SLIDER_HEIGHT = 322.0;
+
+  { Reserved settings-store key holding the plot's pristine styling, captured
+    once at startup. Restored for any analysis panel that hasn't been visited
+    yet, so a fresh panel starts from defaults (linear axes, autoscale) rather
+    than inheriting the styling the previously used panel left on the shared
+    plot. Never a real ActiveAnalysisKey, so it can't collide with a panel. }
+  DEFAULT_STYLE_KEY = '__default__';
 
   DefaultModel = '''
       // Load a model from disk, type in a model,
@@ -404,12 +443,15 @@ begin
   moAntimony.GutterTextColor := $FF808080;
   moAntimony.Highlighter.UseAntimony;
   moAntimony.Highlighter.AddKeywords(AntimonyKeywords);
+  moAntimony.SelectionColor := claCadetblue;//  claCornflowerblue;
+  moAntimony.CaretColor := claWhite;
 
   //moAntimony.SetText (DefaultModel);
 
   TabControl1.ActiveTab := tbPlot;
 
   FListOfLoadedDataFiles := TList<TLoadDataFile>.Create;
+  FSimColorByName := TDictionary<string, TAlphaColor>.Create;
 
   FireEvent := False;
 
@@ -449,6 +491,11 @@ begin
   Plot.AutoYScaling := True;
   Plot.LegendStyle.Visible := True;
 
+  { Snapshot the pristine plot styling now, before any user edits, as the
+    baseline a never-visited panel restores. Must precede the first
+    ShowAnalysisFrame below. }
+  Plot.SaveSettings(DEFAULT_STYLE_KEY);
+
   FIsModifiedSinceLastSave := False;
 
   chkAutoscaleX.IsChecked := Plot.AutoXScaling;
@@ -470,6 +517,12 @@ begin
   //moAntimony.Font.Size := spFontSize.Value;
   moAntimony.FontSize := spFontSize.Value;
 
+  { Edits to the source must mark the session dirty so the next EnsureLoaded
+    re-parses instead of simulating the previously loaded model. Wired here
+    rather than in the .fmx: TSkiaCodeEditor fires OnChange on text mutation
+    only (not on SetText / load), which is exactly the dirty signal we want. }
+  moAntimony.OnChange := moAntimony1ChangeTracking;
+
   ShowAnalysisFrame(FFrameTimeCourse);   { default view }
 
   FireEvent := True;
@@ -477,7 +530,73 @@ end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
+   ClearLoadedDataFiles;
    FListOfLoadedDataFiles.Free;
+   FSimColorByName.Free;
+end;
+
+{ The list owns its TLoadDataFile entries, which in turn own the cloned series
+  they hold, so both levels are freed here. }
+procedure TfrmMain.ClearLoadedDataFiles;
+var
+  I: Integer;
+begin
+  for I := 0 to FListOfLoadedDataFiles.Count - 1 do
+    FListOfLoadedDataFiles[I].Free;
+  FListOfLoadedDataFiles.Clear;
+
+  cboLoadedFilename.Clear;
+  lblParameterName.Text := 'None';
+end;
+
+procedure TfrmMain.ClearPlotAndLoadedData;
+begin
+  Plot.ClearSeries;
+  ClearLoadedDataFiles;
+  Plot.Redraw;
+end;
+
+{ Drop the per-analysis plot-styling snapshots (but not DEFAULT_STYLE_KEY),
+  for use when the model changes and the old panel styling no longer applies.
+  Delete the three analysis keys individually rather than ClearAllSettings, so
+  the pristine DEFAULT_STYLE_KEY baseline survives a model change and can still
+  style a freshly-visited panel. DeleteSettings is a no-op for absent keys. }
+procedure TfrmMain.ClearPanelStyleSnapshots;
+begin
+  Plot.DeleteSettings('TimeCourse');
+  Plot.DeleteSettings('ParameterScan');
+  Plot.DeleteSettings('SteadyState');
+end;
+
+{ Copy styling the user edited on the plotted data series back into the stored
+  clones, so the dropdown's clear-and-re-add (cboLoadedFilenameChange) re-shows
+  a dataset with the marker colour/shape the user last gave it rather than the
+  as-loaded defaults. Matched by SeriesId; only styling is copied, the stored
+  data points are left as they were. Loaded data is global — not scoped to any
+  analysis panel. }
+procedure TfrmMain.SyncOverlayStyleToStorage;
+var
+  I, J, K: Integer;
+  PS: TPlotSeries;
+  Style: TJSONObject;
+begin
+  for I := 0 to Plot.Series.Count - 1 do
+  begin
+    PS := Plot.Series[I];
+    if PS.SeriesKind <> skData then Continue;
+
+    for J := 0 to FListOfLoadedDataFiles.Count - 1 do
+      for K := 0 to FListOfLoadedDataFiles[J].Series.Count - 1 do
+        if FListOfLoadedDataFiles[J].Series[K].SeriesId = PS.SeriesId then
+        begin
+          Style := PS.SaveStyleToJson;
+          try
+            FListOfLoadedDataFiles[J].Series[K].LoadStyleFromJson(Style);
+          finally
+            Style.Free;
+          end;
+        end;
+  end;
 end;
 
 
@@ -623,6 +742,7 @@ begin
       SBMLString := TFile.ReadAllText(OpenSBMLDialog.FileName);
       if SBMLString = '' then exit;
       FSession.Unload;
+      ClearPlotAndLoadedData;
       //moAntimony.text := uAntimonyAPI.getAntimonyFromSBML(SBMLString);
       moAntimony.SetText (uAntimonyAPI.getAntimonyFromSBML(SBMLString));
       FSession.ClearDirty;
@@ -634,6 +754,7 @@ begin
  if OpenDialogAnt.Execute then
     begin
     FSession.Unload;
+    ClearPlotAndLoadedData;
     //moAntimony.Text := TFile.ReadAllText(OpenDialogAnt.FileName);
     moAntimony.SetText (TFile.ReadAllText(OpenDialogAnt.FileName));
 
@@ -644,12 +765,35 @@ begin
 end;
 
 procedure TfrmMain.mnuNewClick(Sender: TObject);
+var
+  Msg: string;
 begin
+  { New discards the model text along with the plot and every loaded data
+    overlay, and none of it can be recovered — so confirm before wiping.
+    An empty editor has nothing to lose, so don't nag in that case. }
+  if Trim(moAntimony.GetText) <> '' then
+    begin
+    if FIsModifiedSinceLastSave then
+      Msg := 'The model has unsaved changes. Clear it and start a new model?'
+    else
+      Msg := 'Clear the current model and start a new model?';
+
+    if MessageDlg(Msg, TMsgDlgType.mtConfirmation,
+                  [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
+      Exit;
+    end;
+
   //moAntimony.Text := '';
   moAntimony.SetText('');
   FSession.Unload;
-  Plot.ClearSeries;
+  ClearPlotAndLoadedData;
   FFrameTimeCourse.SetSimulationParameters(20, 200);
+
+  { Back to the untitled state — the old file name no longer describes what is
+    in the editor. Set after Unload: the session's state-changed listener
+    rewrites Caption, so this has to be the last word. }
+  FCurrentFileName := 'untitled.txt';
+  Caption := 'Iridium II: ' + FCurrentFileName;
 end;
 
 procedure TfrmMain.mnuQuitClick(Sender: TObject);
@@ -792,8 +936,16 @@ begin
   begin
     { A structurally different model means series names no longer match the
       stored per-analysis styling, so discard it rather than mis-applying it
-      to unrelated series. A compatible in-place edit keeps the styling. }
-    Plot.ClearAllSettings;
+      to unrelated series. A compatible in-place edit keeps the styling.
+      DEFAULT_STYLE_KEY is preserved — the pristine baseline is model-agnostic. }
+    ClearPanelStyleSnapshots;
+    { Observable colours belong to the old model's names; start the new model's
+      palette fresh from the first colour. }
+    FSimColorByName.Clear;
+    TColorManager.ResetCycle;
+    { New parameter set — let the scan panel re-seed its observables from the
+      time-course selection when it is next shown. }
+    FScanObservablesSeeded := False;
     FSliderFrame.ClearSliders;
     FSliderFrame.LoadParams(FSession.GetTunableNames,    { <-- refresh catalogue }
                             FSession.GetTunableValues);
@@ -814,8 +966,9 @@ begin
     decided at reload time by SessionModelReloaded. }
   if not FSession.IsLoaded then
   begin
-    { Model gone -> stored per-analysis plot styling is meaningless. }
-    Plot.ClearAllSettings;
+    { Model gone -> stored per-analysis plot styling is meaningless.
+      DEFAULT_STYLE_KEY is preserved as the model-agnostic baseline. }
+    ClearPanelStyleSnapshots;
     FSliderFrame.ClearSliders;
     { Also hide the panel itself so it doesn't linger from the previous model. }
     if FSliderFrame.ParamPanelVisible then
@@ -880,6 +1033,47 @@ begin
     ATarget.BringToFront;
   end;
 
+  { Pick up editor edits made while another panel was showing, so the scan
+    parameter combo and observable lists describe the current model. Must run
+    before UpdateScanParameterLock, which locks whatever the combo now holds. }
+  if ATarget = FFrameParameterScan then
+    FFrameParameterScan.RefreshFromModelIfStale;
+
+  { The first time the scan panel is shown for this model, seed its observables
+    from the current time-course selection, so a scan starts from the variables
+    the user was already plotting. Once only — thereafter their scan selection
+    is left alone. Runs after RefreshFromModelIfStale so the lists are current. }
+  if (ATarget = FFrameParameterScan) and (not FScanObservablesSeeded) then
+  begin
+    FFrameParameterScan.SetCheckedObservables(FFrameTimeCourse.GetSelectedYAxisNames);
+    FScanObservablesSeeded := True;
+  end;
+
+  { Blank the simulation display on a mode switch — its results must be
+    regenerated by the incoming panel. Loaded data is deliberately left alone:
+    it is global and user-controlled (Clear Data / the filename dropdown), not
+    tied to a panel, so it persists across switches. }
+  Plot.ClearSeriesKind(skSimulation);
+
+  { Restore this panel's chart/axis/legend styling now, not only on the next
+    simulation rerun. Axis styling (log X/Y, manual limits, titles, legend
+    position) lives on a single shared plot object, so without this the plot
+    keeps whatever the previous panel left — e.g. a log axis set here reverts
+    after visiting a panel that ran with linear axes. Data-series styling is
+    excluded from these snapshots (see CaptureStylingJson), so restoring never
+    reformats the loaded data.
+
+    A panel that has never been visited has no saved styling, and would
+    otherwise inherit the shared plot's current state (again, the previous
+    panel's log axis). Restore the pristine default instead, so every panel's
+    first appearance looks the same regardless of what was used before it. }
+  if (ActiveAnalysisKey <> '') and Plot.HasSettings(ActiveAnalysisKey) then
+    Plot.RestoreSettings(ActiveAnalysisKey)
+  else if Plot.HasSettings(DEFAULT_STYLE_KEY) then
+    Plot.RestoreSettings(DEFAULT_STYLE_KEY);
+
+  Plot.Redraw;
+
   if ATarget = FFrameParameterScan then
     FFrameParameterScan.UpdateScanParameterLock
   else
@@ -922,7 +1116,7 @@ end;
 
 procedure TfrmMain.btnSaveClick(Sender: TObject);
 begin
-//
+  mnuSaveClick(Sender);
 end;
 
 procedure TfrmMain.btnScanClick(Sender: TObject);
@@ -937,10 +1131,11 @@ end;
 
 procedure TfrmMain.btnClearDataClick(Sender: TObject);
 begin
+  { The user's explicit control over the loaded data: remove all of it. Loaded
+    data is global, so this clears every dataset regardless of which panel is
+    showing. (A model change also clears it, via ClearPlotAndLoadedData.) }
   Plot.ClearSeriesKind(skData);
-  FListOfLoadedDataFiles.Clear;
-  cboLoadedFilename.Clear;
-  lblParameterName.Text := 'None';
+  ClearLoadedDataFiles;
   Plot.Redraw;
 end;
 
@@ -1017,6 +1212,7 @@ begin
         ClearDataKind := True;
 
      FileName := ExtractFileName(OpenDialog1.FileName);
+     { Loaded data is global; a given file is loaded once. }
      for i := 0 to FListOfLoadedDataFiles.Count - 1 do
          if FileName = FListOfLoadedDataFiles[i].FileName then
             begin
@@ -1040,7 +1236,12 @@ begin
          TPlotSeries (Series.Objects[i]).SeriesId := FileName + '_' + inttostr (i);
          TPlotSeries (Series.Objects[i]).LineVisible := False;
          TPlotSeries (Series.Objects[i]).MarkerStrokeWidth := 1.5;
-         //TPlotSeries (Series.Objects[i]).MarkerFillColor := TPlotSeries (Series.Objects[i]).MarkerStrokeColor;
+         { Markers are always solid, fill matching border. LoadData only paints
+           both when the column name matches a simulation series; otherwise the
+           fill keeps the component default (white), which reads as a hollow
+           marker. The stroke already carries the next palette color in either
+           case, so copying it across covers both. }
+         TPlotSeries (Series.Objects[i]).MarkerFillColor := TPlotSeries (Series.Objects[i]).MarkerStrokeColor;
          TPlotSeries (Series.Objects[i]).MarkerSize := 4;
          end;
 
@@ -1065,6 +1266,14 @@ var i : integer;
 begin
   if not FireEvent then Exit;
 
+  { Clearing the combo (new model / clear data) fires OnChange with no
+    selection — nothing to show, and indexing Items would raise. }
+  if cboLoadedFilename.ItemIndex < 0 then Exit;
+
+  { Preserve any styling the user edited on the dataset currently shown before
+    we replace it, so re-selecting it later re-shows those edits. }
+  SyncOverlayStyleToStorage;
+
   Found := False;
   for i := 0 to FListOfLoadedDataFiles.Count - 1 do
       if cboLoadedFilename.items[cboLoadedFilename.ItemIndex] = FListOfLoadedDataFiles[i].FileName then
@@ -1076,6 +1285,7 @@ begin
          end;
   if Found then
      begin
+     { Show only the selected dataset: current data goes, selected comes in. }
      Plot.ClearSeriesKind(skData);
      for i := 0 to FListOfLoadedDataFiles[Index].Series.Count - 1 do
          Plot.AddSeries(FListOfLoadedDataFiles[Index].Series[i].Clone);
@@ -1090,7 +1300,10 @@ var i : integer;
     StoredSeries : TPlotSeries;
     Found : Boolean;
 begin
+  if cboLoadedFilename.ItemIndex < 0 then Exit;
+
   Found := False;
+  Index := -1;
   for i := 0 to FListOfLoadedDataFiles.Count - 1 do
       if cboLoadedFilename.items[cboLoadedFilename.ItemIndex] = FListOfLoadedDataFiles[i].FileName then
          begin
@@ -1099,6 +1312,7 @@ begin
          Index:= i;
          break;
          end;
+  if not Found then Exit;
 
   for i := 0 to Plot.Series.Count -1 do
       if Plot.Series[i].SeriesKind = skData then
@@ -1130,6 +1344,7 @@ begin
 
   Model := (cboExampleModels.Items.Objects[cboExampleModels.ItemIndex]) as TBuiltInModel;
   FSession.Unload;
+  ClearPlotAndLoadedData;
   moAntimony.SetText (Model.ModelStr);
   FCurrentFileName := 'untitled.txt';
   Caption := 'Iridium II: ' + FCurrentFileName;
@@ -1279,11 +1494,26 @@ var
   end;
 
   procedure AddSeriesForColumn(AColIdx: Integer);
-  var J  : Integer;
+  var
+    J    : Integer;
+    Name : string;
+    C    : TAlphaColor;
   begin
-    Series := TPlotSeries.Create(AData.columnHeader[AColIdx], claBlue);
-    Series.YLabel        := AData.columnHeader[AColIdx];
-    Series.LineColor     := TColorManager.NextColor;
+    Name := AData.columnHeader[AColIdx];
+
+    { Colour is keyed to the observable name, not its slot in the selection.
+      First time we see a name it takes the next palette colour and keeps it;
+      thereafter it is reused, so toggling other observables never recolours
+      this one. }
+    if not FSimColorByName.TryGetValue(Name, C) then
+    begin
+      C := TColorManager.NextColor;
+      FSimColorByName.Add(Name, C);
+    end;
+
+    Series := TPlotSeries.Create(Name, claBlue);
+    Series.YLabel        := Name;
+    Series.LineColor     := C;
     Series.LineWidth     := 2.5;
     Series.MarkerVisible := False;
     for J := 0 to NumRows - 1 do
@@ -1302,8 +1532,6 @@ begin
   if XColIdx < 0 then XColIdx := 0;
   XLabel := AData.columnHeader[XColIdx];
 
-  TColorManager.ResetCycle;
-
   { Plot only the requested Y columns. An empty array yields an empty
     plot - this is intentional, and is what the live-update path needs
     when the user has unchecked every species. }
@@ -1317,6 +1545,11 @@ begin
   Plot.XAxisTitle.Text := XLabel;
   Plot.Redraw;
   TabControl1.ActiveTab := tbPlot;
+end;
+
+procedure TfrmMain.PlotSetXAxisTitle(const ATitle: string);
+begin
+  Plot.XAxisTitle.Text := ATitle;
 end;
 
 procedure TfrmMain.PlotClearSimulationSeries;
@@ -1357,7 +1590,8 @@ begin
   moTextView.text := AString;
 end;
 
-procedure TfrmMain.AppendToAntimonySource(const ABlock: string);
+procedure TfrmMain.AppendToAntimonySource(const ABlock: string;
+  AReplace: Boolean);
 const
   BLOCK_TAG = '// [SliderValues]';
 var
@@ -1365,9 +1599,15 @@ var
   TagPos: Integer;
 begin
   Src := moAntimony.GetText;
-  TagPos := Pos(BLOCK_TAG, Src);
-  if TagPos > 0 then
-    Src := Copy(Src, 1, TagPos - 1).TrimRight;
+  { Replace mode: drop everything from the first tagged block onward, so only
+    the new block remains. Append mode (default): leave existing blocks in
+    place and add the new one at the end. }
+  if AReplace then
+  begin
+    TagPos := Pos(BLOCK_TAG, Src);
+    if TagPos > 0 then
+      Src := Copy(Src, 1, TagPos - 1).TrimRight;
+  end;
   moAntimony.SetText (Src + sLinebreak + ABlock);
 end;
 

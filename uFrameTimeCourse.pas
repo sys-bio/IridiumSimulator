@@ -109,6 +109,7 @@ type
     cmbFilter: TComboBox;
     btnConfigIntegrator: TSpeedButton;
     SkSvgConfig: TSkSvg;
+    chkReplaceValues: TCheckBox;
     procedure btnSimulateClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure btnSliders1Click(Sender: TObject);
@@ -119,6 +120,7 @@ type
     procedure btnSimulateMouseLeave(Sender: TObject);
     procedure cmbFilterChange(Sender: TObject);
     procedure btnConfigIntegratorClick(Sender: TObject);
+    procedure chkReplaceValuesChange(Sender: TObject);
   private
     FContext:            IAnalysisContext;
     FLastData:           T2DMatrix;
@@ -162,7 +164,6 @@ type
     function GetPythonScript(const AntimonyText: string): string;
 
     function  GetSelectedXAxisName:  string;
-    function  GetSelectedYAxisNames: TArray<string>;
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
@@ -170,6 +171,10 @@ type
     procedure SetContext(const AContext: IAnalysisContext);
     procedure SetSimulationParameters(ATimeEnd: Double; ANumPoints: Integer);
     procedure AttachToSliders;
+
+    { The canonical Y-axis selection, for the shell to seed the parameter scan's
+      observables from on that panel's first appearance. }
+    function  GetSelectedYAxisNames: TArray<string>;
   end;
 
 implementation
@@ -741,6 +746,13 @@ begin
   Result := False;
 end;
 
+procedure TFrameTimeCourse.chkReplaceValuesChange(Sender: TObject);
+begin
+  { No action needed here: btnCopySliderValuesToModelClick reads
+    chkReplaceValues.IsChecked at click time. Off (default) = append a new
+    block; on = replace the previous block. }
+end;
+
 procedure TFrameTimeCourse.cmbFilterChange(Sender: TObject);
 begin
   if FContext = nil then Exit;
@@ -912,7 +924,9 @@ begin
   for I := 0 to High(Names) do
     Block := Block + Names[I] + ' = ' + FloatToStr(Values[I]) + sLineBreak;
 
-  FContext.AppendToAntimonySource(Block);
+  { chkReplaceValues off (default) appends a new block each click; on replaces
+    the previously copied block with this one. }
+  FContext.AppendToAntimonySource(Block, chkReplaceValues.IsChecked);
 end;
 
 

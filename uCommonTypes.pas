@@ -29,7 +29,13 @@ begin
 end;
 
 destructor TLoadDataFile.Destroy;
+var
+  I: Integer;
 begin
+  { The clones handed to Series belong to this object — the plot keeps its own
+    copies — so free them along with the list. }
+  for I := 0 to Series.Count - 1 do
+    Series[I].Free;
   Series.Free;
   inherited;
 end;
