@@ -75,6 +75,8 @@ type
     edtScanNPoints: TEdit;
     edtSampleTime: TEdit;
     chkProgressBar: TCheckBox;
+    btnScanUnSelectAll: TButton;
+    btnScanSelectAll: TButton;
 
     procedure rbRangeModeChange(Sender: TObject);
     procedure rbOutputMeasureChange(Sender: TObject);
@@ -105,6 +107,8 @@ type
     procedure edtSampleTimeKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: WideChar; Shift: TShiftState);
     procedure edtSampleTimeExit(Sender: TObject);
+    procedure btnScanSelectAllClick(Sender: TObject);
+    procedure btnScanUnSelectAllClick(Sender: TObject);
 
   private
     FContext:          IAnalysisContext;
@@ -121,6 +125,11 @@ type
     procedure UpdateRangeMode;
     procedure UpdateMeasureMode;
     procedure UpdateSelectedObsLabel;
+
+    { The observable list belonging to the tab the user is looking at, or nil
+      if the active tab isn't one of the four observable tabs. }
+    function  ActiveObservableList: TListBox;
+    procedure SetAllChecked(AList: TListBox; AChecked: Boolean);
 
     procedure CheckNumberKeys (edt : TEdit; var Key: Word;  var KeyChar: WideChar; Shift: TShiftState);
     procedure CheckNumberKeysInteger (edt : TEdit; var Key: Word;  var KeyChar: WideChar; Shift: TShiftState);
@@ -410,6 +419,35 @@ begin
   CollectChecked(lstRatesOfChange);
 
   FSelectedObsNames := Names;
+end;
+
+function TFrameParameterScan.ActiveObservableList: TListBox;
+begin
+  if      TabControl1.ActiveTab = tabFloating      then Result := lstFloating
+  else if TabControl1.ActiveTab = tabBoundary      then Result := lstBoundary
+  else if TabControl1.ActiveTab = tabFluxes        then Result := lstFluxes
+  else if TabControl1.ActiveTab = tabRatesOfChange then Result := lstRatesOfChange
+  else                                                  Result := nil;
+end;
+
+{ Check/uncheck every item in AList in one pass. BeginUpdate keeps the listbox
+  from repainting per item, and FSelectedObsNames is rebuilt once at the end
+  rather than relying on per-item check events. }
+procedure TFrameParameterScan.SetAllChecked(AList: TListBox; AChecked: Boolean);
+var
+  I: Integer;
+begin
+  if AList = nil then Exit;
+
+  AList.BeginUpdate;
+  try
+    for I := 0 to AList.Count - 1 do
+      AList.ListItems[I].IsChecked := AChecked;
+  finally
+    AList.EndUpdate;
+  end;
+
+  UpdateSelectedObsLabel;
 end;
 
 procedure TFrameParameterScan.UpdateRangeMode;
@@ -765,8 +803,12 @@ begin
 
   try
     { Snapshot current plot styling before we destroy this scan's series, so
-      the user's edits survive the rebuild and a later return to this frame. }
-    FContext.PlotBeginRebuild;
+      the user's edits survive the rebuild and a later return to this frame.
+      Skipped on the slider path: OnSliderChanged has already snapshotted and
+      then cleared the series, so snapshotting again here would overwrite the
+      good styling with an empty set. }
+    if not FRunningScan then
+      FContext.PlotBeginRebuild;
 
     { ── 5. Scan loop ── }
     { For overlay mode, clear the plot first so traces don't accumulate
@@ -879,6 +921,13 @@ begin
   TButton(Sender).Enabled := True;
 end;
 
+procedure TFrameParameterScan.btnScanSelectAllClick(Sender: TObject);
+begin
+  { Only the visible tab's list — the other tabs hold different kinds of
+    observable and the user can't see what they'd be agreeing to. }
+  SetAllChecked(ActiveObservableList, True);
+end;
+
 procedure TFrameParameterScan.btnScanSlidersClick(Sender: TObject);
 var
   Names:  TArray<string>;
@@ -912,6 +961,11 @@ begin
   UpdateScanParameterLock;
 
   FContext.SliderContainer.ToggleParamPanel;
+end;
+
+procedure TFrameParameterScan.btnScanUnSelectAllClick(Sender: TObject);
+begin
+  SetAllChecked(ActiveObservableList, False);
 end;
 
 { ── Slider integration ───────────────────────────────────────────────────── }
@@ -1078,6 +1132,13 @@ begin
 
   FRunningScan := True;
   try
+    { Snapshot styling BEFORE the clear below: PlotBeginRebuild captures the
+      styling of the series that are live at that moment, so clearing first
+      would store an empty set and the user's colour edits would be lost on
+      every slider move. btnRunScanClick skips its own PlotBeginRebuild while
+      FRunningScan is set, so this snapshot is the one that survives. }
+    FContext.PlotBeginRebuild;
+
     { btnRunScanClick clears simulation series at different points
       depending on mode (start for overlay, end via PlotData for
       scalar). That's fine when triggered by the button, but with rapid

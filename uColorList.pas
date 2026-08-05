@@ -200,184 +200,143 @@ begin
   Values.AddObject('Blue', TColorItem.Create(claBlue));
   Values.AddObject('Green', TColorItem.Create(claGreen));
 
-  //masterColorList.Values.AddObject('C1', TColorItem.Create(TAlphaColor($FFe60049)));
-  Values.AddObject('C2', TColorItem.Create(TAlphaColor(claDarkViolet)));
+  Values.AddObject('C4', TColorItem.Create(TAlphaColor(claDarkViolet)));
+  Values.AddObject('C5', TColorItem.Create(TAlphaColor($FF0bb4ff)));
+  Values.AddObject('C6', TColorItem.Create(TAlphaColor($FF38A365)));
+  Values.AddObject('C7', TColorItem.Create(TAlphaColor(claRoyalBlue)));
+  Values.AddObject('C8', TColorItem.Create(TAlphaColor($FF9b19f5)));
+  Values.AddObject('C9', TColorItem.Create(TAlphaColor($FFffa300)));
 
-  //masterColorList.Values.AddObject('C3', TColorItem.Create(TAlphaColor($FF0bb4ff)));
-  Values.AddObject('C3', TColorItem.Create(TAlphaColor($FF0bb4ff)));
+  Values.AddObject('DarkTurquoise', TColorItem.Create(claDarkTurquoise));    // 10
+  Values.AddObject('DarkSalmon', TColorItem.Create(claDarkSalmon));          // 11
+  Values.AddObject('DarkOrange', TColorItem.Create(claMediumSeaGreen));      // 12
+  Values.AddObject('IndianRed', TColorItem.Create(claIndianRed));            // 13
+  Values.AddObject('Olive', TColorItem.Create(claCrimson));                  // 14
+  Values.AddObject('SandyBrown', TColorItem.Create(claSandyBrown));          // 15
 
-  Values.AddObject('C4', TColorItem.Create(TAlphaColor($FF50e991)));
-  Values.AddObject('C5', TColorItem.Create(TAlphaColor(claRoyalBlue)));
+  Values.AddObject('Maroon', TColorItem.Create(claMaroon));                  // 16
+  Values.AddObject('ForestGreen', TColorItem.Create(claForestGreen));        // 17
+  Values.AddObject('Firebrick', TColorItem.Create(claFirebrick));            // 18
+  Values.AddObject('SaddleBrown', TColorItem.Create(claSaddleBrown));        // 19
+  Values.AddObject('Sienna', TColorItem.Create(claSienna));                  // 20
 
-  //masterColorList.Values.AddObject('C5', TColorItem.Create(TAlphaColor($FFe6d800)));
-
-  Values.AddObject('C6', TColorItem.Create(TAlphaColor($FF9b19f5)));
-  Values.AddObject('C7', TColorItem.Create(TAlphaColor($FFffa300)));
-  Values.AddObject('LightSalmon', TColorItem.Create(claLightSalmon));
-
-  //masterColorList.Values.AddObject('C8', TColorItem.Create(TAlphaColor($FFdc0ab4)));
-  //masterColorList.Values.AddObject('C9', TColorItem.Create(TAlphaColor($FFb3d4ff)));
- // masterColorList.Values.AddObject('C9', TColorItem.Create(TAlphaColor($FF00bfa0)));
-
-//  masterColorList.Values.AddObject('C1', TColorItem.Create(TAlphaColor($FFea5545)));
-//  masterColorList.Values.AddObject('C2', TColorItem.Create(TAlphaColor($FFf46a9b)));
-//  masterColorList.Values.AddObject('C3', TColorItem.Create(TAlphaColor($FFef9b20)));
-//  masterColorList.Values.AddObject('C4', TColorItem.Create(TAlphaColor($FFedbf33)));
-//  masterColorList.Values.AddObject('C5', TColorItem.Create(TAlphaColor($FFdc0ab4)));
-//  masterColorList.Values.AddObject('C6', TColorItem.Create(TAlphaColor($FFbdcf32)));
-//  masterColorList.Values.AddObject('C7', TColorItem.Create(TAlphaColor($FF87bc45)));
-//  masterColorList.Values.AddObject('C8', TColorItem.Create(TAlphaColor($FF27aeef)));
-//  masterColorList.Values.AddObject('C9', TColorItem.Create(TAlphaColor($FFb33dc6)));
-
-
-  //masterColorList.Values.AddObject('Chocolate', TColorItem.Create(claChocolate));
- // masterColorList.Values.AddObject('Purple', TColorItem.Create(claPurple));
-  //masterColorList.Values.AddObject('Orange', TColorItem.Create(claOrange));
-
-  //masterColorList.Values.AddObject('Coral', TColorItem.Create(claCoral));
-
- // masterColorList.Values.AddObject('LightCoral', TColorItem.Create(claLightCoral));
-  //masterColorList.Values.AddObject('OrangeRed', TColorItem.Create(claOrangeRed));
-  //masterColorList.Values.AddObject('Salmon', TColorItem.Create(claSalmon));
-  //masterColorList.Values.AddObject('Peru', TColorItem.Create(claPeru));
-
-  Values.AddObject('DarkTurquoise', TColorItem.Create(claDarkTurquoise));
-  Values.AddObject('DarkSalmon', TColorItem.Create(claDarkSalmon));
-  Values.AddObject('RosyBrown', TColorItem.Create(claRosyBrown));
-  Values.AddObject('DarkOrange', TColorItem.Create(claDarkOrange));
-  Values.AddObject('LightGoldenrodYellow', TColorItem.Create(claLightGoldenrodYellow));
-  Values.AddObject('IndianRed', TColorItem.Create(claIndianRed));
-  Values.AddObject('Olive', TColorItem.Create(claOlive));
-  Values.AddObject('SandyBrown', TColorItem.Create(claSandyBrown));
-
-  Values.AddObject('DarkRed', TColorItem.Create(claDarkRed));
-  Values.AddObject('Maroon', TColorItem.Create(claMaroon));
-  Values.AddObject('Brown', TColorItem.Create(claBrown));
-  Values.AddObject('ForestGreen', TColorItem.Create(claForestGreen));
-  Values.AddObject('Firebrick', TColorItem.Create(claFirebrick));
-  Values.AddObject('SaddleBrown', TColorItem.Create(claSaddleBrown));
-  Values.AddObject('Sienna', TColorItem.Create(claSienna));
-  Values.AddObject('PaleGoldenrod', TColorItem.Create(claPaleGoldenrod));
-
-  Values.AddObject('LightSkyBlue', TColorItem.Create(claLightSkyBlue));
+  Values.AddObject('LightSkyBlue', TColorItem.Create(claSkyBlue));
   Values.AddObject('Chartreuse', TColorItem.Create(claChartreuse));
   Values.AddObject('Indigo', TColorItem.Create(claIndigo));
-  Values.AddObject('Aquamarine', TColorItem.Create(claAquamarine));
-  Values.AddObject('SeaGreen', TColorItem.Create(claSeaGreen));
-  Values.AddObject('GoldenRod', TColorItem.Create(claGoldenRod));
-  Values.AddObject('Khaki', TColorItem.Create(claKhaki));
-  Values.AddObject('OliveDrab', TColorItem.Create(claOliveDrab));
-  Values.AddObject('YellowGreen', TColorItem.Create(claYellowGreen));
-  Values.AddObject('Gold', TColorItem.Create(claGold));
-  Values.AddObject('LawnGreen', TColorItem.Create(claLawnGreen));
-  Values.AddObject('PaleGreen', TColorItem.Create(claPaleGreen));
-  Values.AddObject('MediumAquamarine', TColorItem.Create(claMediumAquamarine));
-  Values.AddObject('MediumSeaGreen', TColorItem.Create(claMediumSeaGreen));
-  Values.AddObject('DarkGoldenRod', TColorItem.Create(claDarkGoldenRod));
-  Values.AddObject('DarkKhaki', TColorItem.Create(claDarkKhaki));
-  Values.AddObject('DarkOliveGreen', TColorItem.Create(claDarkOliveGreen));
-  Values.AddObject('Darkgreen', TColorItem.Create(claDarkgreen));
-  Values.AddObject('Magenta', TColorItem.Create(claMagenta));
-  Values.AddObject('Crimson', TColorItem.Create(claCrimson));
-  Values.AddObject('LimeGreen', TColorItem.Create(claLimeGreen));
-  Values.AddObject('SpringGreen', TColorItem.Create(claSpringGreen));
-  Values.AddObject('Snow', TColorItem.Create(claSnow));
-  Values.AddObject('MediumSpringGreen', TColorItem.Create(claMediumSpringGreen));
-  Values.AddObject('Tomato', TColorItem.Create(claTomato));
-  Values.AddObject('DarkSeaGreen', TColorItem.Create(claDarkSeaGreen));
-  Values.AddObject('LightSeaGreen', TColorItem.Create(claLightSeaGreen));
-  Values.AddObject('PaleTurquoise', TColorItem.Create(claPaleTurquoise));
-  Values.AddObject('LightCyan', TColorItem.Create(claLightCyan));
-  Values.AddObject('LightBlue', TColorItem.Create(claLightBlue));
-  Values.AddObject('CornFlowerBlue', TColorItem.Create(claCornFlowerBlue));
-  Values.AddObject('DarkBlue', TColorItem.Create(claDarkBlue));
-  Values.AddObject('MediumTurquoise', TColorItem.Create(claMediumTurquoise));
-  Values.AddObject('Turquoise', TColorItem.Create(claTurquoise));
-  Values.AddObject('Aqua', TColorItem.Create(claAqua));
-  Values.AddObject('PowderBlue', TColorItem.Create(claPowderBlue));
-  Values.AddObject('SkyBlue', TColorItem.Create(claSkyBlue));
-  Values.AddObject('RoyalBlue', TColorItem.Create(claRoyalBlue));
-  Values.AddObject('MediumBlue', TColorItem.Create(claMediumBlue));
-  Values.AddObject('MidnightBlue', TColorItem.Create(claMidnightBlue));
-  Values.AddObject('CadetBlue', TColorItem.Create(claCadetBlue));
-  Values.AddObject('DarkCyan', TColorItem.Create(claDarkCyan));
-  Values.AddObject('DeepskyBlue', TColorItem.Create(claDeepskyBlue));
-  Values.AddObject('DodgerBlue', TColorItem.Create(claDodgerBlue));
-
-  Values.AddObject('Navy', TColorItem.Create(claNavy));
-  Values.AddObject('DarkViolet', TColorItem.Create(claDarkViolet));
-  Values.AddObject('DarkOrchid', TColorItem.Create(claDarkOrchid));
-  Values.AddObject('DarkMagenta', TColorItem.Create(claDarkMagenta));
-  Values.AddObject('MediumVioletRed', TColorItem.Create(claMediumVioletRed));
-  Values.AddObject('PaleVioletRed', TColorItem.Create(claPaleVioletRed));
-  Values.AddObject('BlueViolet', TColorItem.Create(claBlueViolet));
-  Values.AddObject('MediumOrchid', TColorItem.Create(claMediumOrchid));
-  Values.AddObject('MediumPurple', TColorItem.Create(claMediumPurple));
-  Values.AddObject('DeepPink', TColorItem.Create(claDeepPink));
-  Values.AddObject('LightPink', TColorItem.Create(claLightPink));
-  Values.AddObject('Orchid', TColorItem.Create(claOrchid));
-  Values.AddObject('Plum', TColorItem.Create(claPlum));
-  Values.AddObject('Thistle', TColorItem.Create(claThistle));
-  Values.AddObject('HotPink', TColorItem.Create(claHotPink));
-  Values.AddObject('Pink', TColorItem.Create(claPink));
-  Values.AddObject('LightSteelBlue', TColorItem.Create(claLightSteelBlue));
-  Values.AddObject('MediumSlateBlue', TColorItem.Create(claMediumSlateBlue));
-  Values.AddObject('LightSlateGray', TColorItem.Create(claLightSlateGray));
-  Values.AddObject('White', TColorItem.Create(claWhite));
-  Values.AddObject('Lightgrey', TColorItem.Create(claLightgrey));
-  Values.AddObject('Gray', TColorItem.Create(claGray));
-  Values.AddObject('SteelBlue', TColorItem.Create(claSteelBlue));
-  Values.AddObject('SlateBlue', TColorItem.Create(claSlateBlue));
-  Values.AddObject('SlateGray', TColorItem.Create(claSlateGray));
-  Values.AddObject('WhiteSmoke', TColorItem.Create(claWhiteSmoke));
-  Values.AddObject('Silver', TColorItem.Create(claSilver));
-  Values.AddObject('DimGray', TColorItem.Create(claDimGray));
-  Values.AddObject('MistyRose', TColorItem.Create(claMistyRose));
-  Values.AddObject('DarkSlateBlue', TColorItem.Create(claDarkSlateBlue));
-  Values.AddObject('DarkSlategray', TColorItem.Create(claDarkSlategray));
-  Values.AddObject('Gainsboro', TColorItem.Create(claGainsboro));
-  Values.AddObject('DarkGray', TColorItem.Create(claDarkGray));
-  Values.AddObject('Black', TColorItem.Create(claBlack));
-  Values.AddObject('Violet', TColorItem.Create(claViolet));
-  Values.AddObject('Moccasin', TColorItem.Create(claMoccasin));
-  Values.AddObject('Fuchsia', TColorItem.Create(claFuchsia));
-
-  Values.AddObject('GhostWhite', TColorItem.Create(claGhostWhite));
-  Values.AddObject('Lavender', TColorItem.Create(claLavender));
-  Values.AddObject('Seashell', TColorItem.Create(claSeashell));
-  Values.AddObject('LightYellow', TColorItem.Create(claLightYellow));
-  Values.AddObject('PapayaWhip', TColorItem.Create(claPapayaWhip));
-  Values.AddObject('NavajoWhite', TColorItem.Create(claNavajoWhite));
-  Values.AddObject('Burlywood', TColorItem.Create(claBurlywood));
-  Values.AddObject('Azure', TColorItem.Create(claAzure));
-  Values.AddObject('Mintcream', TColorItem.Create(claMintcream));
-  Values.AddObject('Honeydew', TColorItem.Create(claHoneydew));
-  Values.AddObject('Linen', TColorItem.Create(claLinen));
-  Values.AddObject('LemonChiffon', TColorItem.Create(claLemonChiffon));
-  Values.AddObject('BlanchedAlmond', TColorItem.Create(claBlanchedAlmond));
-  Values.AddObject('Bisque', TColorItem.Create(claBisque));
-  Values.AddObject('PeachPuff', TColorItem.Create(claPeachPuff));
-  Values.AddObject('Tan', TColorItem.Create(claTan));
-  Values.AddObject('Yellow', TColorItem.Create(claYellow));
-  Values.AddObject('Lime', TColorItem.Create(claLime));
-  Values.AddObject('Cyan', TColorItem.Create(claCyan));
-  Values.AddObject('Teal', TColorItem.Create(claTeal));
-  Values.AddObject('GreenYellow', TColorItem.Create(claGreenYellow));
-  Values.AddObject('LightGreen', TColorItem.Create(claLightGreen));
-
-  Values.AddObject('Silver', TColorItem.Create(claSilver));
-  Values.AddObject('FloralWhite', TColorItem.Create(claFloralWhite));
-  Values.AddObject('White', TColorItem.Create(claWhite));
-  Values.AddObject('Gray', TColorItem.Create(claGray));
-  Values.AddObject('Ivory', TColorItem.Create(claIvory));
-  Values.AddObject('CornSilk', TColorItem.Create(claCornSilk));
-  Values.AddObject('Beige', TColorItem.Create(claBeige));
-  Values.AddObject('OldLace', TColorItem.Create(claOldLace));
-  Values.AddObject('AntiqueWhite', TColorItem.Create(claAntiqueWhite));
-  Values.AddObject('Skyblue', TColorItem.Create(claSkyBlue));
-  Values.AddObject('Wheat', TColorItem.Create(claWheat));
-  Values.AddObject('LavenderBlush', TColorItem.Create(claLavenderBlush));
-  Values.AddObject('AliceBlue', TColorItem.Create(claAliceBlue));
+  Values.AddObject('Aquamarine', TColorItem.Create(claDarkgreen));
+  Values.AddObject('SeaGreen', TColorItem.Create(claMediumBlue));
+//  Values.AddObject('OliveDrab', TColorItem.Create(claOliveDrab));
+//  Values.AddObject('YellowGreen', TColorItem.Create(claYellowGreen));
+//  Values.AddObject('Gold', TColorItem.Create(claGold));
+//  Values.AddObject('LawnGreen', TColorItem.Create(claLawnGreen));
+//  Values.AddObject('PaleGreen', TColorItem.Create(claPaleGreen));
+//  Values.AddObject('MediumAquamarine', TColorItem.Create(claMediumAquamarine));
+//  Values.AddObject('MediumSeaGreen', TColorItem.Create(claMediumSeaGreen));
+//  Values.AddObject('DarkGoldenRod', TColorItem.Create(claDarkGoldenRod));
+//  Values.AddObject('DarkKhaki', TColorItem.Create(claDarkKhaki));
+//  Values.AddObject('DarkOliveGreen', TColorItem.Create(claDarkOliveGreen));
+//  Values.AddObject('Darkgreen', TColorItem.Create(claDarkgreen));
+//  Values.AddObject('Magenta', TColorItem.Create(claMagenta));
+//  Values.AddObject('Crimson', TColorItem.Create(claCrimson));
+//  Values.AddObject('LimeGreen', TColorItem.Create(claLimeGreen));
+//  Values.AddObject('SpringGreen', TColorItem.Create(claSpringGreen));
+//  Values.AddObject('Snow', TColorItem.Create(claSnow));
+//  Values.AddObject('MediumSpringGreen', TColorItem.Create(claMediumSpringGreen));
+//  Values.AddObject('Tomato', TColorItem.Create(claTomato));
+//  Values.AddObject('DarkSeaGreen', TColorItem.Create(claDarkSeaGreen));
+//  Values.AddObject('LightSeaGreen', TColorItem.Create(claLightSeaGreen));
+//  Values.AddObject('PaleTurquoise', TColorItem.Create(claPaleTurquoise));
+//  Values.AddObject('LightCyan', TColorItem.Create(claLightCyan));
+//  Values.AddObject('LightBlue', TColorItem.Create(claLightBlue));
+//  Values.AddObject('CornFlowerBlue', TColorItem.Create(claCornFlowerBlue));
+//  Values.AddObject('DarkBlue', TColorItem.Create(claDarkBlue));
+//  Values.AddObject('MediumTurquoise', TColorItem.Create(claMediumTurquoise));
+//  Values.AddObject('Turquoise', TColorItem.Create(claTurquoise));
+//  Values.AddObject('Aqua', TColorItem.Create(claAqua));
+//  Values.AddObject('PowderBlue', TColorItem.Create(claPowderBlue));
+//  Values.AddObject('SkyBlue', TColorItem.Create(claSkyBlue));
+//  Values.AddObject('RoyalBlue', TColorItem.Create(claRoyalBlue));
+//  Values.AddObject('MediumBlue', TColorItem.Create(claMediumBlue));
+//  Values.AddObject('MidnightBlue', TColorItem.Create(claMidnightBlue));
+//  Values.AddObject('CadetBlue', TColorItem.Create(claCadetBlue));
+//  Values.AddObject('DarkCyan', TColorItem.Create(claDarkCyan));
+//  Values.AddObject('DeepskyBlue', TColorItem.Create(claDeepskyBlue));
+//  Values.AddObject('DodgerBlue', TColorItem.Create(claDodgerBlue));
+//
+//  Values.AddObject('Navy', TColorItem.Create(claNavy));
+//  Values.AddObject('DarkViolet', TColorItem.Create(claDarkViolet));
+//  Values.AddObject('DarkOrchid', TColorItem.Create(claDarkOrchid));
+//  Values.AddObject('DarkMagenta', TColorItem.Create(claDarkMagenta));
+//  Values.AddObject('MediumVioletRed', TColorItem.Create(claMediumVioletRed));
+//  Values.AddObject('PaleVioletRed', TColorItem.Create(claPaleVioletRed));
+//  Values.AddObject('BlueViolet', TColorItem.Create(claBlueViolet));
+//  Values.AddObject('MediumOrchid', TColorItem.Create(claMediumOrchid));
+//  Values.AddObject('MediumPurple', TColorItem.Create(claMediumPurple));
+//  Values.AddObject('DeepPink', TColorItem.Create(claDeepPink));
+//  Values.AddObject('LightPink', TColorItem.Create(claLightPink));
+//  Values.AddObject('Orchid', TColorItem.Create(claOrchid));
+//  Values.AddObject('Plum', TColorItem.Create(claPlum));
+//  Values.AddObject('Thistle', TColorItem.Create(claThistle));
+//  Values.AddObject('HotPink', TColorItem.Create(claHotPink));
+//  Values.AddObject('Pink', TColorItem.Create(claPink));
+//  Values.AddObject('LightSteelBlue', TColorItem.Create(claLightSteelBlue));
+//  Values.AddObject('MediumSlateBlue', TColorItem.Create(claMediumSlateBlue));
+//  Values.AddObject('LightSlateGray', TColorItem.Create(claLightSlateGray));
+//  Values.AddObject('White', TColorItem.Create(claWhite));
+//  Values.AddObject('Lightgrey', TColorItem.Create(claLightgrey));
+//  Values.AddObject('Gray', TColorItem.Create(claGray));
+//  Values.AddObject('SteelBlue', TColorItem.Create(claSteelBlue));
+//  Values.AddObject('SlateBlue', TColorItem.Create(claSlateBlue));
+//  Values.AddObject('SlateGray', TColorItem.Create(claSlateGray));
+//  Values.AddObject('WhiteSmoke', TColorItem.Create(claWhiteSmoke));
+//  Values.AddObject('Silver', TColorItem.Create(claSilver));
+//  Values.AddObject('DimGray', TColorItem.Create(claDimGray));
+//  Values.AddObject('MistyRose', TColorItem.Create(claMistyRose));
+//  Values.AddObject('DarkSlateBlue', TColorItem.Create(claDarkSlateBlue));
+//  Values.AddObject('DarkSlategray', TColorItem.Create(claDarkSlategray));
+//  Values.AddObject('Gainsboro', TColorItem.Create(claGainsboro));
+//  Values.AddObject('DarkGray', TColorItem.Create(claDarkGray));
+//  Values.AddObject('Black', TColorItem.Create(claBlack));
+//  Values.AddObject('Violet', TColorItem.Create(claViolet));
+//  Values.AddObject('Moccasin', TColorItem.Create(claMoccasin));
+//  Values.AddObject('Fuchsia', TColorItem.Create(claFuchsia));
+//
+//  Values.AddObject('GhostWhite', TColorItem.Create(claGhostWhite));
+//  Values.AddObject('Lavender', TColorItem.Create(claLavender));
+//  Values.AddObject('Seashell', TColorItem.Create(claSeashell));
+//  Values.AddObject('LightYellow', TColorItem.Create(claLightYellow));
+//  Values.AddObject('PapayaWhip', TColorItem.Create(claPapayaWhip));
+//  Values.AddObject('NavajoWhite', TColorItem.Create(claNavajoWhite));
+//  Values.AddObject('Burlywood', TColorItem.Create(claBurlywood));
+//  Values.AddObject('Azure', TColorItem.Create(claAzure));
+//  Values.AddObject('Mintcream', TColorItem.Create(claMintcream));
+//  Values.AddObject('Honeydew', TColorItem.Create(claHoneydew));
+//  Values.AddObject('Linen', TColorItem.Create(claLinen));
+//  Values.AddObject('LemonChiffon', TColorItem.Create(claLemonChiffon));
+//  Values.AddObject('BlanchedAlmond', TColorItem.Create(claBlanchedAlmond));
+//  Values.AddObject('Bisque', TColorItem.Create(claBisque));
+//  Values.AddObject('PeachPuff', TColorItem.Create(claPeachPuff));
+//  Values.AddObject('Tan', TColorItem.Create(claTan));
+//  Values.AddObject('Yellow', TColorItem.Create(claYellow));
+//  Values.AddObject('Lime', TColorItem.Create(claLime));
+//  Values.AddObject('Cyan', TColorItem.Create(claCyan));
+//  Values.AddObject('Teal', TColorItem.Create(claTeal));
+//  Values.AddObject('GreenYellow', TColorItem.Create(claGreenYellow));
+//  Values.AddObject('LightGreen', TColorItem.Create(claLightGreen));
+//
+//  Values.AddObject('Silver', TColorItem.Create(claSilver));
+//  Values.AddObject('FloralWhite', TColorItem.Create(claFloralWhite));
+//  Values.AddObject('White', TColorItem.Create(claWhite));
+//  Values.AddObject('Gray', TColorItem.Create(claGray));
+//  Values.AddObject('Ivory', TColorItem.Create(claIvory));
+//  Values.AddObject('CornSilk', TColorItem.Create(claCornSilk));
+//  Values.AddObject('Beige', TColorItem.Create(claBeige));
+//  Values.AddObject('OldLace', TColorItem.Create(claOldLace));
+//  Values.AddObject('AntiqueWhite', TColorItem.Create(claAntiqueWhite));
+//  Values.AddObject('Skyblue', TColorItem.Create(claSkyBlue));
+//  Values.AddObject('Wheat', TColorItem.Create(claWheat));
+//  Values.AddObject('LavenderBlush', TColorItem.Create(claLavenderBlush));
+//  Values.AddObject('AliceBlue', TColorItem.Create(claAliceBlue));
 end;
 
 

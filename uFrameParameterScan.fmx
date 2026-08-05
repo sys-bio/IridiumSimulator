@@ -436,7 +436,7 @@ object FrameParameterScan: TFrameParameterScan
       Position.X = 5.000000000000000000
       Position.Y = 483.000000000000000000
       Size.Width = 312.000000000000000000
-      Size.Height = 320.000000000000000000
+      Size.Height = 329.000000000000000000
       Size.PlatformDefault = False
       Text = ' Observables (check to select) '
       TextSettings.FontColor = claCornsilk
@@ -444,9 +444,9 @@ object FrameParameterScan: TFrameParameterScan
       object TabControl1: TTabControl
         Anchors = [akLeft, akTop, akBottom]
         Position.X = 12.000000000000000000
-        Position.Y = 22.000000000000000000
+        Position.Y = 55.000000000000000000
         Size.Width = 287.000000000000000000
-        Size.Height = 282.000000000000000000
+        Size.Height = 263.000000000000000000
         Size.PlatformDefault = False
         TabHeight = 28.000000000000000000
         TabIndex = 0
@@ -454,13 +454,13 @@ object FrameParameterScan: TFrameParameterScan
         TabPosition = Top
         Sizes = (
           287s
-          254s
+          235s
           287s
-          254s
+          235s
           287s
-          254s
+          235s
           287s
-          254s)
+          235s)
         object tabFloating: TTabItem
           CustomIcon = <
             item
@@ -478,7 +478,7 @@ object FrameParameterScan: TFrameParameterScan
             Align = Client
             Anchors = [akLeft, akTop, akBottom]
             Size.Width = 287.000000000000000000
-            Size.Height = 254.000000000000000000
+            Size.Height = 235.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -488,7 +488,7 @@ object FrameParameterScan: TFrameParameterScan
             ShowCheckboxes = True
             OnChangeCheck = lstObservableCheckChanged
             Viewport.Width = 283.000000000000000000
-            Viewport.Height = 250.000000000000000000
+            Viewport.Height = 231.000000000000000000
           end
         end
         object tabBoundary: TTabItem
@@ -507,7 +507,7 @@ object FrameParameterScan: TFrameParameterScan
           object lstBoundary: TListBox
             Anchors = [akLeft, akTop, akBottom]
             Size.Width = 344.000000000000000000
-            Size.Height = 358.000000000000000000
+            Size.Height = 339.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -536,7 +536,7 @@ object FrameParameterScan: TFrameParameterScan
           object lstFluxes: TListBox
             Align = Client
             Size.Width = 287.000000000000000000
-            Size.Height = 254.000000000000000000
+            Size.Height = 235.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -565,7 +565,7 @@ object FrameParameterScan: TFrameParameterScan
           object lstRatesOfChange: TListBox
             Align = Client
             Size.Width = 287.000000000000000000
-            Size.Height = 254.000000000000000000
+            Size.Height = 235.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
             DisableFocusEffect = True
@@ -578,6 +578,20 @@ object FrameParameterScan: TFrameParameterScan
             Viewport.Height = 151.000000000000000000
           end
         end
+      end
+      object btnScanUnSelectAll: TButton
+        Position.X = 116.000000000000000000
+        Position.Y = 25.000000000000000000
+        TabOrder = 39
+        Text = 'Unselect All'
+        OnClick = btnScanUnSelectAllClick
+      end
+      object btnScanSelectAll: TButton
+        Position.X = 16.000000000000000000
+        Position.Y = 25.000000000000000000
+        TabOrder = 38
+        Text = 'Select All'
+        OnClick = btnScanSelectAllClick
       end
     end
     object grpOutputMeasure: TGroupBox
@@ -641,8 +655,8 @@ object FrameParameterScan: TFrameParameterScan
       end
     end
     object cboColorpalette: TComboBox
-      Position.X = 126.000000000000000000
-      Position.Y = 806.000000000000000000
+      Position.X = 99.000000000000000000
+      Position.Y = 822.000000000000000000
       Size.Width = 142.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
@@ -650,8 +664,8 @@ object FrameParameterScan: TFrameParameterScan
       OnChange = cboColorpaletteChange
     end
     object Label1: TLabel
-      Position.X = 43.000000000000000000
-      Position.Y = 810.000000000000000000
+      Position.X = 16.000000000000000000
+      Position.Y = 826.000000000000000000
       Size.Width = 77.000000000000000000
       Size.Height = 17.000000000000000000
       Size.PlatformDefault = False

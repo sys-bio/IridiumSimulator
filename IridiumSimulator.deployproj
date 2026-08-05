@@ -36,6 +36,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="OSXARM64\Debug\IridiumSimulator.dSYM" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>IridiumSimulator.app\..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF\</RemoteDir>
+            <RemoteName>IridiumSimulator</RemoteName>
+            <DeployClass>ProjectOSXDebug</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="OSXARM64\OSX64ARM_libs\libroadrunner_c_api.dylib" Condition="'$(Config)'=='Release'">
             <RemoteDir>IridiumSimulator.app\Contents\MacOS\</RemoteDir>
             <RemoteName>libroadrunner_c_api.dylib</RemoteName>
