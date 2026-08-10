@@ -14,13 +14,20 @@ var
 
    function loadAntimonyLibrary (var errMsg : string) : boolean;
 
-   function ant_loadSBMLString (str : AnsiString) : integer;
-   function ant_loadAntimonyString (str : AnsiString) : integer;
-   function ant_loadAntimonyStringWithException (str : AnsiString) : integer;
-   function getSBMLFromAntimony (str : AnsiString) : TModelErrorState;
-   function getAntimonyFromSBML (str : AnsiString) : AnsiString;
+   { libantimony and libSBML speak UTF-8 throughout. Every function here
+     takes and returns ordinary Delphi strings and converts at the
+     boundary — see Utf8PtrToString. Nothing in this unit may declare an
+     AnsiString parameter or result for library text: that type carries
+     the SYSTEM codepage, so the compiler would transcode UTF-8 to CP1252
+     (or whatever the machine is set to) in one direction and misread it
+     in the other. }
+   function ant_loadSBMLString (const str : string) : integer;
+   function ant_loadAntimonyString (const str : string) : integer;
+   function ant_loadAntimonyStringWithException (const str : string) : integer;
+   function getSBMLFromAntimony (const str : string) : TModelErrorState;
+   function getAntimonyFromSBML (const str : string) : string;
 
-   function printAllDataFor : AnsiString;
+   function printAllDataFor : string;
 
    function getNumReactions : integer;
    function getSymbolsEquations (return_type : integer) : TArray<string>;
@@ -39,6 +46,7 @@ Uses
   {$ELSE}
   Winapi.Windows,
   {$ENDIF}
+  System.AnsiStrings,
   FMX.Dialogs;
 
 type
@@ -84,53 +92,44 @@ begin
 end;
 
 
-function ant_loadSBMLString (str : AnsiString) : integer;
-var p : PAnsiChar;
-    err : integer;
+{ A UTF-8 byte string from the library, decoded.
+
+  The bytes must NOT be routed through AnsiString: that type carries the
+  system codepage, so the compiler would treat UTF-8 bytes as CP1252 (or
+  whatever the machine is set to) and mangle every non-ASCII character.
+  The same mistake in the other direction — passing a UnicodeString to a
+  parameter declared AnsiString — is what made downloaded BioModels fail
+  to convert: characters like 'τ' or a curly apostrophe became single
+  high bytes, which libSBML rejected as an invalid UTF-8 sequence and
+  reported as "XML content is not well-formed" at the first such line. }
+function Utf8PtrToString (p : PAnsiChar) : string;
+var
+  u : UTF8String;
+  n : Integer;
 begin
-  err := ant_libLoadSBMLString (PAnsiChar (str));
-  if err = -1 then
-     begin
-     p := libGetLastError;
-     raise Exception.Create (AnsiString (p));
-     end;
-  result := err;
+  Result := '';
+  if p = nil then
+    Exit;
+  n := System.AnsiStrings.StrLen (p);
+  SetLength (u, n);
+  if n > 0 then
+    Move (p^, PAnsiChar (u)^, n);
+  Result := string (u);
 end;
 
 
-function ant_loadAntimonyStringWithException (str : AnsiString) : integer;
+function getSBMLFromAntimony (const str : string) : TModelErrorState;
 var p : PAnsiChar;
     err : integer;
+    pendingErr : string;
+    utf8 : UTF8String;
 begin
-  err := libLoadAntimonyString (PAnsiChar (str));
-  result := err;
-end;
-
-
-function ant_loadAntimonyString (str : AnsiString) : integer;
-var p : PAnsiChar;
-    err : integer;
-begin
-  err := libLoadAntimonyString (PAnsiChar (str));
+  utf8 := UTF8String (str);
+  err := libLoadString (PAnsiChar (utf8));
   if err = -1 then
      begin
      p := libGetLastError;
-     raise Exception.Create (AnsiString (p));
-     end;
-  result := err;
-end;
-
-
-function getSBMLFromAntimony (str : AnsiString) : TModelErrorState;
-var p : PAnsiChar;
-    err : integer;
-    pendingErr : AnsiString;
-begin
-  err := libLoadString (PAnsiChar (str));
-  if err = -1 then
-     begin
-     p := libGetLastError;
-     result.errMsg := AnsiString (p);
+     result.errMsg := Utf8PtrToString (p);
      result.ok := false;
      exit;
      end;
@@ -140,10 +139,7 @@ begin
     without initial value). These produce SBML that won't simulate, so
     treat them as load failures here. }
   p := libGetLastError;
-  if p <> nil then
-    pendingErr := AnsiString (p)
-  else
-    pendingErr := '';
+  pendingErr := Utf8PtrToString (p);
   if pendingErr <> '' then
      begin
      result.errMsg := pendingErr;
@@ -152,21 +148,23 @@ begin
      end;
 
   p := libGetSBMLString (libGetMainModuleName());
-  result.sbmlStr := AnsiString (p);
+  result.sbmlStr := Utf8PtrToString (p);
   result.ok := True;
 end;
 
 
-function getAntimonyFromSBML (str : AnsiString) : AnsiString;
+function getAntimonyFromSBML (const str : string) : string;
 var p : PAnsiChar;
+    utf8 : UTF8String;
 begin
-  if ant_libLoadSBMLString (PAnsiChar (str)) = -1 then
+  utf8 := UTF8String (str);
+  if ant_libLoadSBMLString (PAnsiChar (utf8)) = -1 then
      begin
      p := libGetLastError;
-     raise Exception.Create ('Antimony load error: ' + AnsiString (p));
+     raise Exception.Create ('Antimony load error: ' + Utf8PtrToString (p));
      end;
   p := libGetAntimonyString (libGetMainModuleName());
-  result := AnsiString (p);
+  result := Utf8PtrToString (p);
 end;
 
 

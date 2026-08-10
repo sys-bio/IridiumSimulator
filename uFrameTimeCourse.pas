@@ -259,6 +259,12 @@ type
       selector — a re-parse happens on every model reload, and applying
       there would overwrite what the user had just typed. }
     procedure MetadataChanged(AApply: Boolean);
+
+    { Apply the named experiment to this panel and compute it — what
+      Metadata ▸ Run Experiment dispatches here. The compute is the
+      panel's own, so it loads the model itself and reports its own
+      errors. }
+    procedure RunExperiment(const ALabel: string);
     procedure AttachToSliders;
 
     { The canonical Y-axis selection, for the shell to seed the parameter scan's
@@ -444,6 +450,36 @@ begin
     trustworthy. }
   if AApply then
     FSelector.ApplyFirstUsable(FContext.MetaExperiments);
+end;
+
+procedure TFrameTimeCourse.RunExperiment(const ALabel: string);
+begin
+  if (FContext = nil) or (FSelector = nil) then Exit;
+
+  { Load BEFORE applying, which is the whole reason this is not simply
+    "apply then press Simulate". The block has just been edited, so the
+    source is dirty: applying first would validate the @plot's names
+    against the OUTGOING model, and the reload that the compute then
+    triggers would rebuild the selectors underneath the preset. That is
+    what made a changed block need running twice — the first run applied
+    to the old model and the second to the new one. }
+  try
+    if not FContext.Session.EnsureLoaded then
+    begin
+      ShowMessage('Cannot load model: ' + FContext.Session.LastError);
+      Exit;
+    end;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Model load failed: ' + E.Message);
+      Exit;
+    end;
+  end;
+
+  { The reload above re-parsed the block, so this is the fresh set. }
+  FSelector.ApplyLabel(FContext.MetaExperiments, ALabel);
+  RunSimulation;
 end;
 
 procedure TFrameTimeCourse.SnapshotUserSettings;
@@ -855,6 +891,8 @@ end;
 { ── session callbacks ──────────────────────────────────────────────────── }
 
 procedure TFrameTimeCourse.SessionStateChanged(Sender: TObject);
+var
+  Cat: TObservableCategory;
 begin
   { Memo edited — cached matrix is stale; disable live updates. }
   if FContext.Session.IsDirty then
@@ -871,6 +909,14 @@ begin
     lstYAxis.Clear;
     FSelectedYNames.Clear;
     FFirstPopulation := True;
+    { The per-category id caches too, and not merely for tidiness: they are
+      how RepopulateYList decides whether the model's names are known yet
+      (NoModelNamesYet). Left holding the previous model's ids, the next
+      model's @plot preview is rendered from THAT model's list instead —
+      the new panel looks unchanged, and only after loading one model does
+      opening a second go wrong. }
+    for Cat := Low(TObservableCategory) to High(TObservableCategory) do
+      FCategoryIds[Cat].Clear;
   end;
 end;
 

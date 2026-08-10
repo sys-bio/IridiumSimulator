@@ -297,6 +297,18 @@ var
       Result := Latest;
   end;
 
+  { A drawing command with no experiment to belong to. }
+  procedure AddOrphan(ACmd: TMetaCommandBase);
+  var
+    S: TMetaSkippedCommand;
+  begin
+    S.Name    := ACmd.Name;
+    S.Display := ACmd.DisplayName;
+    S.Reason  := 'no @simulate, @scan or @steadystate for it to draw — '
+               + 'add a task command before it, or a source: naming one';
+    FSkipped := FSkipped + [S];
+  end;
+
 begin
   Latest := nil;
 
@@ -328,12 +340,19 @@ begin
       Continue;
     end;
 
+    { A @plot / @output with nothing to attach to — no preceding task and
+      no resolvable source — has no experiment to live in, so no panel
+      would ever show it. Record it rather than dropping it: a block whose
+      only command is a bare @plot otherwise fails completely silently,
+      which reads as "the metadata block was not read at all". }
     if Cmd is TPlotCommand then
     begin
       Src := TPlotCommand(Cmd).Source;
       Exp := OwnerOf(Src);
       if Exp <> nil then
-        Exp.AddPlot(TPlotCommand(Cmd));
+        Exp.AddPlot(TPlotCommand(Cmd))
+      else
+        AddOrphan(Cmd);
       Continue;
     end;
 
@@ -342,7 +361,9 @@ begin
       Src := TOutputCommand(Cmd).Source;
       Exp := OwnerOf(Src);
       if Exp <> nil then
-        Exp.AddOutput(TOutputCommand(Cmd));
+        Exp.AddOutput(TOutputCommand(Cmd))
+      else
+        AddOrphan(Cmd);
       Continue;
     end;
 

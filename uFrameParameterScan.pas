@@ -219,6 +219,10 @@ type
       when a model was OPENED. See uFrameTimeCourse.MetadataChanged. }
     procedure MetadataChanged(AApply: Boolean);
 
+    { Apply the named experiment to this panel and compute it — what
+      Metadata ▸ Run Experiment dispatches here. }
+    procedure RunExperiment(const ALabel: string);
+
     { Replace the checked observables with those in ANames (matched against the
       four observable lists; names not present here are ignored). Used by the
       shell to seed the scan selection from the time-course selection on this
@@ -404,6 +408,32 @@ begin
   for N in Names do
     if (N = AName) or (N = '[' + AName + ']') then
       Exit(N);
+end;
+
+procedure TFrameParameterScan.RunExperiment(const ALabel: string);
+begin
+  if (FContext = nil) or (FSelector = nil) then Exit;
+
+  { Load before applying: the block has just been edited, so the preset
+    must be validated against the incoming model, not the outgoing one,
+    and the reload must not land after the apply and rebuild the
+    selectors underneath it. }
+  try
+    if not FContext.Session.EnsureLoaded then
+    begin
+      ShowMessage('Cannot load model: ' + FContext.Session.LastError);
+      Exit;
+    end;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Model load failed: ' + E.Message);
+      Exit;
+    end;
+  end;
+
+  FSelector.ApplyLabel(FContext.MetaExperiments, ALabel);
+  btnRunScanClick(nil);
 end;
 
 procedure TFrameParameterScan.MetadataChanged(AApply: Boolean);

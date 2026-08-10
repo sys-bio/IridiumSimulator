@@ -417,25 +417,44 @@ end;
 
 function getLorenzAttractor : string;
 begin
-  result := sLineBreak + '// Example of solving ODEs using' + sLineBreak +
+  result := '''
+  // Example of solving ODEs using
 
-  '// using the Lorenz attractor' + sLineBreak
+  // using the Lorenz attractor
 
-  + '// See https://en.wikipedia.org/wiki/Lorenz_system ' + sLineBreak + sLineBreak
+  // See https://en.wikipedia.org/wiki/Lorenz_system
 
-  + '-> u; -sigma*(u - v);' + sLineBreak
-  + '-> v; rho*u - v - u*w;' + sLineBreak
-  + '-> w; -beta*w + u*v;' + sLineBreak + sLineBreak
+  -> u; -sigma*(u - v)
+  -> v; rho*u - v - u*w
+  -> w; -beta*w + u*v;
 
-  + '// Variable initializations' + sLineBreak
-  + 'u = 0' + sLineBreak
-  + 'v = 1' + sLineBreak
-  + 'w = 1.05' + sLineBreak + sLineBreak
+  // Variable initializations
+  u = 0
+  v = 1
+  w = 1.05
 
-  + '// Parameter initializations' + sLineBreak
-  + 'sigma = 10' + sLineBreak
-  + 'rho = 28' + sLineBreak
-  + 'beta = 2.667'
+  // Parameter initializations
+  sigma = 10
+  rho = 28
+  beta = 2.667
+
+  /*
+    @simulate attractor: {
+      timestart: 0,
+      timeend: 40,
+      points: 2500,
+    }
+
+    @plot: {
+      source: attractor,
+      x: u,
+      y: v,
+      title: "Chaotic attractor",
+      xlabel: "u",
+      ylabel: "v",
+    }
+  */
+  ''';
 end;
 
 

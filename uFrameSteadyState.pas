@@ -240,6 +240,10 @@ type
     { The shell re-parsed the model's metadata block. AApply = True only
       when a model was OPENED. See uFrameTimeCourse.MetadataChanged. }
     procedure MetadataChanged(AApply: Boolean);
+
+    { Apply the named experiment to this panel and compute it — what
+      Metadata ▸ Run Experiment dispatches here. }
+    procedure RunExperiment(const ALabel: string);
   end;
 
 implementation
@@ -805,6 +809,32 @@ begin
     Result := nil
   else
     Result := FContext.MetaExperiments;
+end;
+
+procedure TFrameSteadyState.RunExperiment(const ALabel: string);
+begin
+  if (FContext = nil) or (FSelector = nil) then Exit;
+
+  { Load before applying, so the selection is made against the incoming
+    model and the reload cannot land after it. }
+  try
+    if not FContext.Session.EnsureLoaded then
+    begin
+      ShowMessage('Cannot load model: ' + FContext.Session.LastError);
+      Exit;
+    end;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Model load failed: ' + E.Message);
+      Exit;
+    end;
+  end;
+
+  FSelector.ApplyLabel(FContext.MetaExperiments, ALabel);
+  { The block's keys are engine settings; ApplyMetadataToEngine writes
+    them from inside the compute, so there is nothing to apply here. }
+  RecomputeAll;
 end;
 
 procedure TFrameSteadyState.MetadataChanged(AApply: Boolean);

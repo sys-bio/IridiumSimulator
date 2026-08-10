@@ -73,6 +73,14 @@ type
       model open does. }
     procedure ApplyFirstUsable(ASet: TMetaExperimentSet);
 
+    { Select and apply the experiment named ALabel, exactly as picking it
+      from the dropdown would. False when this set has no usable
+      experiment of that label — the caller decides what to say, since
+      the reason (renamed, deleted, or unusable) is theirs to explain.
+      By label, never by index: the set is rebuilt on every re-parse. }
+    function  ApplyLabel(ASet: TMetaExperimentSet;
+                         const ALabel: string): Boolean;
+
     { Show ALabel as the selection without firing OnApply. For a panel
       that has just applied an experiment by another route. }
     procedure ShowLabel(const ALabel: string);
@@ -225,6 +233,25 @@ begin
   ShowLabel(Exp.LabelText);
   if Assigned(FOnApply) then
     FOnApply(Exp, WasUnset);
+end;
+
+function TMetaExperimentSelector.ApplyLabel(ASet: TMetaExperimentSet;
+  const ALabel: string): Boolean;
+var
+  Exp:      TMetaExperiment;
+  WasUnset: Boolean;
+begin
+  Result := False;
+  if (ASet = nil) or (ALabel = '') then Exit;
+
+  Exp := ASet.FindByLabel(ALabel);
+  if (Exp = nil) or (Exp.Kind <> FKind) or (not Exp.Usable) then Exit;
+
+  WasUnset := FActive = '';
+  ShowLabel(ALabel);
+  if Assigned(FOnApply) then
+    FOnApply(Exp, WasUnset);
+  Result := True;
 end;
 
 procedure TMetaExperimentSelector.ShowLabel(const ALabel: string);

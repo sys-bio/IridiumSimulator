@@ -279,7 +279,9 @@ begin
   end;
 
   try
-    SbmlInfo := getSBMLFromAntimony(AnsiString(AntText));
+    { No AnsiString cast: that would re-encode the text to the system
+      codepage and corrupt every non-ASCII character on the way in. }
+    SbmlInfo := getSBMLFromAntimony(AntText);
     if not SbmlInfo.ok then
       raise Exception.Create('Antimony parse failed: ' + SbmlInfo.errMsg);
 

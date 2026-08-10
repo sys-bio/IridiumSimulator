@@ -65,7 +65,8 @@ uses
   FMX.SpinBox, FMX.TabControl,
   FMX.ListBox,
   System.Math.Vectors, FMX.Controls3D,
-  FMX.Layers3D, uSkiaCodeEditor, uPlotAnnotation, uRhoMarkdownViewer;
+  FMX.Layers3D, uSkiaCodeEditor, uPlotAnnotation, uRhoMarkdownViewer,
+  System.Math, System.Threading, uBioModelsCache;
 
 const
     VERSION = '0.985';
@@ -263,6 +264,44 @@ type
       the outgoing frame's leftover series under the incoming frame's key. }
     FSuppressPlotSnapshot: Boolean;
 
+    { The X-axis title PlotData derived from the X column, and the value it
+      held when the last snapshot was taken. A styling snapshot serialises
+      the axis title TEXT along with its font and colour, so restoring it
+      after a rebuild puts the previous X column's name back — which is why
+      changing the X selection redrew the plot but left the label behind.
+      Comparing the restored text against the auto value at snapshot time
+      tells the two cases apart: unchanged means nobody had renamed the
+      axis, so the fresh column name should win; different means the user
+      (or an @plot xlabel) titled it deliberately and it must be kept. }
+    FAutoXTitle:         string;
+    FSnapshotAutoXTitle: string;
+
+    { ── BioModels search ──────────────────────────────────────────────
+      A search box in the top strip whose results drop down under it.
+      Every control here is built in code: the .fmx is multi-megabyte and
+      the dropdown has to be a child of the FORM rather than of the strip,
+      so it can overhang the panels below.
+
+      The cache object is touched only by the search task, which is
+      serialised through FBioSearchRunning / FBioSearchAgain — one search
+      at a time, with at most one more queued. Fetching a model uses its
+      own short-lived cache object, so a click during a search cannot
+      share the HTTP client with it. }
+    FBioCache:         TBiomodelsCache;
+    FBioSearchEdit:    TEdit;
+    FBioSearchList:    TListBox;
+    FBioSearchTimer:   TTimer;
+    { The term the visible results describe, so a reply that arrives after
+      the user has typed on can be recognised as stale and dropped. }
+    FBioSearchTerm:    string;
+    FBioSearchRunning: Boolean;
+    FBioSearchAgain:   Boolean;
+    FBioFetching:      Boolean;
+    { OnChangeTracking does not distinguish typing from an assignment, so
+      the "Loading..." message this code puts in the box would otherwise
+      be searched for. }
+    FBioSuppressSearch: Boolean;
+
     FCurrentFileName : String;
     FireEvent: Boolean;
     FIsModifiedSinceLastSave: Boolean;
@@ -333,6 +372,10 @@ type
     FMetaBarWrite: TButton;
     FMetaBarClose: TButton;
     FMnuMetaApply: TMenuItem;
+    { Metadata ▸ Run Experiment. Its children are rebuilt from the
+      experiment set every time the Metadata menu is opened, so the list
+      describes the block as the editor currently spells it. }
+    FMnuMetaRun:   TMenuItem;
 
     { ── metadata export ────────────────────────────────────────────────────
       Tellurium, SED-ML and COMBINE, all driven from the parsed metadata
@@ -398,6 +441,23 @@ type
 
     procedure CreateMetaBar;
     procedure CreateMetaMenu;
+
+    { BioModels search — see the implementation section for how the pieces
+      fit together. }
+    procedure CreateBioModelsSearch;
+    procedure BioSearchChanged(Sender: TObject);
+    procedure BioSearchKeyDown(Sender: TObject; var Key: Word;
+                               var KeyChar: WideChar; Shift: TShiftState);
+    procedure BioSearchTimerTick(Sender: TObject);
+    procedure StartBioSearch;
+    procedure ShowBioResults(const AResults: TBiomodelArray;
+                             const ATerm: string);
+    procedure ShowBioMessage(const AText: string);
+    procedure PositionBioList;
+    procedure HideBioList;
+    procedure BioResultClick(const Sender: TCustomListBox;
+                             const Item: TListBoxItem);
+    procedure LoadBiomodelSBML(const ASBML, AModelID, ATitle: string);
     procedure ShowMetaBar(const AText: string; AShowApply: Boolean);
     procedure HideMetaBar;
     procedure MetaBarApplyClick(Sender: TObject);
@@ -406,6 +466,9 @@ type
     procedure MetaBarWriteClick(Sender: TObject);
     procedure OutputStateChanged;
     procedure MetaMenuApplyClick(Sender: TObject);
+    procedure MetaMenuOpening(Sender: TObject);
+    procedure RebuildRunExperimentMenu;
+    procedure MetaRunExperimentClick(Sender: TObject);
 
     { Re-read the metadata block from the editor. AApplyToPanels = True only
       on the paths that OPEN a model. }
@@ -653,6 +716,7 @@ begin
   FApplyMetaOnOpen := True;
   CreateMetaBar;
   CreateMetaMenu;
+  CreateBioModelsSearch;
   UpdateExportMenuState;
   OutputStateChanged;
 
@@ -699,6 +763,11 @@ begin
   HelpViewer.OnScroll    := HelpScrolled;
   HelpViewer.OnLinkClick := HelpLinkClicked;
 
+  { The designed title is the auto title until PlotData derives one, so the
+    first rebuild's comparison in PlotEndRebuild has something valid to
+    measure against. }
+  FAutoXTitle := Plot.XAxisTitle.Text;
+
   ShowAnalysisFrame(FFrameTimeCourse);   { default view }
 
   FireEvent := True;
@@ -712,6 +781,7 @@ begin
    { Experiments hold borrowed references into FMeta, so they go first. }
    FExperiments.Free;
    FMeta.Free;
+   FBioCache.Free;
 end;
 
 { The overlay catalogue of the panel showing now. Panels get one on first use,
@@ -997,7 +1067,7 @@ var
 begin
   ASbml  := '';
   AError := '';
-  Info := getSBMLFromAntimony(AnsiString(GetAntimonyText));
+  Info := getSBMLFromAntimony(GetAntimonyText);
   Result := Info.ok;
   if Result then
     ASbml := Info.sbmlStr
@@ -1396,6 +1466,355 @@ begin
   FMetaBarLabel.VertTextAlign := TTextAlign.Center;
 end;
 
+{ ── BioModels search ─────────────────────────────────────────────────────
+  Type in the box at the top right; matching models drop down beneath it;
+  clicking one downloads its SBML, converts it to Antimony and loads it the
+  same way Import SBML does.
+
+  Both the search and the download run off the UI thread — the first search
+  of a session downloads the whole cache document, which is far too slow to
+  do between keystrokes on the main thread. }
+
+procedure TfrmMain.CreateBioModelsSearch;
+var
+  Host: TLayout;
+begin
+  FBioCache := TBiomodelsCache.Create;
+
+  Host := TLayout.Create(Self);
+  Host.Parent := Layout4;
+  Host.Align  := TAlignLayout.Right;
+  Host.Width  := 320;
+
+  FBioSearchEdit := TEdit.Create(Self);
+  FBioSearchEdit.Parent      := Host;
+  FBioSearchEdit.Align       := TAlignLayout.Client;
+  FBioSearchEdit.Margins.Rect := RectF(6, 10, 10, 10);
+  FBioSearchEdit.TextPrompt  := 'Search BioModels';
+  FBioSearchEdit.Hint        := 'Type at least three characters; ' +
+                                'click a result to load that model';
+  FBioSearchEdit.ShowHint    := True;
+  FBioSearchEdit.OnChangeTracking := BioSearchChanged;
+  FBioSearchEdit.OnKeyDown        := BioSearchKeyDown;
+
+  { A child of the FORM, not of the 50-pixel strip, which would clip it to
+    its own height. }
+  FBioSearchList := TListBox.Create(Self);
+  FBioSearchList.Parent      := Self;
+  FBioSearchList.Visible     := False;
+  FBioSearchList.Height      := 300;
+  FBioSearchList.OnItemClick := BioResultClick;
+
+  { Debounce. Searching on every keystroke would queue a search per
+    character typed; 350ms is long enough that ordinary typing produces
+    one search at the end of a word. }
+  FBioSearchTimer := TTimer.Create(Self);
+  FBioSearchTimer.Enabled  := False;
+  FBioSearchTimer.Interval := 350;
+  FBioSearchTimer.OnTimer  := BioSearchTimerTick;
+end;
+
+procedure TfrmMain.BioSearchChanged(Sender: TObject);
+begin
+  if FBioSuppressSearch then Exit;
+
+  FBioSearchTimer.Enabled := False;
+
+  { Below three characters the term matches most of the repository, which
+    is neither useful nor quick to render. }
+  if Length(Trim(FBioSearchEdit.Text)) < 3 then
+  begin
+    HideBioList;
+    Exit;
+  end;
+
+  FBioSearchTimer.Enabled := True;
+end;
+
+procedure TfrmMain.BioSearchKeyDown(Sender: TObject; var Key: Word;
+  var KeyChar: WideChar; Shift: TShiftState);
+begin
+  if Key = vkEscape then
+  begin
+    HideBioList;
+    Key := 0;
+  end
+  else if Key = vkReturn then
+  begin
+    { Don't make the user wait out the debounce. }
+    FBioSearchTimer.Enabled := False;
+    StartBioSearch;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmMain.BioSearchTimerTick(Sender: TObject);
+begin
+  FBioSearchTimer.Enabled := False;
+  StartBioSearch;
+end;
+
+procedure TfrmMain.StartBioSearch;
+var
+  Term: string;
+begin
+  Term := Trim(FBioSearchEdit.Text);
+  if Term = '' then
+  begin
+    HideBioList;
+    Exit;
+  end;
+
+  FBioSearchTerm := Term;
+
+  { One search at a time, with at most one queued behind it. The slow part
+    is the cache download the first search does, and a newer term needs it
+    just the same — so wait for it rather than starting a second. }
+  if FBioSearchRunning then
+  begin
+    FBioSearchAgain := True;
+    Exit;
+  end;
+
+  FBioSearchRunning := True;
+  ShowBioMessage('Searching...');
+
+  TTask.Run(
+    procedure
+    var
+      Res:    TBiomodelArray;
+      Err:    string;
+      Wanted: string;
+    begin
+      Wanted := Term;
+      Err    := '';
+      try
+        Res := FBioCache.Search(Wanted, 40);
+      except
+        on E: Exception do
+        begin
+          Res := nil;
+          Err := E.Message;
+        end;
+      end;
+
+      TThread.Queue(nil,
+        procedure
+        begin
+          FBioSearchRunning := False;
+
+          if Err <> '' then
+            ShowBioMessage('Search failed: ' + Err)
+          else if Wanted = FBioSearchTerm then
+            { Stale otherwise: the user typed on while this was running,
+              and the queued search below is about to replace it. }
+            ShowBioResults(Res, Wanted);
+
+          if FBioSearchAgain then
+          begin
+            FBioSearchAgain := False;
+            StartBioSearch;
+          end;
+        end);
+    end);
+end;
+
+procedure TfrmMain.ShowBioResults(const AResults: TBiomodelArray;
+  const ATerm: string);
+var
+  I:    Integer;
+  Item: TListBoxItem;
+  Desc: string;
+begin
+  if Length(AResults) = 0 then
+  begin
+    ShowBioMessage('No models match "' + ATerm + '"');
+    Exit;
+  end;
+
+  FBioSearchList.BeginUpdate;
+  try
+    FBioSearchList.Clear;
+    for I := 0 to High(AResults) do
+    begin
+      Desc := AResults[I].Title;
+      if Desc = '' then
+        Desc := AResults[I].Name;
+
+      Item := TListBoxItem.Create(FBioSearchList);
+      Item.Parent := FBioSearchList;
+      Item.Text   := AResults[I].ID + '   ' + Desc;
+      { The id is what GetModel needs; the row text is for reading. }
+      Item.TagString := AResults[I].ID;
+      Item.Hint      := Trim(AResults[I].Authors + '  ' + AResults[I].Journal +
+                             '  ' + AResults[I].Date);
+      Item.ShowHint  := Item.Hint <> '';
+    end;
+  finally
+    FBioSearchList.EndUpdate;
+  end;
+
+  PositionBioList;
+end;
+
+{ A one-row list saying what is going on. The row carries no id, so
+  clicking it does nothing. }
+procedure TfrmMain.ShowBioMessage(const AText: string);
+var
+  Item: TListBoxItem;
+begin
+  FBioSearchList.BeginUpdate;
+  try
+    FBioSearchList.Clear;
+    Item := TListBoxItem.Create(FBioSearchList);
+    Item.Parent    := FBioSearchList;
+    Item.Text      := AText;
+    Item.TagString := '';
+    Item.Enabled   := False;
+  finally
+    FBioSearchList.EndUpdate;
+  end;
+
+  PositionBioList;
+end;
+
+procedure TfrmMain.PositionBioList;
+var
+  P: TPointF;
+  W: Single;
+begin
+  W := 520;
+  if W > ClientWidth - 16 then
+    W := ClientWidth - 16;
+
+  { Hang the list from the bottom-right corner of the box, so it grows
+    leftwards and never runs off the right edge of the window. }
+  P := FBioSearchEdit.LocalToAbsolute(
+         PointF(FBioSearchEdit.Width, FBioSearchEdit.Height + 2));
+
+  FBioSearchList.Width      := W;
+  FBioSearchList.Position.X := Max(8, P.X - W);
+  FBioSearchList.Position.Y := P.Y;
+  FBioSearchList.Visible    := True;
+  FBioSearchList.BringToFront;
+end;
+
+procedure TfrmMain.HideBioList;
+begin
+  if FBioSearchList = nil then Exit;
+  FBioSearchList.Visible := False;
+  FBioSearchList.Clear;
+end;
+
+procedure TfrmMain.BioResultClick(const Sender: TCustomListBox;
+  const Item: TListBoxItem);
+var
+  ModelID: string;
+  Title:   string;
+begin
+  if Item = nil then Exit;
+
+  ModelID := Item.TagString;
+  if ModelID = '' then Exit;   { a status row, not a result }
+
+  { One download at a time; the button-equivalent here is the row itself,
+    and a second click while the first is in flight would race it. }
+  if FBioFetching then Exit;
+
+  Title := Item.Text;
+  HideBioList;
+
+  FBioFetching := True;
+  FBioSearchEdit.Enabled := False;
+  FBioSuppressSearch := True;
+  try
+    FBioSearchEdit.Text := 'Loading ' + ModelID + '...';
+  finally
+    FBioSuppressSearch := False;
+  end;
+
+  TTask.Run(
+    procedure
+    var
+      SBML: string;
+      Err:  string;
+      Fetch: TBiomodelsCache;
+    begin
+      SBML := '';
+      Err  := '';
+      { Its own cache object: the shared one may be mid-search on the
+        search task, and they would be sharing an HTTP client. }
+      Fetch := TBiomodelsCache.Create;
+      try
+        try
+          SBML := Fetch.GetModel(ModelID);
+        except
+          on E: Exception do
+            Err := E.Message;
+        end;
+      finally
+        Fetch.Free;
+      end;
+
+      TThread.Queue(nil,
+        procedure
+        begin
+          FBioFetching := False;
+          FBioSearchEdit.Enabled := True;
+          FBioSuppressSearch := True;
+          try
+            FBioSearchEdit.Text := '';
+          finally
+            FBioSuppressSearch := False;
+          end;
+
+          if Err <> '' then
+          begin
+            ShowMessage('Could not download ' + ModelID + ': ' + Err);
+            Exit;
+          end;
+
+          LoadBiomodelSBML(SBML, ModelID, Title);
+        end);
+    end);
+end;
+
+{ The same route Import SBML takes, so a downloaded model arrives in the
+  same state as an opened one: nothing computed, no stale plot, and the
+  metadata block (SBML has none, but the conversion may produce comments)
+  parsed on the way in. }
+procedure TfrmMain.LoadBiomodelSBML(const ASBML, AModelID, ATitle: string);
+var
+  Ant: string;
+begin
+  if Trim(ASBML) = '' then
+  begin
+    ShowMessage(AModelID + ' returned an empty document.');
+    Exit;
+  end;
+
+  Ant := uAntimonyAPI.getAntimonyFromSBML(ASBML);
+  if Trim(Ant) = '' then
+  begin
+    ShowMessage('Could not convert ' + AModelID + ' to Antimony. ' +
+                'The model may use SBML features Antimony cannot express.');
+    Exit;
+  end;
+
+  FSession.Unload;
+  ClearPlotAndLoadedData;
+  moAntimony.SetText(Ant);
+
+  { Downloaded, not opened from disk: no path, so Save prompts for one. }
+  FCurrentFileName := AModelID + '.ant';
+  FCurrentFilePath := '';
+  Caption := 'Iridium II: ' + FCurrentFileName;
+  FSession.ClearDirty;
+  FIsModifiedSinceLastSave := False;
+
+  ParseMetadata(True);
+end;
+
 procedure TfrmMain.CreateMetaMenu;
 var
   Top:  TMenuItem;
@@ -1404,13 +1823,25 @@ begin
   { Built in code so the .fmx — which is multi-megabyte — does not have to
     be edited for it. }
   Top := TMenuItem.Create(Self);
-  Top.Parent := MainMenu1;
+  MainMenu1.InsertObject(2, Top);
   Top.Text   := 'Metadata';
+  { Opening the menu re-reads the block from the editor, so the run list
+    describes what is typed there now rather than what was parsed at the
+    last reload. Without this, editing a block and going straight to the
+    menu would offer the previous set of labels. }
+  Top.OnClick := MetaMenuOpening;
 
   Item := TMenuItem.Create(Self);
   Item.Parent  := Top;
   Item.Text    := 'Experiments and Diagnostics...';
   Item.OnClick := MetaBarViewClick;
+
+  { Apply an experiment to its own panel and compute it. The one place in
+    Iridium where metadata causes a computation — which is why it is
+    named for what it does, and why nothing else in the feature does it. }
+  FMnuMetaRun := TMenuItem.Create(Self);
+  FMnuMetaRun.Parent := Top;
+  FMnuMetaRun.Text   := 'Run Experiment';
 
   Item := TMenuItem.Create(Self);
   Item.Parent := Top;
@@ -1438,6 +1869,98 @@ end;
 procedure TfrmMain.MetaBarViewClick(Sender: TObject);
 begin
   ShowAnalysisFrame(FFrameMetadata);
+end;
+
+procedure TfrmMain.MetaMenuOpening(Sender: TObject);
+begin
+  { A parse, never an apply: opening a menu must not write into the
+    user's controls. This refreshes the experiment set and diagnostics
+    from the current editor text, which is what the run list is built
+    from. }
+  ParseMetadata(False);   { rebuilds the run list on its way out }
+end;
+
+{ One row per experiment, labelled as the selector labels it. Unusable
+  ones are listed and disabled, carrying their reason, for the same
+  reason the selector lists them (C5): the user is looking here for the
+  thing that is missing. }
+procedure TfrmMain.RebuildRunExperimentMenu;
+var
+  I:    Integer;
+  Exp:  TMetaExperiment;
+  Item: TMenuItem;
+begin
+  if FMnuMetaRun = nil then Exit;
+
+  while FMnuMetaRun.ItemsCount > 0 do
+    FMnuMetaRun.Items[0].Free;
+
+  if (FExperiments = nil) or (FExperiments.Count = 0) then
+  begin
+    { An always-empty submenu is a dead end. Say why it is empty. }
+    Item := TMenuItem.Create(Self);
+    Item.Parent  := FMnuMetaRun;
+    Item.Text    := 'No experiments in this model';
+    Item.Enabled := False;
+    Exit;
+  end;
+
+  for I := 0 to FExperiments.Count - 1 do
+  begin
+    Exp := FExperiments[I];
+    Item := TMenuItem.Create(Self);
+    Item.Parent    := FMnuMetaRun;
+    Item.Text      := Exp.DisplayText;
+    { By label, never by index: the set is rebuilt wholesale on every
+      re-parse, and this menu outlives the objects it was built from. }
+    Item.TagString := Exp.LabelText;
+    Item.Enabled   := Exp.Usable;
+    Item.OnClick   := MetaRunExperimentClick;
+  end;
+end;
+
+procedure TfrmMain.MetaRunExperimentClick(Sender: TObject);
+var
+  ALabel: string;
+  Exp:    TMetaExperiment;
+begin
+  if not (Sender is TMenuItem) then Exit;
+  ALabel := TMenuItem(Sender).TagString;
+
+  if FExperiments = nil then Exit;
+  Exp := FExperiments.FindByLabel(ALabel);
+  if Exp = nil then
+  begin
+    { The block was edited between the menu being built and this click. }
+    ShowMessage('"' + ALabel + '" is no longer defined in this model.');
+    Exit;
+  end;
+  if not Exp.Usable then
+  begin
+    ShowMessage('This experiment cannot be used: ' + Exp.Reason);
+    Exit;
+  end;
+
+  { Switch to the panel that owns the task kind first, so the run happens
+    where the user can watch it, and so the frame's compute plots onto the
+    panel's own styling. }
+  case Exp.Kind of
+    mekTimeCourse:
+      begin
+        ShowAnalysisFrame(FFrameTimeCourse);
+        FFrameTimeCourse.RunExperiment(ALabel);
+      end;
+    mekScan:
+      begin
+        ShowAnalysisFrame(FFrameParameterScan);
+        FFrameParameterScan.RunExperiment(ALabel);
+      end;
+    mekSteadyState:
+      begin
+        ShowAnalysisFrame(FFrameSteadyState);
+        FFrameSteadyState.RunExperiment(ALabel);
+      end;
+  end;
 end;
 
 { ── @output: writing the data files a block describes ────────────────────── }
@@ -1672,6 +2195,7 @@ begin
   if FFrameMetadata <> nil then
     FFrameMetadata.Refresh;
   UpdateExportMenuState;
+  RebuildRunExperimentMenu;
 end;
 
 procedure TfrmMain.ApplyMetadataToPanels;
@@ -2604,6 +3128,9 @@ begin
     if ActiveAnalysisKey <> '' then
       Plot.SaveSettings(ActiveAnalysisKey);
   FSuppressPlotSnapshot := False;
+  { What the X title would be if nobody had renamed it — the yardstick
+    PlotEndRebuild measures the restored title against. }
+  FSnapshotAutoXTitle := FAutoXTitle;
 end;
 
 procedure TfrmMain.PlotEndRebuild;
@@ -2613,6 +3140,15 @@ begin
     before it has anything stored. }
   if (ActiveAnalysisKey <> '') and Plot.HasSettings(ActiveAnalysisKey) then
     Plot.RestoreSettings(ActiveAnalysisKey);
+
+  { The restore just reinstated the snapshot's X title. Where that title was
+    the previous X column's name rather than something the user chose, the
+    column PlotData has just plotted against is the right label. }
+  if (FAutoXTitle <> '')
+     and (Plot.XAxisTitle.Text = FSnapshotAutoXTitle)
+     and (Plot.XAxisTitle.Text <> FAutoXTitle) then
+    Plot.XAxisTitle.Text := FAutoXTitle;
+
   Plot.Redraw;
 end;
 
@@ -2686,6 +3222,7 @@ begin
   end;
 
   Plot.XAxisTitle.Text := XLabel;
+  FAutoXTitle := XLabel;
   Plot.Redraw;
   TabControl1.ActiveTab := tbPlot;
 end;
