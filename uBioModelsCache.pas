@@ -1,4 +1,4 @@
-unit uBioModelsCache;
+﻿unit uBioModelsCache;
 
 interface
 
@@ -211,9 +211,8 @@ begin
   FLoaded := False;
 end;
 
-function TBiomodelsCache.Search(
-  const Term: string;
-  Limit: Integer): TBiomodelArray;
+
+function TBiomodelsCache.Search(const Term: string; Limit: Integer): TBiomodelArray;
 var
   LowerTerm: string;
   Count: Integer;
@@ -258,9 +257,7 @@ begin
   end;
 end;
 
-function TBiomodelsCache.GetStoreFileURL(
-  const ModelID: string;
-  out FileName: string): string;
+function TBiomodelsCache.GetStoreFileURL(const ModelID: string; out FileName: string): string;
 var
   Text: string;
   Contents: TJSONArray;
@@ -318,8 +315,7 @@ begin
     [ModelID]);
 end;
 
-function TBiomodelsCache.GetModel(
-  const ModelID: string): string;
+function TBiomodelsCache.GetModel(const ModelID: string): string;
 var
   NormalizedID: string;
   FileName: string;

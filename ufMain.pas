@@ -426,6 +426,7 @@ type
     procedure UpdateExportMenuState;
     procedure ExportTelluriumScript;
     procedure ExportSedML;
+    function  SbmlRootNamespace(const ASbml: string): string;
     procedure ExportOmexArchive;
     { Somewhere to write to, defaulted from the model's own name. }
     function  AskExportPath(const ATitle, AFilter, ADefaultExt: string;
@@ -1145,6 +1146,38 @@ begin
   end;
 end;
 
+{ The default namespace declared on the <sbml> root of ASbml, which is what
+  the SED-ML's XPath targets have to be resolved against. Empty when it
+  cannot be found, in which case the exporter keeps its own default rather
+  than writing something wrong. Deliberately a text scan: the level and
+  version of what libantimony emits is not ours to assume, and pulling in
+  an XML parser to read one attribute would be a poor trade. }
+function TfrmMain.SbmlRootNamespace(const ASbml: string): string;
+var
+  Start, Stop, Tag: Integer;
+  Head: string;
+begin
+  Result := '';
+
+  Tag := Pos('<sbml', ASbml);
+  if Tag = 0 then Exit;
+
+  Stop := Pos('>', ASbml, Tag);
+  if Stop = 0 then Exit;
+  Head := Copy(ASbml, Tag, Stop - Tag + 1);
+
+  { xmlns=, not xmlns:something= — the default namespace is the one the
+    unprefixed element names are in. }
+  Start := Pos('xmlns="', Head);
+  if Start = 0 then Exit;
+  Inc(Start, Length('xmlns="'));
+
+  Stop := Pos('"', Head, Start);
+  if Stop = 0 then Exit;
+
+  Result := Copy(Head, Start, Stop - Start);
+end;
+
 procedure TfrmMain.ExportSedML;
 var
   Exporter: TSedMLExporter;
@@ -1183,6 +1216,10 @@ begin
   Symbols  := TRoadRunnerSymbolProvider.Create(FSession);
   Exporter := TSedMLExporter.Create(FMeta, Symbols);
   try
+    { So the sbml: prefix the targets use is declared as the namespace this
+      model is actually in. }
+    if SbmlRootNamespace(Sbml) <> '' then
+      Exporter.SbmlNamespace := SbmlRootNamespace(Sbml);
     try
       Exporter.ExportToFile(Path);
     except
@@ -1249,6 +1286,8 @@ begin
   Symbols  := TRoadRunnerSymbolProvider.Create(FSession);
   Exporter := TSedMLExporter.Create(FMeta, Symbols);
   try
+    if SbmlRootNamespace(Sbml) <> '' then
+      Exporter.SbmlNamespace := SbmlRootNamespace(Sbml);
     try
       { The archive carries the SBML, the SED-ML, the original Antimony
         with its metadata block, and Dublin Core from @meta. }

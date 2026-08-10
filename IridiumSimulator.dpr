@@ -33,6 +33,7 @@ uses
   Syntax.Code.Antimony in 'RichMemo\Syntax.Code.Antimony.pas',
   Syntax.Code in 'RichMemo\Syntax.Code.pas',
   uBuiltInModels in 'uBuiltInModels.pas',
+  uBioModelsCache in 'uBioModelsCache.pas',
   Syntax.Code.Pascal in 'RichMemo\Syntax.Code.Pascal.pas',
   ufBar3DWindow in 'ufBar3DWindow.pas' {frmBar3D},
   U3DBarGraph in '..\T3DBarGraph-main\U3DBarGraph.pas',

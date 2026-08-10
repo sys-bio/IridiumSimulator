@@ -224,6 +224,7 @@
         <DCCReference Include="RichMemo\Syntax.Code.Antimony.pas"/>
         <DCCReference Include="RichMemo\Syntax.Code.pas"/>
         <DCCReference Include="uBuiltInModels.pas"/>
+        <DCCReference Include="uBioModelsCache.pas"/>
         <DCCReference Include="RichMemo\Syntax.Code.Pascal.pas"/>
         <DCCReference Include="ufBar3DWindow.pas">
             <Form>frmBar3D</Form>
@@ -244,6 +245,27 @@
         <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotJsonUtils.pas"/>
         <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotMapper.pas"/>
         <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotSeries.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Types.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Lexer.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Ast.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Registry.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Parser.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Validate.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Model.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Writer.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Python.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Types.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Export.pas"/>
+        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Omex.pas"/>
+        <DCCReference Include="uMetaSymbolProvider.pas"/>
+        <DCCReference Include="uMetaExperiments.pas"/>
+        <DCCReference Include="uMetaSelector.pas"/>
+        <DCCReference Include="uMetaOutput.pas"/>
+        <DCCReference Include="uFrameMetadata.pas">
+            <Form>FrameMetadata</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <DCCReference Include="uMySplitter.pas"/>
         <DCCReference Include="ufConfigureCVODE.pas">
             <Form>frmConfigCVODE</Form>
@@ -451,6 +473,12 @@
                 <DeployFile LocalName="Win64\Debug\IridiumSimulator.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>IridiumSimulator.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\IridiumSimulator.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>IridiumSimulator.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

@@ -118,6 +118,46 @@ begin
 end;
 
 
+function ant_loadSBMLString (const str : string) : integer;
+var p : PAnsiChar;
+    err : integer;
+    utf8 : UTF8String;
+begin
+  utf8 := UTF8String (str);
+  err := ant_libLoadSBMLString (PAnsiChar (utf8));
+  if err = -1 then
+     begin
+     p := libGetLastError;
+     raise Exception.Create (Utf8PtrToString (p));
+     end;
+  result := err;
+end;
+
+
+function ant_loadAntimonyStringWithException (const str : string) : integer;
+var utf8 : UTF8String;
+begin
+  utf8 := UTF8String (str);
+  result := libLoadAntimonyString (PAnsiChar (utf8));
+end;
+
+
+function ant_loadAntimonyString (const str : string) : integer;
+var p : PAnsiChar;
+    err : integer;
+    utf8 : UTF8String;
+begin
+  utf8 := UTF8String (str);
+  err := libLoadAntimonyString (PAnsiChar (utf8));
+  if err = -1 then
+     begin
+     p := libGetLastError;
+     raise Exception.Create (Utf8PtrToString (p));
+     end;
+  result := err;
+end;
+
+
 function getSBMLFromAntimony (const str : string) : TModelErrorState;
 var p : PAnsiChar;
     err : integer;
@@ -168,11 +208,11 @@ begin
 end;
 
 
-function printAllDataFor : AnsiString;
+function printAllDataFor : string;
 var p : PAnsiChar;
 begin
   p := libPrintAllDataFor (libGetMainModuleName());
-  result := AnsiString (p);
+  result := Utf8PtrToString (p);
 end;
 
 
@@ -201,10 +241,11 @@ begin
   begin
     for i := 0 to numSymbols - 1 do
     begin
-      if StringPtrArray^[i] <> nil then
-        Result[i] := string(StringPtrArray^[i])
-      else
-        Result[i] := '';
+      { Utf8PtrToString, not string(): the cast would read these bytes in
+        the system codepage, so an identifier or equation containing a
+        non-ASCII character would come back mangled — and identifiers are
+        matched by name all over Iridium. }
+      Result[i] := Utf8PtrToString (StringPtrArray^[i]);
     end;
   end;
 end;
@@ -223,10 +264,11 @@ begin
   begin
     for i := 0 to numSymbols - 1 do
     begin
-      if StringPtrArray^[i] <> nil then
-        Result[i] := string(StringPtrArray^[i])
-      else
-        Result[i] := '';
+      { Utf8PtrToString, not string(): the cast would read these bytes in
+        the system codepage, so an identifier or equation containing a
+        non-ASCII character would come back mangled — and identifiers are
+        matched by name all over Iridium. }
+      Result[i] := Utf8PtrToString (StringPtrArray^[i]);
     end;
   end;
 
@@ -251,7 +293,11 @@ begin
     if FLibHandle = 0 then
        begin
        errMsg := 'Antimony library could not be loaded';
+       { Exit, or the assignment below overwrites this and the failure is
+         reported by whichever GetProcAddress raises first — which says
+         a function is missing rather than that the DLL is absent. }
        result := False;
+       exit;
        end;
 {$ENDIF}
 

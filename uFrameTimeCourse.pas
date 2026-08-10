@@ -680,6 +680,14 @@ begin
           Known.Add(CanonicalModelName(ModelId), ModelId);
       end;
 
+    { 'time' belongs to no observable category — it is the independent
+      variable — but a block may legitimately put it on the y axis, and the
+      block is authoritative. Leaving it out of Known made Iridium drop it
+      silently while the SED-ML export and Tellurium honoured it, so the
+      same file drew different figures in different tools. }
+    if (Known.Count > 0) and (not Known.ContainsKey(TIME_COLUMN_LABEL)) then
+      Known.Add(TIME_COLUMN_LABEL, TIME_COLUMN_LABEL);
+
     { No model loaded yet, so nothing can be validated. Leave the request
       standing — this is the ordinary case when a model has just been
       opened, and consuming it here is exactly the bug this whole
@@ -1182,6 +1190,27 @@ begin
         Exit;
       end;
 
+      { 'time' is not an observable and so belongs to no category, but it
+        is a legitimate y axis — plotting it against itself is only the
+        diagonal, though against a species on x it is a perfectly ordinary
+        thing to want. It has to appear here or the list would deny a
+        selection the panel is honouring. Under the 'All' filter only,
+        like any row whose category is filtered out; a selection hidden by
+        the filter still counts. }
+      if Visible = ALL_CATEGORIES then
+      begin
+        Header := TListBoxGroupHeader.Create(lstYAxis);
+        Header.Parent     := lstYAxis;
+        Header.Text       := 'Time';
+        Header.Selectable := False;
+
+        Item := TListBoxItem.Create(lstYAxis);
+        Item.Parent    := lstYAxis;
+        Item.Text      := TIME_COLUMN_LABEL;
+        Item.TagString := TIME_COLUMN_LABEL;
+        Item.IsChecked := FSelectedYNames.IndexOf(TIME_COLUMN_LABEL) >= 0;
+      end;
+
       for Cat := Low(TObservableCategory) to High(TObservableCategory) do
       begin
         if not (Cat in Visible) then Continue;
@@ -1244,6 +1273,10 @@ begin
     for Cat := Low(TObservableCategory) to High(TObservableCategory) do
       for I := 0 to FCategoryIds[Cat].Count - 1 do
         ValidIds.Add(FCategoryIds[Cat][I]);
+
+    { Every model has a time column, so a selected 'time' is valid and must
+      survive the prune — see the note in ApplyPendingYSelection. }
+    ValidIds.Add(TIME_COLUMN_LABEL);
 
     for I := FSelectedYNames.Count - 1 downto 0 do
       if ValidIds.IndexOf(FSelectedYNames[I]) < 0 then
