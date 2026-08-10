@@ -1,0 +1,5 @@
+object FrameMetadata: TFrameMetadata
+  Size.Width = 324.000000000000000000
+  Size.Height = 830.000000000000000000
+  Size.PlatformDefault = False
+end

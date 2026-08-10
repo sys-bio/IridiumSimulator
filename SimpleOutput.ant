@@ -1,0 +1,32 @@
+// A minimal example of a simulation that writes a data file.
+//
+// To try it:
+//   1. Open this file in Iridium.
+//   2. Press Simulate on the time course panel.
+//   3. A "Write decay.csv" button appears on the bar above the plot.
+//   4. Press it. decay.csv is written next to this file.
+
+model decay()
+    J1: A -> B; k1*A;
+
+    A = 10;
+    B = 0;
+    k1 = 0.3;
+end
+
+/*
+@simulate run1: {
+  timestart: 0,
+  timeend: 20,
+  points: 100,
+}
+
+@output: {
+  source: run1,
+  file: "decay.csv",
+  columns: [time, A, B],
+  precision: 6,
+  comments: true,
+  notes: "First run of the decay model.",
+}
+*/

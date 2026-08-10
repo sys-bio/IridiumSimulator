@@ -1,0 +1,118 @@
+// Demonstration model for the simulation-metadata block.
+//
+// Open it in Iridium: the notice above the plot should say two experiments
+// were found, the time-course panel should gain an "Experiment" selector
+// offering "wt" and "slow", and the boxes should be filled from "wt" --
+// with nothing computed until Simulate is pressed.
+//
+// Metadata -> Experiments and Diagnostics shows everything the block
+// defines, including the two things below that deliberately go wrong.
+
+model demo()
+    J1: A -> B; k1*A;
+    J2: B -> C; k2*B;
+
+    A = 10;
+    B = 0;
+    C = 0;
+    k1 = 0.35;
+    k2 = 0.2;
+end
+
+/*
+Prose, not metadata. A block only counts as metadata when its first
+non-whitespace character is '@', so the command below is NOT part of the
+experiment set -- and the parser must say so rather than ignoring it
+silently. This is the format's one genuinely quiet failure mode.
+@plot: { y: [C] }
+*/
+
+/*
+@meta: {
+  title: "Two-step decay",
+  author: "H. Sauro",
+  description: "Demonstrates metadata-driven presets in Iridium.",
+}
+
+@simulate wt: {
+  timestart: 0,
+  timeend: 20,
+  points: 200,
+}
+
+@plot: {
+  source: wt,
+  y: [A, B, C],
+  title: "Wild type",
+  xlabel: "time",
+  ylabel: "concentration",
+  gridy: true,
+  series: {
+    A: { color: #1f77b4, line_width: 3 },
+    B: { color: #d62728, line_style: dashed },
+    C: { color: #2ca02c, marker_style: circle, marker_size: 5 },
+  },
+}
+
+// Writes a data file next to this model. Nothing is written when the
+// simulation runs — the button appears on the panel once there is a
+// result, and writing is an explicit click.
+@output: {
+  source: wt,
+  file: "wildtype.csv",
+  columns: [time, A, B, C],
+  precision: 8,
+  notes: "Baseline run. Compare against the slow experiment.",
+}
+
+// A second experiment, so the selector has something to choose between.
+@simulate slow: {
+  timestart: 0,
+  timeend: 120,
+  steps: 600,
+}
+
+@plot: {
+  source: slow,
+  y: [B],
+  title: "Slow run, B only",
+  logy: true,
+}
+
+// How does the peak of B depend on k1? Repeats the wt time course at each
+// value of k1, so the scan panel takes its time settings from wt.
+@scan sweep: {
+  source: wt,
+  parameter: k1,
+  start: 0.05,
+  end: 2,
+  points: 25,
+  spacing: log,
+  observables: [B],
+  measure: peakvalue,
+}
+
+@plot: {
+  source: sweep,
+  logx: true,
+  y: [B],
+  title: "Peak B vs k1",
+  xlabel: "k1",
+}
+
+// A steady state for the record. None of these keys is a control on the
+// steady-state panel — they are engine settings — so the panel shows a
+// summary of what Compute will apply rather than filling boxes in.
+@steadystate ss: {
+  presimulate: 50,
+  observables: [A, B, C],
+}
+
+// Known to the format, not supported by this build: it must be reported
+// by name and skipped, leaving everything above working.
+@bifurcation: {
+  parameter: k1,
+  start: 0.1,
+  end: 2,
+}
+*/

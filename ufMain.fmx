@@ -70,11 +70,13 @@ object frmMain: TfrmMain
       Size.Width = 610.909912109375000000
       Size.Height = 859.000000000000000000
       Size.PlatformDefault = False
-      TabIndex = 0
+      TabIndex = 3
       TabOrder = 1
       TabPosition = PlatformDefault
       OnChange = TabControl1Change
       Sizes = (
+        610.909912109375s
+        833s
         610.909912109375s
         833s
         610.909912109375s
@@ -85,7 +87,7 @@ object frmMain: TfrmMain
         CustomIcon = <
           item
           end>
-        IsSelected = True
+        IsSelected = False
         Size.Width = 62.000000000000000000
         Size.Height = 26.000000000000000000
         Size.PlatformDefault = False
@@ -465,7 +467,7 @@ object frmMain: TfrmMain
           item
           end>
         IsSelected = False
-        Size.Width = 85.000000000000000000
+        Size.Width = 86.000000000000000000
         Size.Height = 26.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = ''
@@ -481,6 +483,87 @@ object frmMain: TfrmMain
           TabOrder = 0
           Viewport.Width = 610.900000000000000000
           Viewport.Height = 833.000000000000000000
+        end
+      end
+      object tbHelp: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = True
+        Size.Width = 45.000000000000000000
+        Size.Height = 26.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'Help'
+        ExplicitSize.cx = 45.000000000000000000
+        ExplicitSize.cy = 26.000000000000000000
+        object HelpViewer: TRhoMarkdownViewer
+          BackgroundColor = claWhite
+          TextColor = claBlack
+          LinkColor = xFF0366D6
+          CodeBackgroundColor = xFFF4F4F4
+          QuoteBarColor = xFFD0D7DE
+          RuleColor = xFFD0D7DE
+          HeadingRuleColor = xFFD0D7DE
+          HighlightColor = xFFFFF3A3
+          SelectionColor = x60318CE7
+          SearchHighlightColor = x80FFB300
+          SearchCurrentMatchColor = xFFFF9800
+          SyntaxColors.PlainColor = claNull
+          SyntaxColors.KeywordColor = claBlue
+          SyntaxColors.CommentColor = claGreen
+          SyntaxColors.StringColor = xFFA31515
+          SyntaxColors.NumberColor = xFF6F42C1
+          SyntaxColors.TypeColor = xFF2B91AF
+          SyntaxColors.PreprocessorColor = claGray
+          SyntaxColors.SymbolColor = xFF505050
+          FontFamily = 'Segoe UI'
+          CodeFontFamily = 'Consolas'
+          FontSize = 14.000000000000000000
+          ContentPadding = 12.000000000000000000
+          Align = Client
+          Size.Width = 610.909912109375000000
+          Size.Height = 783.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+        end
+        object Layout10: TLayout
+          Align = Top
+          Size.Width = 610.909912109375000000
+          Size.Height = 50.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+          object btnAntimonyHelp: TButton
+            Position.X = 24.000000000000000000
+            Position.Y = 17.000000000000000000
+            Size.Width = 106.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 1
+            Text = 'Antimony Help'
+            OnClick = btnAntimonyHelpClick
+          end
+          object btnSimulationHelp: TButton
+            Position.X = 134.000000000000000000
+            Position.Y = 17.000000000000000000
+            Size.Width = 106.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 0
+            Text = 'Simulation Help'
+            OnClick = btnSimulationHelpClick
+          end
+          object btnLighDark: TButton
+            Position.X = 250.000000000000000000
+            Position.Y = 17.000000000000000000
+            Size.Width = 106.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 2
+            Text = 'Theme Light/Daark'
+            OnClick = btnLighDarkClick
+          end
         end
       end
     end
@@ -994,9 +1077,9 @@ object frmMain: TfrmMain
     TabOrder = 3
     object SliderContainer: TLayout
       Align = Bottom
-      Position.Y = 537.000000000000000000
+      Position.Y = 475.000000000000000000
       Size.Width = 441.000000000000000000
-      Size.Height = 322.000000000000000000
+      Size.Height = 384.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
     end
@@ -1004,7 +1087,7 @@ object frmMain: TfrmMain
       Align = Bottom
       Cursor = crVSplit
       MinSize = 20.000000000000000000
-      Position.Y = 529.000000000000000000
+      Position.Y = 467.000000000000000000
       Size.Width = 441.000000000000000000
       Size.Height = 8.000000000000000000
       Size.PlatformDefault = False
@@ -1013,12 +1096,12 @@ object frmMain: TfrmMain
     object LayoutEditorPanel: TLayout
       Align = Client
       Size.Width = 441.000000000000000000
-      Size.Height = 529.000000000000000000
+      Size.Height = 467.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 1
       object Layout7: TLayout
         Align = Bottom
-        Position.Y = 479.000000000000000000
+        Position.Y = 417.000000000000000000
         Size.Width = 441.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
@@ -1058,7 +1141,7 @@ object frmMain: TfrmMain
       object moAntimony: TSkiaCodeEditor
         Align = Client
         Size.Width = 441.000000000000000000
-        Size.Height = 479.000000000000000000
+        Size.Height = 417.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         Lines.Strings = (
@@ -1082,6 +1165,8 @@ object frmMain: TfrmMain
         Highlighter.StringColor = xFFA31515
         Highlighter.CommentColor = claLightgreen
         Highlighter.NumberColor = claCoral
+        Highlighter.MetadataColor = xFF57606A
+        Highlighter.MetadataTagColor = xFF795E26
         FontSize = 16.000000000000000000
         FontFamily = 'Segoe UI '
         BackgroundColor = xFF1F1F1F
@@ -1277,6 +1362,29 @@ object frmMain: TfrmMain
       object MenuItem5: TMenuItem
         Locked = True
         Text = '-'
+        object MenuItem3: TMenuItem
+          Locked = True
+          Text = 'MenuItem3'
+        end
+      end
+      object mnuExportTelluriumScript: TMenuItem
+        Locked = True
+        Text = 'Export Tellurium Script...'
+        OnClick = mnuExportTelluriumScriptClick
+      end
+      object mnuExportSEDMLFile: TMenuItem
+        Locked = True
+        Text = 'Export SED-ML..'
+        OnClick = mnuExportSEDMLFileClick
+      end
+      object mnuExportCOMBINEArchve: TMenuItem
+        Locked = True
+        Text = 'Export COMBINE Archve...'
+        OnClick = mnuExportCOMBINEArchveClick
+      end
+      object MenuItem9: TMenuItem
+        Locked = True
+        Text = '-'
       end
       object mnuQuit: TMenuItem
         Bitmap.PNG = {
@@ -1352,8 +1460,8 @@ object frmMain: TfrmMain
   object OpenDialogAnt: TOpenDialog
     DefaultExt = 'txt'
     Filter = 
-      'Antimony file (as .txt)|*.txt|Antimony file (as .ant)|*.ant|Any ' +
-      'file|*.*'
+      'Antimony file (.txt and ant)|*.txt;*.ant|Antimony file (as .ant)' +
+      '|*.ant|Any file|*.*'
     Left = 128
     Top = 530
   end

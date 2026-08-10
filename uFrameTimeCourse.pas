@@ -50,12 +50,14 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  System.RegularExpressions,
+  System.RegularExpressions, System.Math, System.Generics.Collections,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Controls.Presentation, FMX.Edit, FMX.EditBox, FMX.NumberBox,
-  FMX.Objects, FMX.Layouts, FMX.ListBox,
+  FMX.Objects, FMX.Layouts, FMX.ScrollBox, FMX.ListBox,
   uRR2DSimpleMatrix,
-  uAnalysisTypes, System.Skia, FMX.Skia;
+  uAnalysisTypes, uMetaExperiments, uMetaSelector, uMetaOutput,
+  Sim.Meta, Sim.Meta.Model,
+  System.Skia, FMX.Skia;
 
 type
   { Observable categories surfaced in the Y-axis list. Enum order is the
@@ -79,7 +81,7 @@ type
   );
   TObservableCategorySet = set of TObservableCategory;
 
-  TFrameTimeCourse = class(TFrame, IPythonScriptExporter)
+  TFrameTimeCourse = class(TFrame, IPythonScriptExporter, IMetaOutputProvider)
     btnSimulate: TButton;
     btnReset: TButton;
     Layout5: TLayout;
@@ -127,6 +129,14 @@ type
     FHasData:            Boolean;
     FSuppressPlotUpdate: Boolean;
 
+    { Scrolling. The designed panel is taller than a short form, so the
+      whole of the designer's content rectangle is re-parented into a
+      TVertScrollBox at construction (the parameter-scan frame has the
+      equivalent box in its .fmx). FContent is Rectangle1 — it has no
+      published field, so it is reached through GroupBox1.Parent. }
+    FScroll:             TVertScrollBox;
+    FContent:            TControl;
+
     { Canonical Y-axis selection — survives filter changes. Sorted, case-
       sensitive, no duplicates. The visible listbox is a view onto this. }
     FSelectedYNames:     TStringList;
@@ -137,6 +147,74 @@ type
     { True until the first successful population — used to seed defaults
       (all floating species checked) on the very first model load. }
     FFirstPopulation:    Boolean;
+
+    { The list is showing the file's requested selection rather than the
+      model's own names, because no model has been loaded yet. Those rows
+      are a preview: they must not be read back as if the user had ticked
+      them. }
+    FShowingUnverified:  Boolean;
+
+    { ── metadata presets ───────────────────────────────────────────────
+      The @simulate experiments this model defines. The block fills these
+      controls and never runs anything: the user still presses Simulate.
+      The dropdown itself, and everything generic about it, lives in
+      uMetaSelector. }
+    FSelector: TMetaExperimentSelector;
+
+    { What the preset put in the boxes, so an edit to any of them can be
+      recognised as the user diverging from it. }
+    FPresetTimeStart: Double;
+    FPresetTimeEnd:   Double;
+    FPresetPoints:    Integer;
+
+    { The user's own settings, captured once before the first preset is
+      applied, so selecting '—' can genuinely put them back. }
+    FUserTimeStart:   Double;
+    FUserTimeEnd:     Double;
+    FUserPoints:      Integer;
+    FUserYNames:      TStringList;
+    FHasUserSettings: Boolean;
+
+    { The Y selection (and X axis) a preset asked for, held until there is
+      a model to validate it against.
+
+      A preset is applied when the model is OPENED, which is before it has
+      been loaded into RoadRunner — so at that moment there are no names
+      to check against and no list to check them in. Writing straight into
+      FSelectedYNames looked like it worked and did not: that list is the
+      live selection, and the session clears it whenever the model is
+      unloaded, which is exactly the state an unopened model is in. Held
+      separately, the request survives until PopulateAxisSelectors can
+      honour it. }
+    FPendingYNames:   TArray<string>;
+    FPendingX:        string;
+    FHasPendingY:     Boolean;
+
+    { Experiment whose extra @plot commands have already been reported, so
+      the warning appears once rather than on every Simulate. }
+    FWarnedMultiPlot: string;
+
+    { IMetaOutputProvider — what this panel could satisfy an @output from.
+      The Write button itself lives on the shell's notice bar: writing a
+      file is not part of setting up a run, and these panels are for
+      setup. }
+    function GetOutputExperiment: TMetaExperiment;
+    function GetOutputData: T2DMatrix;
+
+    procedure ApplyExperiment(AExp: TMetaExperiment; AWasUnset: Boolean);
+    procedure RestoreUserSettings(Sender: TObject);
+    procedure SnapshotUserSettings;
+    { Move a preset's Y/X request into the live selection, filtered to
+      names the loaded model actually has. False if nothing matched, so
+      the caller can fall back to the usual defaults rather than leave the
+      user with an empty selection and no way to plot. }
+    function  ApplyPendingYSelection: Boolean;
+    procedure DoTimeSettingChanged(Sender: TObject);
+    function  DivergedFromPreset: Boolean;
+    function  GetMetaExperiments: TMetaExperimentSet;
+    { Style the freshly drawn series from the selected experiment's @plot,
+      and warn about any it could not draw (conformance C6). }
+    procedure ApplyPlotMetadata;
 
     function  RunSimulation: Boolean;
     procedure OnSliderChanged(Sender: TObject;
@@ -164,12 +242,23 @@ type
     function GetPythonScript(const AntimonyText: string): string;
 
     function  GetSelectedXAxisName:  string;
+
+    procedure InstallScrollBox;
+    procedure UpdateContentHeight;
+    procedure DoScrollResize(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
 
     procedure SetContext(const AContext: IAnalysisContext);
     procedure SetSimulationParameters(ATimeEnd: Double; ANumPoints: Integer);
+
+    { The shell re-parsed the model's metadata block. AApply = True only
+      when a model was OPENED: the first usable @simulate experiment is
+      loaded into the controls. AApply = False merely refreshes the
+      selector — a re-parse happens on every model reload, and applying
+      there would overwrite what the user had just typed. }
+    procedure MetadataChanged(AApply: Boolean);
     procedure AttachToSliders;
 
     { The canonical Y-axis selection, for the shell to seed the parameter scan's
@@ -182,7 +271,9 @@ implementation
 {$R *.fmx}
 
 uses
-  uRoadRunner, uRRList, uAntimonyAPI, uCommonTypes, ufConfigureCVODE;
+  System.IOUtils,
+  uRoadRunner, uRRList, uAntimonyAPI, uCommonTypes, ufConfigureCVODE,
+  uMetaSymbolProvider;   { CanonicalModelName: '[A]' <-> 'A' }
 
 const
   TIME_COLUMN_LABEL = 'time';
@@ -223,6 +314,23 @@ var
 begin
   inherited;
 
+  InstallScrollBox;
+
+  FSelector := TMetaExperimentSelector.Create(Self, mekTimeCourse,
+                                              GetMetaExperiments);
+  FSelector.OnApply   := ApplyExperiment;
+  FSelector.OnRestore := RestoreUserSettings;
+  { Immediately above the time-settings group, where the values it fills
+    in are. GroupBox1.Parent rather than a named container: the frame's
+    background rectangle has no published field to reach it by. }
+  FSelector.Place(GroupBox1.Parent, GroupBox1);
+
+
+  FUserYNames := TStringList.Create;
+  FUserYNames.CaseSensitive := True;
+  FUserYNames.Sorted        := True;
+  FUserYNames.Duplicates    := dupIgnore;
+
   FSelectedYNames := TStringList.Create;
   FSelectedYNames.CaseSensitive := True;
   FSelectedYNames.Sorted        := True;
@@ -236,6 +344,62 @@ begin
 
   cmbFilter.ItemIndex := 1;
   FFirstPopulation := True;
+
+  { After the selector has been placed, so its row counts towards the height. }
+  UpdateContentHeight;
+end;
+
+{ Re-parent the designed content into a vertical scroll box so the panel
+  scrolls rather than clips when the form is shorter than the design height. }
+procedure TFrameTimeCourse.InstallScrollBox;
+begin
+  if not (GroupBox1.Parent is TControl) then
+    Exit;
+
+  FContent := TControl(GroupBox1.Parent);
+  if FContent = Self then   { already flat — nothing to wrap }
+    Exit;
+
+  FScroll := TVertScrollBox.Create(Self);
+  FScroll.Parent := Self;
+  FScroll.Align  := TAlignLayout.Client;
+
+  FContent.Parent := FScroll;
+  FContent.Align  := TAlignLayout.Top;
+
+  FScroll.OnResize := DoScrollResize;
+end;
+
+{ The content rectangle must be as tall as its Top-aligned children to make
+  the scroll box scroll, but never shorter than the viewport, or its border
+  would stop part-way down a tall form. }
+procedure TFrameTimeCourse.UpdateContentHeight;
+var
+  I: Integer;
+  C: TControl;
+  H: Single;
+begin
+  if (FScroll = nil) or (FContent = nil) then
+    Exit;
+
+  H := FContent.Padding.Top + FContent.Padding.Bottom;
+  for I := 0 to FContent.ControlsCount - 1 do
+  begin
+    C := FContent.Controls[I];
+    if C.Visible and (C.Align = TAlignLayout.Top) then
+      H := H + C.Height + C.Margins.Top + C.Margins.Bottom;
+  end;
+
+  if H < FScroll.Height then
+    H := FScroll.Height;
+
+  if FContent.Height <> H then
+    FContent.Height := H;
+end;
+
+procedure TFrameTimeCourse.DoScrollResize(Sender: TObject);
+begin
+  UpdateContentHeight;
 end;
 
 destructor TFrameTimeCourse.Destroy;
@@ -243,9 +407,405 @@ var
   Cat: TObservableCategory;
 begin
   FSelectedYNames.Free;
+  FSelector.Free;
+  FUserYNames.Free;
   for Cat := Low(TObservableCategory) to High(TObservableCategory) do
     FCategoryIds[Cat].Free;
   inherited;
+end;
+
+{ ── metadata presets ───────────────────────────────────────────────────── }
+
+function TFrameTimeCourse.GetMetaExperiments: TMetaExperimentSet;
+begin
+  { A function, not a stored reference: the set is rebuilt wholesale on
+    every re-parse. }
+  if FContext = nil then
+    Result := nil
+  else
+    Result := FContext.MetaExperiments;
+end;
+
+procedure TFrameTimeCourse.MetadataChanged(AApply: Boolean);
+begin
+  if (FContext = nil) or (FSelector = nil) then Exit;
+
+  { A fresh parse may have changed how many plots an experiment has, so
+    the "only drew the first" warning is due again. }
+  FWarnedMultiPlot := '';
+
+  FSelector.Rebuild(FContext.MetaExperiments);
+  { Rebuild shows or hides the strip, changing how tall the panel is. }
+  UpdateContentHeight;
+  if FContext <> nil then FContext.OutputStateChanged;
+
+  { A model was opened. The first usable @simulate experiment is applied;
+    an unusable one is listed but never applied — its fields are not
+    trustworthy. }
+  if AApply then
+    FSelector.ApplyFirstUsable(FContext.MetaExperiments);
+end;
+
+procedure TFrameTimeCourse.SnapshotUserSettings;
+begin
+  { Once only. A second preset must not overwrite the snapshot with the
+    first preset's values — '—' means "what I had", not "the last thing
+    the file did". }
+  if FHasUserSettings then Exit;
+  FUserTimeStart   := edtTimeStart.Value;
+  FUserTimeEnd     := edtTimeEnd.Value;
+  FUserPoints      := Trunc(edtNumberofPoints.Value);
+  FUserYNames.Assign(FSelectedYNames);
+  { The plot's appearance too. A @plot switches on log axes, grids and
+    titles, and those outlive the series they were applied to — so
+    without this, stepping back to '—' returns the numbers but leaves the
+    file's log axis in place. }
+  if FContext <> nil then
+    FContext.PlotCaptureUserStyle;
+  FHasUserSettings := True;
+end;
+
+procedure TFrameTimeCourse.RestoreUserSettings(Sender: TObject);
+begin
+  if not FHasUserSettings then Exit;
+
+  { A preset that never got applied must not be applied later just
+    because the user asked for their own settings back. }
+  FHasPendingY := False;
+  FPendingX    := '';
+
+  FSuppressPlotUpdate := True;
+  try
+    edtTimeStart.Value      := FUserTimeStart;
+    edtTimeEnd.Value        := FUserTimeEnd;
+    edtNumberofPoints.Value := FUserPoints;
+
+    if FUserYNames.Count > 0 then
+      FSelectedYNames.Assign(FUserYNames)
+    else
+      { The snapshot was taken on a model that had only just been opened,
+        so there was no selection to remember. Handing back an empty one
+        would leave Simulate unable to do anything — which is not what
+        "my own settings" should mean. Fall back to Iridium's own default
+        of every floating species, the same thing a model with no
+        metadata block would have given. }
+      FSelectedYNames.Assign(FCategoryIds[ocFloating]);
+  finally
+    FSuppressPlotUpdate := False;
+  end;
+
+  RepopulateYList;
+
+  { Put the plot's appearance back as well — a log axis or a title the
+    preset switched on is as much part of "the file's settings" as the
+    numbers were. }
+  if FContext <> nil then
+    FContext.PlotRestoreUserStyle;
+
+  { No named experiment means no @output to honour. }
+  if FContext <> nil then FContext.OutputStateChanged;
+
+  { Results on screen were computed from other settings. }
+  FHasData := False;
+end;
+
+procedure TFrameTimeCourse.ApplyExperiment(AExp: TMetaExperiment;
+  AWasUnset: Boolean);
+var
+  Sim:  TSimulateCommand;
+  Plot: TPlotCommand;
+  Idx:  Integer;
+begin
+  if (AExp = nil) or (not AExp.Usable) then Exit;
+  if not (AExp.Task is TSimulateCommand) then Exit;
+  Sim := TSimulateCommand(AExp.Task);
+
+  SnapshotUserSettings;
+
+  { Coming off '—', everything on the panel right now is the user's own
+    work — the numbers, the Y selection and the plot's appearance alike —
+    so re-capture all of it before the preset overwrites it. That makes
+    '—' mean "the last settings I made myself" rather than only "the ones
+    I had before the very first preset", which silently discarded
+    everything the user did while '—' was selected. }
+  if AWasUnset and FHasUserSettings then
+  begin
+    FUserTimeStart := edtTimeStart.Value;
+    FUserTimeEnd   := edtTimeEnd.Value;
+    FUserPoints    := Trunc(edtNumberofPoints.Value);
+    FUserYNames.Assign(FSelectedYNames);
+    if FContext <> nil then
+      FContext.PlotCaptureUserStyle;
+  end;
+
+  FSelector.Suppressed := True;
+  FSuppressPlotUpdate  := True;
+  try
+    { 'steps' has already been folded into Points by the validator
+      (points = steps + 1), so there is no arithmetic to repeat here. }
+    edtTimeStart.Value      := Sim.TimeStart;
+    edtTimeEnd.Value        := Sim.TimeEnd;
+    edtNumberofPoints.Value := Sim.Points;
+
+    FPresetTimeStart := Sim.TimeStart;
+    FPresetTimeEnd   := Sim.TimeEnd;
+    FPresetPoints    := Sim.Points;
+
+    { The experiment's @plot says which quantities the user wanted drawn,
+      which is the Y selection. Recorded as a request rather than applied
+      here: on the path that matters — opening a model — there is no
+      loaded model yet, so there are no names to validate against and no
+      list to show them in. PopulateAxisSelectors honours it as soon as
+      there is. A task with no plot leaves the selection alone. }
+    Plot := AExp.FirstPlot;
+    if (Plot <> nil) and (Length(Plot.Y) > 0) then
+    begin
+      FPendingYNames := Copy(Plot.Y);
+      FPendingX      := Plot.X;
+      FHasPendingY   := True;
+
+      if (FContext <> nil) and FContext.Session.IsLoaded then
+        { A model is loaded, so the request can be validated and shown at
+          once — there is no reason to make the user press Simulate to
+          see the selection change. }
+        ApplyPendingYSelection
+      else
+      begin
+        { No model loaded yet. Iridium loads lazily, so this is the normal
+          state between opening a file and the first compute, and the
+          observable lists do not exist to validate against or render
+          into.
+
+          Take the request at face value anyway. The alternative — leave
+          the live selection alone until the lists appear — is what made
+          switching experiments look like it did nothing: the panel went
+          on showing the PREVIOUS experiment's selection, and Simulate
+          either plotted the wrong variables or refused for want of any.
+          Anything the model turns out not to have is dropped by the
+          prune in PopulateAxisSelectors, and the pending request is
+          still honoured there, so this is only ever an early view of the
+          same answer. }
+        FSuppressPlotUpdate := True;
+        try
+          FSelectedYNames.Clear;
+          for Idx := 0 to High(FPendingYNames) do
+            FSelectedYNames.Add(FPendingYNames[Idx]);
+        finally
+          FSuppressPlotUpdate := False;
+        end;
+        RepopulateYList;
+      end;
+    end;
+
+    { The selector already holds this label — it is what dispatched here. }
+  finally
+    FSuppressPlotUpdate  := False;
+    FSelector.Suppressed := False;
+  end;
+
+  { Settings changed, so anything on screen is stale. Nothing is
+    recomputed: the user presses Simulate when they want a result. }
+  FHasData := False;
+  if FContext <> nil then FContext.OutputStateChanged;
+end;
+
+function TFrameTimeCourse.ApplyPendingYSelection: Boolean;
+var
+  Cat:    TObservableCategory;
+  Known:  TDictionary<string, string>;
+  Prev:   TStringList;
+  Name:   string;
+  ModelId: string;
+  I, Idx: Integer;
+begin
+  Result := False;
+  if not FHasPendingY then Exit;
+
+  { Known: every name the model actually has, across all categories — a
+    @plot may legitimately name a flux or a boundary species, not only a
+    floater. Prev: what was selected before, so a request naming nothing
+    this model has can fall back to something usable instead of leaving
+    an empty selection that Simulate can only refuse. }
+  { Keyed on the name as the METADATA spells it, valued with the id the
+    MODEL uses — 'A' -> '[A]' for a floating species, 'k1' -> 'k1' for a
+    parameter. Iridium's selection lists and result column headers are
+    keyed on the model's form, so the translation has to survive into
+    what gets stored, not just into the comparison. }
+  Known := TDictionary<string, string>.Create;
+  Prev  := TStringList.Create;
+  try
+    for Cat := Low(TObservableCategory) to High(TObservableCategory) do
+      for I := 0 to FCategoryIds[Cat].Count - 1 do
+      begin
+        ModelId := FCategoryIds[Cat][I];
+        { First writer wins, matching the category order the lists are
+          built in, so a name appearing twice keeps its primary kind. }
+        if not Known.ContainsKey(CanonicalModelName(ModelId)) then
+          Known.Add(CanonicalModelName(ModelId), ModelId);
+      end;
+
+    { No model loaded yet, so nothing can be validated. Leave the request
+      standing — this is the ordinary case when a model has just been
+      opened, and consuming it here is exactly the bug this whole
+      mechanism exists to avoid. }
+    if Known.Count = 0 then Exit;
+
+    Prev.Assign(FSelectedYNames);
+
+    FSuppressPlotUpdate := True;
+    try
+      FSelectedYNames.Clear;
+      for Name in FPendingYNames do
+        { Accept the model's own spelling too, so a block written against
+          RoadRunner's '[A]' form works as well as the plain 'A' the
+          format calls for. }
+        if Known.TryGetValue(Name, ModelId) or
+           Known.TryGetValue(CanonicalModelName(Name), ModelId) then
+        begin
+          FSelectedYNames.Add(ModelId);
+          Result := True;
+        end;
+
+      if not Result then
+      begin
+        if Prev.Count > 0 then
+          FSelectedYNames.Assign(Prev)
+        else
+          FSelectedYNames.Assign(FCategoryIds[ocFloating]);
+      end;
+
+      { FPendingX is deliberately NOT applied here. When this runs from
+        PopulateAxisSelectors the X combo has not been rebuilt yet, so a
+        lookup would search the previous model's names. It is applied
+        where the combo is rebuilt, and cleared there. }
+      if Result and (FPendingX <> '') and (cbXAxis.Items.Count > 0) then
+      begin
+        Idx := cbXAxis.Items.IndexOf(FPendingX);
+        { 'time' is itself, but a phase portrait's x: names a species and
+          needs the same translation as the y: entries. }
+        if (Idx < 0) and Known.TryGetValue(FPendingX, ModelId) then
+          Idx := cbXAxis.Items.IndexOf(ModelId);
+        if Idx >= 0 then
+        begin
+          cbXAxis.ItemIndex := Idx;
+          FPendingX := '';
+        end;
+      end;
+    finally
+      FSuppressPlotUpdate := False;
+    end;
+
+    { Consumed: satisfied or not, a request must not go on overriding the
+      user at every later reload. }
+    FHasPendingY := False;
+
+    { Always, not only when something matched. The listbox is a view onto
+      FSelectedYNames, and this function has just rewritten it — skipping
+      the render leaves ticks on screen that no longer mean anything,
+      which is worse than a wrong selection because it cannot be seen to
+      be wrong. }
+    RepopulateYList;
+  finally
+    Prev.Free;
+    Known.Free;
+  end;
+end;
+
+function TFrameTimeCourse.DivergedFromPreset: Boolean;
+begin
+  Result := (not SameValue(edtTimeStart.Value, FPresetTimeStart)) or
+            (not SameValue(edtTimeEnd.Value,   FPresetTimeEnd))   or
+            (Trunc(edtNumberofPoints.Value) <> FPresetPoints);
+end;
+
+procedure TFrameTimeCourse.DoTimeSettingChanged(Sender: TObject);
+begin
+  if (FSelector = nil) or FSelector.Suppressed or FSuppressPlotUpdate then Exit;
+  if FSelector.ActiveLabel = '' then Exit;
+  if not DivergedFromPreset then Exit;
+
+  { The controls no longer describe the named experiment, so the selector
+    must stop claiming they do. This is the '—' state, and it arises on
+    its own rather than being something the user has to think to choose —
+    which is why it must not restore anything. }
+  FSelector.MarkDiverged;
+end;
+
+function TFrameTimeCourse.GetOutputExperiment: TMetaExperiment;
+begin
+  { Nil unless there is genuinely something to write: an experiment
+    selected, its @output commands present, and a result to write from.
+    The shell shows or hides the Write button on that answer alone, so
+    the offer can never appear with nothing behind it. }
+  Result := nil;
+  if (FSelector = nil) or (not FHasData) then Exit;
+
+  Result := FSelector.ActiveExperiment;
+  if Result = nil then Exit;
+  if (not Result.Usable) or (Length(Result.Outputs) = 0) then
+    Result := nil;
+end;
+
+function TFrameTimeCourse.GetOutputData: T2DMatrix;
+begin
+  if FHasData then
+    Result := FLastData
+  else
+    Result := nil;
+end;
+
+procedure TFrameTimeCourse.ApplyPlotMetadata;
+var
+  Exp:     TMetaExperiment;
+  Skipped: TArray<TPlotCommand>;
+  P:       TPlotCommand;
+  Names:   string;
+begin
+  Exp := FSelector.ActiveExperiment;
+  if (Exp = nil) or (not Exp.Usable) then Exit;
+
+  P := Exp.FirstPlot;
+  if P = nil then Exit;
+
+  { Reset to the user's own appearance FIRST, then overlay only what this
+    @plot actually specifies.
+
+    A @plot is applied key by key — absent keys are left alone, so that a
+    command saying nothing about the grid does not switch the grid off.
+    But "left alone" has to mean left at the user's baseline, not left at
+    whatever the PREVIOUS experiment's @plot happened to set. Without the
+    reset, styling accumulates across experiments: switch from one that
+    dashes B to one that says nothing about series at all, and B stays
+    dashed for no reason the file can explain. Each experiment should
+    look the way its own command describes it. }
+  FContext.PlotRestoreUserStyle;
+  FContext.PlotApplyMetaStyle(P);
+
+  { Iridium has one plot surface. Where an experiment defines several
+    @plot commands it draws the first and must warn naming the others
+    (conformance C6, and spec 13 records this as Iridium's documented
+    behaviour). The warning belongs here, at the moment a plot was
+    actually declined — not at load, where it would be one more line in a
+    wall of text the user learns to dismiss. }
+  Skipped := Exp.SkippedPlots;
+  if Length(Skipped) = 0 then Exit;
+
+  { Once per experiment, not once per Simulate: a dialog on every run
+    would be punishment, and the user cannot act on it any faster the
+    fifth time. Reset when the metadata is re-parsed. }
+  if FWarnedMultiPlot = Exp.LabelText then Exit;
+  FWarnedMultiPlot := Exp.LabelText;
+
+  Names := '';
+  for P in Skipped do
+  begin
+    if Names <> '' then Names := Names + ', ';
+    Names := Names + P.DisplayName;
+  end;
+  ShowMessage(
+    'Experiment ' + Exp.LabelText + ' defines more than one plot. ' +
+    'Iridium has a single plot surface, so it drew the first and did not ' +
+    'draw: ' + Names + '.');
 end;
 
 { ── simulation parameters from main form ───────────────────────────────── }
@@ -283,6 +843,13 @@ begin
     re-plot. }
   lstYAxis.OnChangeCheck := DoYListCheckChanged;
   cbXAxis.OnChange       := DoPlotSelectionChanged;
+
+  { Editing any of the three time settings means the controls no longer
+    describe the selected experiment. Wired here rather than in the .fmx
+    because nothing else needs these events. }
+  edtTimeStart.OnChange      := DoTimeSettingChanged;
+  edtTimeEnd.OnChange        := DoTimeSettingChanged;
+  edtNumberofPoints.OnChange := DoTimeSettingChanged;
 end;
 
 { ── session callbacks ──────────────────────────────────────────────────── }
@@ -516,6 +1083,19 @@ var
   Header:  TListBoxGroupHeader;
   Item:    TListBoxItem;
   Name:    string;
+
+  { True before the first successful load: Iridium loads lazily, so a
+    model that has only been opened has no names yet. }
+  function NoModelNamesYet: Boolean;
+  var
+    C: TObservableCategory;
+  begin
+    for C := Low(TObservableCategory) to High(TObservableCategory) do
+      if FCategoryIds[C].Count > 0 then
+        Exit(False);
+    Result := True;
+  end;
+
 begin
   Visible := CurrentFilterCategories;
 
@@ -524,6 +1104,38 @@ begin
     lstYAxis.BeginUpdate;
     try
       lstYAxis.Clear;
+
+      { Nothing to list from the model, but the file has said what it
+        wants plotted — so show that rather than an empty box. An empty
+        list and "nothing is selected" look identical, and the difference
+        matters: one means the model has not loaded, the other means the
+        user must pick something.
+
+        Shown disabled, because these names have not been checked against
+        anything yet. Pressing Simulate loads the model and replaces them
+        with the real list, at which point any name the model does not
+        have quietly drops out. }
+      FShowingUnverified := NoModelNamesYet and (FSelectedYNames.Count > 0);
+      if FShowingUnverified then
+      begin
+        Header := TListBoxGroupHeader.Create(lstYAxis);
+        Header.Parent     := lstYAxis;
+        Header.Text       := 'From the model file — press Simulate to load';
+        Header.Selectable := False;
+
+        for I := 0 to FSelectedYNames.Count - 1 do
+        begin
+          Name := FSelectedYNames[I];
+          Item := TListBoxItem.Create(lstYAxis);
+          Item.Parent    := lstYAxis;
+          Item.Text      := Name;
+          Item.TagString := Name;
+          Item.IsChecked := True;
+          Item.Enabled   := False;
+        end;
+        Exit;
+      end;
+
       for Cat := Low(TObservableCategory) to High(TObservableCategory) do
       begin
         if not (Cat in Visible) then Continue;
@@ -566,6 +1178,7 @@ var
   IsFirstPop: Boolean;
   PrevX:      string;
   Id:         string;
+  Idx:        Integer;
 begin
   if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
 
@@ -591,6 +1204,18 @@ begin
         FSelectedYNames.Delete(I);
   finally
     ValidIds.Free;
+  end;
+
+  { A preset's Y selection, if one is outstanding. This is the first point
+    at which the model's names are known, which is why it happens here
+    rather than where the preset was applied. It wins over the
+    first-population default — the file said what to plot, so burying it
+    under "every floating species" would be ignoring the model's own
+    instructions. }
+  if FHasPendingY and ApplyPendingYSelection then
+  begin
+    IsFirstPop       := False;
+    FFirstPopulation := False;
   end;
 
   { First-population defaults: check every floating species. Subsequent
@@ -625,6 +1250,24 @@ begin
 
       if PrevX <> '' then
         cbXAxis.ItemIndex := cbXAxis.Items.IndexOf(PrevX);
+
+      { A preset's x: overrides the remembered choice — the file is
+        describing this experiment, and 'x' is how a phase portrait is
+        asked for. Cleared once honoured; a name this model does not have
+        falls through to the remembered choice. }
+      if FPendingX <> '' then
+      begin
+        Idx := cbXAxis.Items.IndexOf(FPendingX);
+        { The combo holds the model's own ids, so a species named in the
+          block has to be looked up in RoadRunner's concentration form
+          as well. 'time' matches directly. }
+        if Idx < 0 then
+          Idx := cbXAxis.Items.IndexOf('[' + FPendingX + ']');
+        if Idx >= 0 then
+          cbXAxis.ItemIndex := Idx;
+        FPendingX := '';
+      end;
+
       if cbXAxis.ItemIndex < 0 then
         cbXAxis.ItemIndex := 0;
     finally
@@ -645,6 +1288,18 @@ var
   Item:   TListBoxItem;
   Id:     string;
 begin
+  { An empty list is not evidence that nothing is selected — it is what a
+    list looks like mid-rebuild, or before the model has been loaded.
+    Syncing from it would wipe the canonical selection and leave Simulate
+    with nothing to plot, so treat it as "no information" and return. }
+  if lstYAxis.Count = 0 then Exit;
+
+  { Likewise when the rows are the file's unverified preview: they were
+    rendered FROM the selection, so reading them back would be circular
+    at best, and would drop the RoadRunner spelling of any name once the
+    model does load. }
+  if FShowingUnverified then Exit;
+
   { For every visible (non-header) row, mirror its IsChecked state into
     FSelectedYNames. Items hidden by the filter are NOT touched here —
     they keep whatever state they had.
@@ -682,6 +1337,13 @@ var
   I:    Integer;
   Item: TListBoxItem;
 begin
+  { The preview rows are disabled, but Enabled only stops the user clicking
+    them — this writes IsChecked directly. Without the guard, Deselect All
+    would visibly clear the file's requested names while SyncSelectionFromVisible
+    (which correctly ignores the preview) left them selected, so Simulate would
+    plot what the list said was unchecked. }
+  if FShowingUnverified then Exit;
+
   FSuppressPlotUpdate := True;
   try
     lstYAxis.BeginUpdate;
@@ -723,6 +1385,7 @@ begin
                       GetSelectedXAxisName,
                       GetSelectedYAxisNames);
     FContext.PlotEndRebuild;
+    ApplyPlotMetadata;
   end;
 end;
 
@@ -879,6 +1542,14 @@ begin
     FContext.PlotBeginRebuild;
     FContext.PlotData(Data, XName, YNames);
     FContext.PlotEndRebuild;
+    { After the bracket, not inside it: PlotEndRebuild re-applies this
+      panel's saved styling, which would otherwise undo everything the
+      @plot command just asked for. Applying last also gives the intended
+      precedence — the file's styling wins on each compute, and the user's
+      later edits in the plot editor stand until the next one (the next
+      PlotBeginRebuild snapshots them). }
+    ApplyPlotMetadata;
+    if FContext <> nil then FContext.OutputStateChanged;
     Result := True;
   except
     on E: Exception do

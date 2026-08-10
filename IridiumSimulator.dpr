@@ -1,4 +1,4 @@
-program IridiumSimulator;
+﻿program IridiumSimulator;
 
 uses
   System.StartUpCopy,
@@ -47,6 +47,30 @@ uses
   uPlotJsonUtils in '..\RhodyComponents\PlottingComponent\Source\uPlotJsonUtils.pas',
   uPlotMapper in '..\RhodyComponents\PlottingComponent\Source\uPlotMapper.pas',
   uPlotSeries in '..\RhodyComponents\PlottingComponent\Source\uPlotSeries.pas',
+  { Simulation-metadata library. Lives in its own project (with its own
+    test harness) and is referenced rather than copied, so a fix there is
+    a fix here. RTL-only by design — nothing below may pull in FMX or
+    libRoadRunner. }
+  Sim.Meta.Types in '..\..\Antimony_MetaData_Support\Sim.Meta.Types.pas',
+  Sim.Meta.Lexer in '..\..\Antimony_MetaData_Support\Sim.Meta.Lexer.pas',
+  Sim.Meta.Ast in '..\..\Antimony_MetaData_Support\Sim.Meta.Ast.pas',
+  Sim.Meta.Registry in '..\..\Antimony_MetaData_Support\Sim.Meta.Registry.pas',
+  Sim.Meta.Parser in '..\..\Antimony_MetaData_Support\Sim.Meta.Parser.pas',
+  Sim.Meta.Validate in '..\..\Antimony_MetaData_Support\Sim.Meta.Validate.pas',
+  Sim.Meta.Model in '..\..\Antimony_MetaData_Support\Sim.Meta.Model.pas',
+  Sim.Meta in '..\..\Antimony_MetaData_Support\Sim.Meta.pas',
+  { The Python exporter re-uses the writer to echo a command's source
+    text, so the writer comes in with it. }
+  Sim.Meta.Writer in '..\..\Antimony_MetaData_Support\Sim.Meta.Writer.pas',
+  Sim.Meta.Python in '..\..\Antimony_MetaData_Support\Sim.Meta.Python.pas',
+  Sim.Meta.SedML.Types in '..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Types.pas',
+  Sim.Meta.SedML.Export in '..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Export.pas',
+  Sim.Meta.Omex in '..\..\Antimony_MetaData_Support\Sim.Meta.Omex.pas',
+  uMetaSymbolProvider in 'uMetaSymbolProvider.pas',
+  uMetaExperiments in 'uMetaExperiments.pas',
+  uMetaSelector in 'uMetaSelector.pas',
+  uMetaOutput in 'uMetaOutput.pas',
+  uFrameMetadata in 'uFrameMetadata.pas' {FrameMetadata: TFrame},
   uMySplitter in 'uMySplitter.pas',
   ufConfigureCVODE in 'ufConfigureCVODE.pas' {frmConfigCVODE},
   ufConfigureSteadyState in 'ufConfigureSteadyState.pas' {frmConfigSteadyState};
@@ -54,6 +78,7 @@ uses
 {$R *.res}
 
 begin
+  GlobalUseSkia := True;
   {$IFDEF MACOS}
   //FMX.Types.GlobalUseMetal := False;
   //FMX.Types.GlobalEventDrivenDisplayUpdates := True;

@@ -11,6 +11,9 @@ uses
   FMX.NumberBox, FMX.TabControl,
   FMX.ScrollBox,
   uAnalysisTypes,
+  uMetaExperiments,
+  uMetaSelector,
+  Sim.Meta.Model,
   uRR2DSimpleMatrix,
   uColorList,
   FMX.EditBox, FMX.Objects;
@@ -18,6 +21,24 @@ uses
 type
   TScanRangeMode  = (srmLinear, srmLog, srmList);
   TOutputMeasure  = (omEndpoint, omPeakValue, omTimeToPeak, omTimeCourseOverlay);
+
+  { Every control a @scan preset writes into, so that stepping back to the
+    '—' row can return the panel exactly as the user left it. Captured
+    once, before the first preset is applied. }
+  TScanPanelState = record
+    Parameter:   string;
+    RangeMode:   TScanRangeMode;
+    ScanStart:   string;
+    ScanEnd:     string;
+    ScanPoints:  string;
+    ValueList:   string;
+    TimeStart:   string;
+    TimeEnd:     string;
+    NumPoints:   string;
+    SampleTime:  string;
+    Measure:     TOutputMeasure;
+    Observables: TArray<string>;
+  end;
 
   TFrameParameterScan = class(TFrame, IPythonScriptExporter)
     grpParameter:          TGroupBox;
@@ -116,6 +137,30 @@ type
     FSelectedObsNames: TArray<string>;
     FRunningScan:      Boolean;   { re-entrancy guard for slider-driven scans }
 
+    { ── metadata presets ───────────────────────────────────────────────
+      The @scan experiments this model defines. As on the time-course
+      panel, the block fills these controls and never runs anything. The
+      dropdown and everything generic about it lives in uMetaSelector. }
+    FSelector:     TMetaExperimentSelector;
+    FUserState:    TScanPanelState;
+    FHasUserState: Boolean;
+
+    { A preset applied while no model was loaded. The parameter combo and
+      observable lists are empty until the first load, so the request is
+      held and replayed once they exist. }
+    FPendingExperiment: string;
+    procedure ApplyPendingExperiment;
+
+    procedure ApplyExperiment(AExp: TMetaExperiment; AWasUnset: Boolean);
+    procedure RestoreUserState(Sender: TObject);
+    function  GetMetaExperiments: TMetaExperimentSet;
+    function  CapturePanelState: TScanPanelState;
+    procedure RestorePanelState(const AState: TScanPanelState);
+    { Model id for a name as the metadata spells it, honouring
+      RoadRunner's '[A]' form for species. '' if the model has no such
+      name. }
+    function  ResolveModelName(const AName: string): string;
+
     procedure SessionStateChanged  (Sender: TObject);
     procedure SessionModelReloaded (Sender: TObject; AParameterSetChanged: Boolean);
 
@@ -162,10 +207,17 @@ type
     function  FindColumn(AData: T2DMatrix; const AColName: string): Integer;
 
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor  Destroy; override;
+
     procedure SetContext(const AContext: IAnalysisContext);
     procedure UpdateScanParameterLock;
     procedure AttachToSliders;
     procedure RefreshFromModelIfStale;
+
+    { The shell re-parsed the model's metadata block. AApply = True only
+      when a model was OPENED. See uFrameTimeCourse.MetadataChanged. }
+    procedure MetadataChanged(AApply: Boolean);
 
     { Replace the checked observables with those in ANames (matched against the
       four observable lists; names not present here are ignored). Used by the
@@ -236,6 +288,284 @@ end;
 
 { ── Context wiring ───────────────────────────────────────────────────────── }
 
+{ ── metadata presets ────────────────────────────────────────────────────── }
+
+constructor TFrameParameterScan.Create(AOwner: TComponent);
+begin
+  inherited;
+  FSelector := TMetaExperimentSelector.Create(Self, mekScan,
+                                              GetMetaExperiments);
+  FSelector.OnApply   := ApplyExperiment;
+  FSelector.OnRestore := RestoreUserState;
+  { Above the parameter group, where the values it fills in begin.
+    grpParameter.Parent rather than a named container: the frame's
+    background has no published field to reach it by. }
+  FSelector.Place(grpParameter.Parent, grpParameter);
+end;
+
+destructor TFrameParameterScan.Destroy;
+begin
+  FSelector.Free;
+  inherited;
+end;
+
+function TFrameParameterScan.GetMetaExperiments: TMetaExperimentSet;
+begin
+  if FContext = nil then
+    Result := nil
+  else
+    Result := FContext.MetaExperiments;
+end;
+
+procedure TFrameParameterScan.RestoreUserState(Sender: TObject);
+begin
+  if not FHasUserState then Exit;
+  FSelector.Suppressed := True;
+  try
+    RestorePanelState(FUserState);
+  finally
+    FSelector.Suppressed := False;
+  end;
+end;
+
+function TFrameParameterScan.CapturePanelState: TScanPanelState;
+begin
+  Result.Parameter := '';
+  if cbParameter.ItemIndex >= 0 then
+    Result.Parameter := cbParameter.Items[cbParameter.ItemIndex];
+
+  if rbLog.IsChecked then Result.RangeMode := srmLog
+  else if rbList.IsChecked then Result.RangeMode := srmList
+  else Result.RangeMode := srmLinear;
+
+  Result.ScanStart  := edtScanStart.Text;
+  Result.ScanEnd    := edtScanEnd.Text;
+  Result.ScanPoints := edtScanNPoints.Text;
+  Result.ValueList  := edtValueList.Text;
+  Result.TimeStart  := edtTimeStart.Text;
+  Result.TimeEnd    := edtTimeEnd.Text;
+  Result.NumPoints  := edtNumPoints.Text;
+  Result.SampleTime := edtSampleTime.Text;
+
+  if rbPeakValue.IsChecked then Result.Measure := omPeakValue
+  else if rbTimeToPeak.IsChecked then Result.Measure := omTimeToPeak
+  else if rbTimeCourseOverlay.IsChecked then Result.Measure := omTimeCourseOverlay
+  else Result.Measure := omEndpoint;
+
+  Result.Observables := Copy(FSelectedObsNames);
+end;
+
+procedure TFrameParameterScan.RestorePanelState(const AState: TScanPanelState);
+var
+  Idx: Integer;
+begin
+  Idx := cbParameter.Items.IndexOf(AState.Parameter);
+  if Idx >= 0 then
+    cbParameter.ItemIndex := Idx;
+
+  rbLinear.IsChecked := AState.RangeMode = srmLinear;
+  rbLog.IsChecked    := AState.RangeMode = srmLog;
+  rbList.IsChecked   := AState.RangeMode = srmList;
+
+  edtScanStart.Text   := AState.ScanStart;
+  edtScanEnd.Text     := AState.ScanEnd;
+  edtScanNPoints.Text := AState.ScanPoints;
+  edtValueList.Text   := AState.ValueList;
+  edtTimeStart.Text   := AState.TimeStart;
+  edtTimeEnd.Text     := AState.TimeEnd;
+  edtNumPoints.Text   := AState.NumPoints;
+  edtSampleTime.Text  := AState.SampleTime;
+
+  rbEndpoint.IsChecked          := AState.Measure = omEndpoint;
+  rbPeakValue.IsChecked         := AState.Measure = omPeakValue;
+  rbTimeToPeak.IsChecked        := AState.Measure = omTimeToPeak;
+  rbTimeCourseOverlay.IsChecked := AState.Measure = omTimeCourseOverlay;
+
+  UpdateRangeMode;
+  UpdateMeasureMode;
+  SetCheckedObservables(AState.Observables);
+
+  { Results on screen were produced from other settings. }
+  FHasData := False;
+end;
+
+function TFrameParameterScan.ResolveModelName(const AName: string): string;
+var
+  Names: TArray<string>;
+  N:     string;
+begin
+  { RoadRunner reports a floating species as '[A]' while the model file
+    calls it 'A'; parameters are unbracketed in both. Accept either
+    spelling and answer with the model's own. }
+  Result := '';
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+
+  Names := FContext.Session.GetTunableNames;
+  for N in Names do
+    if (N = AName) or (N = '[' + AName + ']') then
+      Exit(N);
+end;
+
+procedure TFrameParameterScan.MetadataChanged(AApply: Boolean);
+begin
+  if (FContext = nil) or (FSelector = nil) then Exit;
+
+  FSelector.Rebuild(FContext.MetaExperiments);
+  if AApply then
+    FSelector.ApplyFirstUsable(FContext.MetaExperiments);
+end;
+
+procedure TFrameParameterScan.ApplyExperiment(AExp: TMetaExperiment;
+  AWasUnset: Boolean);
+var
+  Scan:   TScanCommand;
+  ASet:   TMetaExperimentSet;
+  SrcExp: TMetaExperiment;
+  Sim:    TSimulateCommand;
+  Vals:   TArray<Double>;
+  Wanted: TArray<string>;
+  ModelId, S: string;
+  I, Idx: Integer;
+  Fmt:    TFormatSettings;
+begin
+  if (AExp = nil) or (not AExp.Usable) then Exit;
+  if not (AExp.Task is TScanCommand) then Exit;
+  Scan := TScanCommand(AExp.Task);
+  Fmt  := TFormatSettings.Invariant;
+
+  { Capture the user's own settings before overwriting them.
+
+    Re-captured whenever we are leaving the '—' row, not only the first
+    time: while '—' is selected the panel IS the user's settings, so
+    anything they changed there — an observable ticked, a range edited —
+    is theirs and must come back when they return to it. Capturing only
+    once meant '—' replayed whatever they had before the very first
+    preset and silently discarded everything since. }
+  if (not FHasUserState) or AWasUnset then
+  begin
+    FUserState    := CapturePanelState;
+    FHasUserState := True;
+  end;
+
+  FSelector.Suppressed := True;
+  try
+    { The scanned parameter. A @scan may name a species, in which case its
+      initial value is scanned, so the species form has to resolve too. }
+    ModelId := ResolveModelName(Scan.Parameter);
+    if ModelId = '' then
+      ModelId := Scan.Parameter;
+    Idx := cbParameter.Items.IndexOf(ModelId);
+    if Idx >= 0 then
+      cbParameter.ItemIndex := Idx;
+
+    { Range. ScanValues materialises both forms, but the panel has a
+      distinct list mode, so the two are kept apart here to round-trip
+      what the user wrote rather than flattening a range into values. }
+    if Scan.HasRange then
+    begin
+      rbList.IsChecked   := False;
+      rbLog.IsChecked    := Scan.LogSpacing;
+      rbLinear.IsChecked := not Scan.LogSpacing;
+      edtScanStart.Text   := FloatToStr(Scan.RangeStart, Fmt);
+      edtScanEnd.Text     := FloatToStr(Scan.RangeEnd, Fmt);
+      edtScanNPoints.Text := IntToStr(Scan.RangePoints);
+    end
+    else
+    begin
+      rbLinear.IsChecked := False;
+      rbLog.IsChecked    := False;
+      rbList.IsChecked   := True;
+      Vals := Scan.ScanValues;
+      S := '';
+      for I := 0 to High(Vals) do
+      begin
+        if I > 0 then S := S + ', ';
+        S := S + FloatToStr(Vals[I], Fmt);
+      end;
+      edtValueList.Text := S;
+    end;
+    UpdateRangeMode;
+
+    { What to extract at each scan point. }
+    rbEndpoint.IsChecked          := Scan.Measure = mkSampleAt;
+    rbPeakValue.IsChecked         := Scan.Measure = mkPeakValue;
+    rbTimeToPeak.IsChecked        := Scan.Measure = mkTimeToPeak;
+    rbTimeCourseOverlay.IsChecked := Scan.Measure = mkTimecourse;
+    if Scan.Measure = mkSampleAt then
+      edtSampleTime.Text := FloatToStr(Scan.SampleAt, Fmt);
+    UpdateMeasureMode;
+
+    { The time course each scan point runs is described by the task the
+      scan repeats, not by the @scan itself — so the time settings come
+      from its source. }
+    ASet := FContext.MetaExperiments;
+    if (ASet <> nil) and (Length(Scan.Source) > 0) then
+    begin
+      SrcExp := ASet.FindByLabel(Scan.Source[0]);
+      if (SrcExp <> nil) and (SrcExp.Task is TSimulateCommand) then
+      begin
+        Sim := TSimulateCommand(SrcExp.Task);
+        edtTimeStart.Text := FloatToStr(Sim.TimeStart, Fmt);
+        edtTimeEnd.Text   := FloatToStr(Sim.TimeEnd, Fmt);
+        edtNumPoints.Text := IntToStr(Sim.Points);
+      end;
+    end;
+
+    { Observables. SetCheckedObservables matches list text exactly, so
+      offer both spellings and let it take whichever the lists hold. }
+    Wanted := [];
+    for S in Scan.Observables do
+    begin
+      Wanted := Wanted + [S];
+      ModelId := ResolveModelName(S);
+      if (ModelId <> '') and (ModelId <> S) then
+        Wanted := Wanted + [ModelId]
+      else
+        Wanted := Wanted + ['[' + S + ']'];
+    end;
+    if Length(Wanted) > 0 then
+      SetCheckedObservables(Wanted);
+
+    { The selector already holds this label — it is what dispatched here. }
+  finally
+    FSelector.Suppressed := False;
+  end;
+
+  { If there was no model to resolve names against, the parameter combo
+    and observable lists were empty and could not take the request. Hold
+    it for the first load, which is when they are built. }
+  if (FContext <> nil) and FContext.Session.IsLoaded then
+    FPendingExperiment := ''
+  else
+    FPendingExperiment := AExp.LabelText;
+
+  { Settings changed, so any scan on screen is stale. Nothing is
+    recomputed: the user presses Run Scan when they want a result. }
+  FHasData := False;
+  UpdateScanParameterLock;
+end;
+
+procedure TFrameParameterScan.ApplyPendingExperiment;
+var
+  ASet: TMetaExperimentSet;
+  Exp:  TMetaExperiment;
+  Want: string;
+begin
+  Want := FPendingExperiment;
+  FPendingExperiment := '';        { consumed either way, so it cannot
+                                     go on overriding the user }
+  if (Want = '') or (FContext = nil) then Exit;
+
+  ASet := FContext.MetaExperiments;
+  if ASet = nil then Exit;
+  Exp := ASet.FindByLabel(Want);
+  if (Exp <> nil) and Exp.Usable then
+    { Not a transition off '—': the user's state was captured when this
+      experiment was first chosen, and re-capturing now would record the
+      preset's own values as theirs. }
+    ApplyExperiment(Exp, False);
+end;
+
 procedure TFrameParameterScan.SetContext(const AContext: IAnalysisContext);
 begin
   FContext := AContext;
@@ -270,6 +600,16 @@ begin
   FHasData := False;
   PopulateParameterCombo;
   PopulateObservableLists;
+
+  { A preset applied before the model was loaded could not reach the
+    parameter combo or the observable lists — they were empty, because
+    Iridium loads lazily and a model that has only been opened has no
+    names yet. This is the first moment they exist, so apply it now.
+    Re-running the whole apply is simpler than remembering which
+    individual controls did not take, and it is idempotent. }
+  if FPendingExperiment <> '' then
+    ApplyPendingExperiment;
+
   { If the slider panel is currently showing, the previous lock may now
     point at a parameter that no longer exists, or the auto-selected
     new scan parameter needs to be locked. }

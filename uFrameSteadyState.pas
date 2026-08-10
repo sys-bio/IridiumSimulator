@@ -1,4 +1,4 @@
-unit uFrameSteadyState;
+﻿unit uFrameSteadyState;
 
 { Steady-state analysis frame -- CONTROL PANEL ONLY.
 
@@ -31,7 +31,8 @@ uses
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Controls.Presentation, FMX.Grid, FMX.Grid.Style,
   FMX.ScrollBox, FMX.Layouts, FMX.ListBox, FMX.Edit,
-  uAnalysisTypes, uFrameSliderContainer, uRR2DSimpleMatrix, FMX.EditBox,
+  uAnalysisTypes, uMetaExperiments, uMetaSelector, Sim.Meta.Model,
+  uFrameSliderContainer, uRR2DSimpleMatrix, FMX.EditBox,
   FMX.Text,
   System.Generics.Collections,
   ufBar3DWindow,
@@ -78,6 +79,14 @@ type
     FContext: IAnalysisContext;
     FHasData: Boolean;
 
+    { Scrolling. The designer puts this panel's controls straight on the
+      frame, so they clip rather than scroll on a short form. Construction
+      re-parents them all into FContent inside a TVertScrollBox — the
+      parameter-scan frame has the equivalent box in its .fmx, and the
+      time-course frame builds one the same way. }
+    FScroll:  TVertScrollBox;
+    FContent: TLayout;
+
     FSectionsBuilt: Boolean;
     FSecConcentrations: TSteadyStateSection;
     FSecJacobian:       TSteadyStateSection;
@@ -96,6 +105,37 @@ type
       does NOT own the forms -- forms own themselves (caFree on close)
       and notify us via OnFormClosed so we can drop the stale entry. }
     F3DWindows: TDictionary<TBar3DMatrixKind, TfrmBar3D>;
+
+    { ── metadata presets ───────────────────────────────────────────────
+      A @steadystate command carries solver, tolerance, maxiter,
+      presimulate, initial and observables. None of those is a control on
+      this panel — they are engine settings, held in libRoadRunner and
+      edited through the solver-configuration dialog — so unlike the
+      time-course and scan panels there is nothing here for a preset to
+      fill in.
+
+      The preset is therefore applied to the ENGINE, at the moment Compute
+      is pressed, and the panel shows a summary of what that will do. An
+      experiment whose effect is invisible until it runs would be worse
+      than no experiment at all: the user has to be able to see what they
+      have selected. }
+    FSelector:          TMetaExperimentSelector;
+    FExperimentSummary: TLabel;
+
+    { The engine's solver settings as the user had them, captured before
+      the first preset writes over them, so that '—' can put them back.
+      Restoring defaults would not do: the user may have configured the
+      solver themselves through the dialog. }
+    FBaselineSolver: string;
+    FBaselineParams: TStringList;   { name=value, value as display text }
+    FHasBaseline:    Boolean;
+    { The strip holding the three controls above, hidden when the model
+      defines no steady-state experiments. }
+    FExperimentHostRef: TLayout;
+
+    { Experiment whose unapplied settings have already been reported, so
+      the note appears once rather than on every Compute. }
+    FReportedFor:    string;
 
     function  Scaled: Boolean;
     function  SpeciesIds:  TArray<string>;
@@ -164,13 +204,42 @@ type
     procedure RefreshAllOpen3DWindows;
     procedure CloseAll3DWindows;
 
+    procedure BuildExperimentSelector;
+    procedure ApplyExperiment(AExp: TMetaExperiment; AWasUnset: Boolean);
+    procedure RestoreUserSolverSettings(Sender: TObject);
+    function  GetMetaExperiments: TMetaExperimentSet;
+    procedure UpdateExperimentSummary;
+    function  SelectedSteadyState: TSteadyStateCommand;
+
+    procedure CaptureSolverBaseline;
+    procedure RestoreSolverBaseline;
+    { Set the first solver parameter whose name matches one of
+      ACandidates. False if this solver has no such parameter. }
+    function  SetSolverParam(const ACandidates: array of string;
+                             AValue: Double; AAsInteger: Boolean): Boolean;
+    { Resolve a name as the model file spells it to the id RoadRunner
+      uses ('A' -> '[A]' for a species). '' if unknown. }
+    function  ResolveModelId(const AName: string): string;
+    { Write the selected experiment's settings into the engine. Called
+      from EnsureSteadyState, immediately before solving. }
+    procedure ApplyMetadataToEngine;
+
+    procedure InstallScrollBox;
+    procedure UpdateContentHeight;
+    procedure DoScrollResize(Sender: TObject);
+
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
   public
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SetContext(const AContext: IAnalysisContext);
     procedure AttachToSliders;
+
+    { The shell re-parsed the model's metadata block. AApply = True only
+      when a model was OPENED. See uFrameTimeCourse.MetadataChanged. }
+    procedure MetadataChanged(AApply: Boolean);
   end;
 
 implementation
@@ -178,7 +247,8 @@ implementation
 {$R *.fmx}
 
 uses
-  ufConfigureSteadyState;
+  ufConfigureSteadyState,
+  uMetaSymbolProvider;   { CanonicalModelName: '[A]' <-> 'A' }
 
 const
   SECTION_HEIGHT     = 200;
@@ -445,6 +515,8 @@ begin
   F3DWindows.Free;
   FGradientPos.Free;
   FGradientNeg.Free;
+  FSelector.Free;
+  FBaselineParams.Free;
   inherited;
 end;
 
@@ -610,6 +682,460 @@ begin
   CloseAll3DWindows;     { NEW: species/reaction counts may have changed }
 end;
 
+{ -- metadata presets ------------------------------------------------------ }
+
+const
+  { libRoadRunner's solver-parameter type codes. Declared here rather than
+    imported because the two configuration dialogs each declare their own
+    copy in their implementation sections; a shared declaration belongs in
+    uRoadRunner, which is out of scope for this change. }
+  PARAM_TYPE_BOOL   = 2;
+  PARAM_TYPE_INT32  = 3;
+  PARAM_TYPE_INT64  = 5;
+  PARAM_TYPE_FLOAT  = 7;
+  PARAM_TYPE_DOUBLE = 8;
+
+  { Solver parameter names differ between RoadRunner's steady-state
+    solvers, and the format speaks in plain terms. Try each in turn and
+    report honestly when a solver has none of them, rather than silently
+    doing nothing. }
+  TOLERANCE_PARAMS: array[0..2] of string =
+    ('relative_tolerance', 'tolerance', 'abs_tolerance');
+  MAXITER_PARAMS: array[0..2] of string =
+    ('maximum_iterations', 'max_iterations', 'maxiter');
+  PRESIM_ALLOW_PARAMS: array[0..0] of string = ('allow_presimulation');
+  PRESIM_TIME_PARAMS: array[0..1] of string =
+    ('presimulation_time', 'presimulation_maximum_steps');
+
+constructor TFrameSteadyState.Create(AOwner: TComponent);
+begin
+  inherited;
+  FBaselineParams := TStringList.Create;
+  { Before the selector is built, so its strip lands inside the scroll box. }
+  InstallScrollBox;
+  BuildExperimentSelector;
+  UpdateContentHeight;
+end;
+
+{ Move the designed controls into a vertical scroll box so the panel scrolls
+  rather than clips when the form is shorter than the content. }
+procedure TFrameSteadyState.InstallScrollBox;
+var
+  Kids: TArray<TControl>;
+  I:    Integer;
+begin
+  SetLength(Kids, ControlsCount);
+  for I := 0 to ControlsCount - 1 do
+    Kids[I] := Controls[I];
+
+  FScroll := TVertScrollBox.Create(Self);
+  FScroll.Parent := Self;
+  FScroll.Align  := TAlignLayout.Client;
+
+  FContent := TLayout.Create(Self);
+  FContent.Parent := FScroll;
+  FContent.Align  := TAlignLayout.Top;
+
+  { In child order, so the Top-aligned stack keeps its designed sequence. }
+  for I := 0 to High(Kids) do
+    Kids[I].Parent := FContent;
+
+  FScroll.OnResize := DoScrollResize;
+end;
+
+{ The content layout must be as tall as its Top-aligned children to give the
+  scroll box something to scroll, but never shorter than the viewport. }
+procedure TFrameSteadyState.UpdateContentHeight;
+var
+  I: Integer;
+  C: TControl;
+  H: Single;
+begin
+  if (FScroll = nil) or (FContent = nil) then
+    Exit;
+
+  H := FContent.Padding.Top + FContent.Padding.Bottom;
+  for I := 0 to FContent.ControlsCount - 1 do
+  begin
+    C := FContent.Controls[I];
+    if C.Visible and (C.Align = TAlignLayout.Top) then
+      H := H + C.Height + C.Margins.Top + C.Margins.Bottom;
+  end;
+
+  if H < FScroll.Height then
+    H := FScroll.Height;
+
+  if FContent.Height <> H then
+    FContent.Height := H;
+end;
+
+procedure TFrameSteadyState.DoScrollResize(Sender: TObject);
+begin
+  UpdateContentHeight;
+end;
+
+procedure TFrameSteadyState.BuildExperimentSelector;
+begin
+  FSelector := TMetaExperimentSelector.Create(Self, mekSteadyState,
+                                              GetMetaExperiments);
+  FSelector.OnApply   := ApplyExperiment;
+  FSelector.OnRestore := RestoreUserSolverSettings;
+
+  { This panel has no controls a preset could fill, so a third line in
+    the strip carries a summary — the only way to see what Compute is
+    about to do. }
+  FExperimentSummary := TLabel.Create(Self);
+  FExperimentSummary.Parent := FSelector.Host;
+  FExperimentSummary.Align  := TAlignLayout.Top;
+  FExperimentSummary.Height := 22;
+  FExperimentSummary.Margins.Rect := RectF(8, 0, 8, 2);
+  FExperimentSummary.WordWrap := False;
+  FSelector.Host.Height := FSelector.Host.Height + FExperimentSummary.Height;
+
+  { Above the toolbar, so it reads before the Compute button it
+    describes. }
+  { LayoutToolbar.Parent, not Self: the controls now live inside the scroll
+    box's content layout, and the strip must go in there with them. }
+  FSelector.Place(LayoutToolbar.Parent, LayoutToolbar);
+end;
+
+function TFrameSteadyState.GetMetaExperiments: TMetaExperimentSet;
+begin
+  if FContext = nil then
+    Result := nil
+  else
+    Result := FContext.MetaExperiments;
+end;
+
+procedure TFrameSteadyState.MetadataChanged(AApply: Boolean);
+begin
+  if (FContext = nil) or (FSelector = nil) then Exit;
+
+  FReportedFor := '';
+  FSelector.Rebuild(FContext.MetaExperiments);
+  UpdateExperimentSummary;
+  { Rebuild shows or hides the strip, changing how tall the panel is. }
+  UpdateContentHeight;
+
+  if AApply then
+    FSelector.ApplyFirstUsable(FContext.MetaExperiments);
+end;
+
+function TFrameSteadyState.SelectedSteadyState: TSteadyStateCommand;
+var
+  ASet: TMetaExperimentSet;
+  Exp:  TMetaExperiment;
+begin
+  Result := nil;
+  if (FContext = nil) or (FSelector.ActiveLabel = '') then Exit;
+  ASet := FContext.MetaExperiments;
+  if ASet = nil then Exit;
+  Exp := ASet.FindByLabel(FSelector.ActiveLabel);
+  if (Exp = nil) or (not Exp.Usable) then Exit;
+  if Exp.Task is TSteadyStateCommand then
+    Result := TSteadyStateCommand(Exp.Task);
+end;
+
+procedure TFrameSteadyState.UpdateExperimentSummary;
+var
+  Cmd: TSteadyStateCommand;
+begin
+  if FExperimentSummary = nil then Exit;
+
+  Cmd := SelectedSteadyState;
+  if Cmd = nil then
+  begin
+    FExperimentSummary.Text :=
+      'Compute uses the solver settings from the configuration dialog.';
+    Exit;
+  end;
+
+  { Generated from the parsed command rather than hand-written, so it
+    cannot drift as the command gains keys. }
+  if Cmd.SettingsSummary = '' then
+    FExperimentSummary.Text := 'Compute applies: (no settings given)'
+  else
+    FExperimentSummary.Text := 'Compute applies: ' + Cmd.SettingsSummary;
+end;
+
+procedure TFrameSteadyState.ApplyExperiment(AExp: TMetaExperiment;
+  AWasUnset: Boolean);
+begin
+  if (AExp = nil) or (not AExp.Usable) then Exit;
+  if not (AExp.Task is TSteadyStateCommand) then Exit;
+
+  { Nothing is written to the engine here. Selecting an experiment must
+    not change the model's behaviour on its own — the settings go in when
+    Compute is pressed, which is the click that asks for a result. }
+  FReportedFor := '';
+  UpdateExperimentSummary;
+
+  { Grids on screen were solved with other settings. }
+  FHasData := False;
+  ClearAllGrids;
+end;
+
+procedure TFrameSteadyState.RestoreUserSolverSettings(Sender: TObject);
+begin
+  { Put the engine back as the user had it, not to solver defaults — they
+    may have configured it themselves through the dialog. }
+  RestoreSolverBaseline;
+  UpdateExperimentSummary;
+  FHasData := False;
+  ClearAllGrids;
+end;
+
+{ -- engine application ---------------------------------------------------- }
+
+procedure TFrameSteadyState.CaptureSolverBaseline;
+var
+  RR:    TRoadRunner;
+  Names: TStringList;
+  I:     Integer;
+  Fmt:   TFormatSettings;
+begin
+  if FHasBaseline then Exit;
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+
+  RR  := FContext.Session.RoadRunner;
+  Fmt := TFormatSettings.Invariant;
+
+  FBaselineParams.Clear;
+  try
+    FBaselineSolver := RR.getCurrentSteadyStateSolverName;
+    Names := RR.getListOfSteadyStateSolverParameterNames;
+    try
+      for I := 0 to Names.Count - 1 do
+        case RR.getSteadyStateSolverParameterType(Names[I]) of
+          PARAM_TYPE_INT32, PARAM_TYPE_INT64:
+            FBaselineParams.Values[Names[I]] :=
+              IntToStr(RR.getSteadyStateSolverParameterInt(Names[I]));
+          PARAM_TYPE_FLOAT, PARAM_TYPE_DOUBLE:
+            FBaselineParams.Values[Names[I]] :=
+              FloatToStr(RR.getSteadyStateSolverParameterDouble(Names[I]), Fmt);
+          PARAM_TYPE_BOOL:
+            FBaselineParams.Values[Names[I]] :=
+              BoolToStr(RR.getSteadyStateSolverParameterBoolean(Names[I]), True);
+        end;
+    finally
+      Names.Free;
+    end;
+    FHasBaseline := True;
+  except
+    { A solver that will not report its parameters simply has no
+      baseline; that is not a reason to fail the analysis. }
+    on E: Exception do
+      FHasBaseline := False;
+  end;
+end;
+
+procedure TFrameSteadyState.RestoreSolverBaseline;
+var
+  RR:   TRoadRunner;
+  I:    Integer;
+  Name: string;
+  Fmt:  TFormatSettings;
+begin
+  if not FHasBaseline then Exit;
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+
+  RR  := FContext.Session.RoadRunner;
+  Fmt := TFormatSettings.Invariant;
+  try
+    if FBaselineSolver <> '' then
+      RR.setSteadyStateSolver(FBaselineSolver);
+
+    for I := 0 to FBaselineParams.Count - 1 do
+    begin
+      Name := FBaselineParams.Names[I];
+      if Name = '' then Continue;
+      try
+        case RR.getSteadyStateSolverParameterType(Name) of
+          PARAM_TYPE_INT32, PARAM_TYPE_INT64:
+            RR.setSteadyStateSolverParameterInt(Name,
+              StrToIntDef(FBaselineParams.Values[Name], 0));
+          PARAM_TYPE_FLOAT, PARAM_TYPE_DOUBLE:
+            RR.setSteadyStateSolverParameterDouble(Name,
+              StrToFloatDef(FBaselineParams.Values[Name], 0, Fmt));
+          PARAM_TYPE_BOOL:
+            RR.setSteadyStateSolverParameterBoolean(Name,
+              SameText(FBaselineParams.Values[Name], 'True'));
+        end;
+      except
+        { One parameter refusing its old value must not abandon the rest. }
+      end;
+    end;
+  except
+  end;
+end;
+
+function TFrameSteadyState.SetSolverParam(const ACandidates: array of string;
+  AValue: Double; AAsInteger: Boolean): Boolean;
+var
+  RR:    TRoadRunner;
+  Names: TStringList;
+  Cand:  string;
+  I:     Integer;
+begin
+  Result := False;
+  RR := FContext.Session.RoadRunner;
+
+  Names := RR.getListOfSteadyStateSolverParameterNames;
+  try
+    for Cand in ACandidates do
+      for I := 0 to Names.Count - 1 do
+        if SameText(Names[I], Cand) then
+        begin
+          try
+            if AAsInteger then
+              RR.setSteadyStateSolverParameterInt(Names[I], Trunc(AValue))
+            else
+              RR.setSteadyStateSolverParameterDouble(Names[I], AValue);
+            Exit(True);
+          except
+            Exit(False);
+          end;
+        end;
+  finally
+    Names.Free;
+  end;
+end;
+
+function TFrameSteadyState.ResolveModelId(const AName: string): string;
+var
+  RR:  TRoadRunner;
+  Ids: TStringList;
+
+  function Search(AList: TStringList): string;
+  var
+    I: Integer;
+  begin
+    Result := '';
+    for I := 0 to AList.Count - 1 do
+      if (AList[I] = AName) or (AList[I] = '[' + AName + ']') then
+        Exit(AList[I]);
+  end;
+
+begin
+  Result := '';
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+  RR := FContext.Session.RoadRunner;
+
+  Ids := RR.getFloatingSpeciesIds;
+  try Result := Search(Ids); finally Ids.Free; end;
+  if Result <> '' then Exit;
+
+  Ids := RR.getBoundarySpeciesIds;
+  try Result := Search(Ids); finally Ids.Free; end;
+  if Result <> '' then Exit;
+
+  Ids := RR.getGlobalParameterIds;
+  try Result := Search(Ids); finally Ids.Free; end;
+  if Result <> '' then Exit;
+
+  Ids := RR.getReactionIds;
+  try Result := Search(Ids); finally Ids.Free; end;
+end;
+
+procedure TFrameSteadyState.ApplyMetadataToEngine;
+var
+  Cmd:      TSteadyStateCommand;
+  RR:       TRoadRunner;
+  Unmet:    TStringList;
+  Sel:      TStringList;
+  IV:       TInitialValue;
+  Name, Id: string;
+begin
+  Cmd := SelectedSteadyState;
+  if Cmd = nil then Exit;
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+
+  RR := FContext.Session.RoadRunner;
+
+  { Remember the user's own engine settings before writing over them, so
+    the '—' row can put them back. }
+  CaptureSolverBaseline;
+
+  Unmet := TStringList.Create;
+  try
+    if Cmd.Solver <> '' then
+      try
+        RR.setSteadyStateSolver(Cmd.Solver);
+      except
+        Unmet.Add('solver "' + Cmd.Solver + '" is not available here');
+      end;
+
+    if Cmd.HasTolerance and
+       (not SetSolverParam(TOLERANCE_PARAMS, Cmd.Tolerance, False)) then
+      Unmet.Add('tolerance: this solver has no tolerance parameter');
+
+    if Cmd.HasMaxIter and
+       (not SetSolverParam(MAXITER_PARAMS, Cmd.MaxIter, True)) then
+      Unmet.Add('maxiter: this solver has no iteration-limit parameter');
+
+    { presimulate: integrate for a while and solve from there. RoadRunner's
+      own solvers express this directly, which is better than running a
+      time course here and throwing the result away — the engine then
+      knows it is pre-simulating. A solver without it cannot honour the
+      key, and says so rather than quietly solving from the initial
+      state, which is a different (and often failing) analysis. }
+    if Cmd.HasPreSimulate then
+    begin
+      SetSolverParam(PRESIM_ALLOW_PARAMS, 1, True);
+      if not SetSolverParam(PRESIM_TIME_PARAMS, Cmd.PreSimulate, False) then
+        Unmet.Add('presimulate: this solver cannot pre-simulate');
+    end;
+
+    { Initial values, applied before the solve. }
+    for IV in Cmd.Initial do
+    begin
+      Id := ResolveModelId(IV.Name);
+      if Id = '' then
+      begin
+        Unmet.Add('initial ' + IV.Name + ': no such quantity in the model');
+        Continue;
+      end;
+      if not RR.setValue(AnsiString('init(' + Id + ')'), IV.Value) then
+        if not RR.setValue(AnsiString('init(' +
+                           CanonicalModelName(Id) + ')'), IV.Value) then
+          Unmet.Add('initial ' + IV.Name + ': could not be set');
+    end;
+
+    { observables selects what the steady-state result reports. }
+    if Length(Cmd.Observables) > 0 then
+    begin
+      Sel := TStringList.Create;
+      try
+        for Name in Cmd.Observables do
+        begin
+          Id := ResolveModelId(Name);
+          if Id = '' then
+            Unmet.Add('observable ' + Name + ': no such quantity in the model')
+          else
+            Sel.Add(Id);
+        end;
+        if Sel.Count > 0 then
+          RR.setSteadyStateSelectionListEx(Sel);
+      finally
+        Sel.Free;
+      end;
+    end;
+
+    { Report once per experiment. Anything the block asked for and did not
+      get has to reach the user — a steady state solved without the
+      requested pre-simulation is a different answer, not a near miss. }
+    if (Unmet.Count > 0) and (FReportedFor <> FSelector.ActiveLabel) then
+    begin
+      FReportedFor := FSelector.ActiveLabel;
+      ShowMessage('Experiment ' + FSelector.ActiveLabel +
+        ': some settings could not be applied.' + sLineBreak + sLineBreak +
+        Unmet.Text);
+    end;
+  finally
+    Unmet.Free;
+  end;
+end;
+
 { -- compute / populate --------------------------------------------------- }
 
 function TFrameSteadyState.EnsureSteadyState: Boolean;
@@ -630,6 +1156,10 @@ begin
       Exit;
     end;
   end;
+
+  { A selected experiment's settings go into the engine here — on the
+    click that asks for a result, not when it was selected. }
+  ApplyMetadataToEngine;
 
   try
     FContext.Session.RoadRunner.steadyState;

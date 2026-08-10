@@ -27,9 +27,10 @@ var
 implementation
 
 function getDefaultModel : string; forward;
+function getFourStepClosedMassActionPathway : string; forward;
 function getMassActionThreeStepPathway : string; forward;
 function getMassActionReversibleThreeStepPathway : string; forward;
-function getassActionTwentyStepPathway : string; forward;
+function getMassActionTwentyStepPathway : string; forward;
 function getFeedbackModel : string; forward;
 function getThreeStepPathway : string; forward;
 function getLorenzAttractor : string; forward;
@@ -83,8 +84,19 @@ begin
 
   model := TBuiltInModel.Create;
   model.id := 'SimpleThreeStepPathway';
-  model.displayName := 'Simple Three Step Pathway';
+  model.displayName := 'Three Step Closed Mass-Action Pathway';
   model.modelStr := getMassActionThreeStepPathway;
+  model.Ymin := 0;
+  model.Ymax := 3;
+  model.Xmax := 0.0;
+  model.Xmax := 20.0;
+  model.timeEnd := 20.0;
+  builtInModels.Add(model);
+
+  model := TBuiltInModel.Create;
+  model.id := 'SimpleFiveStepPathway';
+  model.displayName := 'Five Step Closed Mass-Action Pathway';
+  model.modelStr := getFourStepClosedMassActionPathway;
   model.Ymin := 0;
   model.Ymax := 3;
   model.Xmax := 0.0;
@@ -106,7 +118,7 @@ begin
   model := TBuiltInModel.Create;
   model.id := 'TwentyStepPathway';
   model.displayName := 'Twenty Step Mass-action Pathway';
-  model.modelStr := getassActionTwentyStepPathway;
+  model.modelStr := getMassActionTwentyStepPathway;
   model.Ymin := 0;
   model.Ymax := 100;
   model.Xmax := 0.0;
@@ -279,6 +291,24 @@ begin
   ''';
 end;
 
+
+function getFourStepClosedMassActionPathway : string;
+begin
+  result := '''
+    // Reactions:
+
+    A -> B; k1*A
+    B -> C; k2*B
+    C -> D; k3*C
+    D -> E; k4*D
+
+    // Species initialization:
+    A = 10
+
+    // Parameter initialization:
+    k1 = 0.35; k2 = 0.2;k3 = 0.23; k4 = 0.33
+  ''';
+end;
 
 function getFourSpeciesMoietyCycle : string;
 begin
@@ -1203,7 +1233,7 @@ begin
 end;
 
 
-function getassActionTwentyStepPathway : string;
+function getMassActionTwentyStepPathway : string;
 begin
   result := '' + sLineBreak +
 
