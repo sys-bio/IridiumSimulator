@@ -87,9 +87,9 @@ That is the whole thing. Run a time course from 0 to 50, then draw `S1` and
 
 Three rules will get you most of the way:
 
-1. The block starts with `/*` and the **first thing inside it must be `@`**.
+1. Commands go inside a `/* */` comment, one per line, each starting with `@`.
 2. Every setting is `name: value`, and settings are separated by **commas**.
-3. Command names start with `@`.
+3. Anything in the comment that is not a command is just a description.
 
 ---
 
@@ -101,7 +101,7 @@ Anywhere in the file. Before the model, after it, or split across several
 blocks — they are read in the order they appear and behave as though joined
 together.
 
-The **only** rule is that the first non-blank character inside `/*` is `@`:
+A command is a line that starts with `@`:
 
 ```
 /*
@@ -109,20 +109,27 @@ The **only** rule is that the first non-blank character inside `/*` is `@`:
 */
 ```
 
-This does **not** work, and is the single most common mistake:
+You can write notes to yourself in the same comment. Anything that is not a
+command is ignored, so this works exactly as it looks:
 
 ```
 /*
 Model of yeast glycolysis, reduced form.
-@plot: { y: [S1] }          <-- ignored: the block starts with 'Model'
+Parameters from Teusink 2000.
+
+@simulate: { timeend: 10 }
+
+S3 is left out below -- on a linear axis it swamps the other two.
+
+@plot: { y: [S1, S2] }
 */
 ```
 
-A block that begins with prose is just a comment. Put your description in
-`@meta` (§5), or keep the prose in a separate comment block.
+Notes like this are for you. If you want the description to travel with the
+model — into an exported SED-ML archive, say — put it in `@meta` (§5) instead.
 
-Good tools will warn you when they spot this, because otherwise it fails
-completely silently.
+The one thing to watch: a note written *inside* a command's `{ }` is not a
+note, it is a syntax error. Close the `}` first.
 
 ### 3.2 Commas, colons, quotes
 
@@ -240,6 +247,7 @@ metadata in a COMBINE archive.
 | `points` | whole number | `100` | not with `steps` |
 | `steps` | whole number | — | not with `points` |
 | `solver` | name | tool's choice | e.g. `cvode`, `gillespie` |
+| `set` | settings | — | values to assign before running |
 
 ```
 @simulate wt: {
@@ -249,6 +257,32 @@ metadata in a COMBINE archive.
   solver: cvode,
 }
 ```
+
+### Changing a value before the run
+
+`set` assigns anything the model can set — a parameter, a species starting
+value, a compartment size — for that task only:
+
+```
+@simulate wt:      { timeend: 50 }
+@simulate mutant:  { timeend: 50, set: { k1: 0.1 } }
+
+@plot: { source: [wt, mutant], y: [S1] }
+```
+
+That is the whole recipe for a knockdown comparison: two tasks, one of which
+changes a value. `wt` still sees the model exactly as written.
+
+Note the nesting. It is `set: { k1: 0.1 }`, not `k1: 0.1` directly inside
+the command — otherwise the tool could not tell `timend: 50` from a request
+to set a parameter called `timend`, and you would lose the *did you mean
+`timeend`?* message.
+
+If you name something the model does not have, you get a warning rather than
+an error, and the line is kept. That is deliberate: you may be writing the
+metadata before the model catches up.
+
+`set` works on `@steadystate` (§10) and `@scan` (§9) too.
 
 ### `points` or `steps` — pick either
 
@@ -424,6 +458,7 @@ Repeat a task across a range of values of one parameter.
 |---|---|---|---|
 | `source` | label | the task above | the task to repeat |
 | `parameter` | name | **required** | parameter, or a species' initial value |
+| `set` | settings | — | values held fixed across the sweep, §6 |
 | `start`, `end`, `points` | numbers | — | one way to give the range |
 | `spacing` | `linear` or `log` | `linear` | |
 | `values` | list of numbers | — | the other way |
@@ -493,7 +528,7 @@ If yours skips this, that is the reason, and it is the right call.
 | `tolerance` | number | |
 | `maxiter` | whole number | |
 | `presimulate` | number | run this long first, §10.1 |
-| `initial` | object | starting values, `{ S1: 0.5, S2: 2 }` |
+| `set` | settings | values to assign before solving, §6 |
 | `observables` | list | defaults to all floating species |
 
 ```
@@ -511,7 +546,7 @@ course of the given length first and hands the result to the solver — which
 is exactly what people do by hand, so it is worth being able to say
 directly.
 
-`initial` and `presimulate` combine in the obvious order: initial values
+`set` and `presimulate` combine in the obvious order: the assignments
 are applied, the pre-simulation runs from those, then the solver runs.
 
 ### 10.2 A steady state is a table, not a curve
@@ -719,7 +754,7 @@ The ones people actually hit:
 
 | What you see | What happened |
 |---|---|
-| `'@plot' found in a comment that is not a metadata block` | the block starts with prose — see §3.1 |
+| `unclosed '{' opened at line 12` | a `}` is missing; if a note follows the command, close the `}` before it — see §3.1 |
 | `unknown key 'logY'; keys are case-sensitive` | `logY` should be `logy` |
 | `'points' and 'steps' cannot both appear` | pick one; they differ by one |
 | `'@plot' needs a 'source': 3 tasks precede it` | say which task you meant; the message lists them |
@@ -803,7 +838,7 @@ expresses all of it.
 
 | | |
 |---|---|
-| block | `/*` … `*/`, first character inside must be `@` |
+| block | `/*` … `*/`; commands start with `@`, anything else is a note |
 | label | `@simulate wt: { … }` |
 | setting | `name: value`, never `=` |
 | separator | `,` — required; trailing one allowed |

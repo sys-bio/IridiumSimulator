@@ -13,6 +13,7 @@ uses
   uAnalysisTypes,
   uMetaExperiments,
   uMetaSelector,
+  uMetaSetValues,
   Sim.Meta.Model,
   uRR2DSimpleMatrix,
   uColorList,
@@ -149,6 +150,11 @@ type
       observable lists are empty until the first load, so the request is
       held and replayed once they exist. }
     FPendingExperiment: string;
+    { The experiment whose unmet 'set:' values have already been reported,
+      so the message appears once rather than on every Run Scan. }
+    FReportedSetFor:    string;
+    { What to write back to undo the selected experiment's 'set:' values. }
+    FActiveSetRestore:  TSetValueRestoreArray;
     procedure ApplyPendingExperiment;
 
     procedure ApplyExperiment(AExp: TMetaExperiment; AWasUnset: Boolean);
@@ -222,6 +228,12 @@ type
     { Apply the named experiment to this panel and compute it — what
       Metadata ▸ Run Experiment dispatches here. }
     procedure RunExperiment(const ALabel: string);
+
+    { The selected experiment's 'set:' values, applied for the duration of
+      one sweep. Returns what RestoreSetValues needs to undo them. }
+    procedure ApplySelectedSetValues(AExp: TMetaExperiment);
+    procedure ClearSelectedSetValues;
+    procedure RefreshSlidersFromEngine;
 
     { Replace the checked observables with those in ANames (matched against the
       four observable lists; names not present here are ignored). Used by the
@@ -323,6 +335,10 @@ end;
 
 procedure TFrameParameterScan.RestoreUserState(Sender: TObject);
 begin
+  { Before the early exit: the engine is put back whether or not there is a
+    panel-state snapshot to restore. }
+  ClearSelectedSetValues;
+
   if not FHasUserState then Exit;
   FSelector.Suppressed := True;
   try
@@ -408,6 +424,59 @@ begin
   for N in Names do
     if (N = AName) or (N = '[' + AName + ']') then
       Exit(N);
+end;
+
+{ While an experiment is selected the engine holds its 'set:' values — see
+  the long note in uFrameTimeCourse. Applied when it is selected, removed
+  when it is left, never around a sweep. }
+
+procedure TFrameParameterScan.ApplySelectedSetValues(AExp: TMetaExperiment);
+var
+  Unmet: TStringList;
+begin
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+
+  ClearSelectedSetValues;
+
+  if (AExp = nil) or (not AExp.Usable) or (AExp.Task = nil) then Exit;
+  if Length(AExp.Task.SetValues) = 0 then Exit;
+
+  Unmet := TStringList.Create;
+  try
+    FActiveSetRestore :=
+      ApplySetValues(FContext.Session.RoadRunner, AExp.Task, Unmet);
+    if (Unmet.Count > 0) and (FReportedSetFor <> AExp.LabelText) then
+    begin
+      FReportedSetFor := AExp.LabelText;
+      ShowMessage('Experiment ' + AExp.LabelText +
+        ': some ''set:'' values could not be applied.' + sLineBreak +
+        sLineBreak + Unmet.Text);
+    end;
+  finally
+    Unmet.Free;
+  end;
+
+  RefreshSlidersFromEngine;
+end;
+
+procedure TFrameParameterScan.ClearSelectedSetValues;
+begin
+  if Length(FActiveSetRestore) = 0 then Exit;
+
+  if (FContext <> nil) and FContext.Session.IsLoaded then
+    RestoreSetValues(FContext.Session.RoadRunner, FActiveSetRestore);
+  FActiveSetRestore := nil;
+  RefreshSlidersFromEngine;
+end;
+
+procedure TFrameParameterScan.RefreshSlidersFromEngine;
+begin
+  if FContext = nil then Exit;
+  if not FContext.Session.IsLoaded then Exit;
+  if not FContext.SliderContainer.ParamPanelVisible then Exit;
+
+  FContext.SliderContainer.RefreshValues(FContext.Session.GetTunableNames,
+                                         FContext.Session.GetTunableValues);
 end;
 
 procedure TFrameParameterScan.RunExperiment(const ALabel: string);
@@ -569,6 +638,10 @@ begin
   else
     FPendingExperiment := AExp.LabelText;
 
+  { The experiment's 'set:' values go into the engine now and stay until it
+    is left, so the sliders and the next sweep agree about them. }
+  ApplySelectedSetValues(AExp);
+
   { Settings changed, so any scan on screen is stale. Nothing is
     recomputed: the user presses Run Scan when they want a result. }
   FHasData := False;
@@ -622,6 +695,10 @@ procedure TFrameParameterScan.SessionStateChanged(Sender: TObject);
 begin
   if FContext.Session.IsDirty then
     FHasData := False;
+
+  { Dropped, NOT restored: those values describe an engine that is gone. }
+  if not FContext.Session.IsLoaded then
+    FActiveSetRestore := nil;
 end;
 
 procedure TFrameParameterScan.SessionModelReloaded(Sender: TObject;
@@ -638,7 +715,18 @@ begin
     Re-running the whole apply is simpler than remembering which
     individual controls did not take, and it is idempotent. }
   if FPendingExperiment <> '' then
-    ApplyPendingExperiment;
+    ApplyPendingExperiment
+  else
+  begin
+    { A reload rebuilt the engine from the model text, so the selected
+      experiment's 'set:' values are no longer in it and the restore data
+      describing the old engine is stale. Re-apply from scratch. (The
+      pending path above goes through ApplyExperiment, which does this
+      itself.) }
+    FActiveSetRestore := nil;
+    if FSelector <> nil then
+      ApplySelectedSetValues(FSelector.ActiveExperiment);
+  end;
 
   { If the slider panel is currently showing, the previous lock may now
     point at a parameter that no longer exists, or the auto-selected
@@ -1149,6 +1237,11 @@ begin
   { ── 3. Save original parameter value ── }
   OrigParamVal := RR.getValue(AnsiString(ParamName));
 
+  { No 'set:' handling here: the selected experiment's values are already in
+    the engine, written when it was selected. The loop resets between
+    points, which is why species were written through their init() form as
+    well — that is the form a reset preserves. }
+
   { ── 4. Prepare storage ── }
   ResultMatrix := nil;
 
@@ -1498,6 +1591,10 @@ begin
     while a scan is in flight — one scan at a time. }
   if FRunningScan then Exit;
 
+  { A slider may move a quantity the experiment's 'set:' section wrote: the
+    value lives in the engine rather than being re-imposed per sweep, so
+    sliding explores the model FROM the experiment's conditions and the
+    experiment stays selected. }
   FContext.Session.SetParameterValue(ASliderString, AValue);
 
   FRunningScan := True;

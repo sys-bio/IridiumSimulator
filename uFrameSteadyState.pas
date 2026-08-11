@@ -30,7 +30,7 @@ uses
   System.Math, System.Rtti,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Controls.Presentation, FMX.Grid, FMX.Grid.Style,
-  FMX.ScrollBox, FMX.Layouts, FMX.ListBox, FMX.Edit,
+  FMX.ScrollBox, FMX.Layouts, FMX.ListBox, FMX.Edit, FMX.TabControl,
   uAnalysisTypes, uMetaExperiments, uMetaSelector, Sim.Meta.Model,
   uFrameSliderContainer, uRR2DSimpleMatrix, FMX.EditBox,
   FMX.Text,
@@ -53,7 +53,7 @@ type
     Grid:   TStringGrid;
   end;
 
-  TFrameSteadyState = class(TFrame)
+  TFrameSteadyState = class(TFrame, ITextViewProvider, IPythonScriptExporter)
     Layout1: TLayout;
     Label1: TLabel;
     LayoutToolbar: TLayout;
@@ -68,6 +68,17 @@ type
     Image1: TImage;
     btnConfigSteadyStateSolver: TSpeedButton;
     SkSvgConfig: TSkSvg;
+    { The observables selector's containers live in the .fmx so they can be
+      moved and resized in the designer. The tabs and their listboxes are
+      built in code (CreateObservableSelector) because they depend on the
+      loaded model. }
+    grpObservables: TGroupBox;
+    tcObservables: TTabControl;
+    btnObsSelectAll: TButton;
+    btnObsUnselectAll: TButton;
+    Label3: TLabel;
+    procedure btnObsSelectAllClick(Sender: TObject);
+    procedure btnObsUnselectAllClick(Sender: TObject);
     procedure btnComputeClick(Sender: TObject);
     procedure cbScalingChange(Sender: TObject);
     procedure btnSlidersClick(Sender: TObject);
@@ -87,8 +98,29 @@ type
     FScroll:  TVertScrollBox;
     FContent: TLayout;
 
+    { ── Observables to report ──────────────────────────────────────────
+      Which scalar quantities the Observables grid shows, and what is put
+      into RoadRunner's steady-state selection list at Compute. Built in
+      code rather than in the .fmx, like the metadata strip above it.
+
+      Categories deliberately limited to the three whose values a steady
+      state actually reports: parameters do not change during the solve,
+      rates of change are ~0 by definition, and eigenvalues have their own
+      grid. The lists mirror the parameter-scan panel's, down to the
+      per-tab Select All / Unselect All. }
+    FLstSpecies:  TListBox;
+    FLstBoundary: TListBox;
+    FLstFluxes:   TListBox;
+
+    { The user's own selection, so the '—' row can give it back. Captured
+      before the first preset writes over it, and again whenever the user
+      leaves '—' — while it is selected the panel IS their settings. }
+    FUserObs:     TStringList;
+    FHasUserObs:  Boolean;
+    FObsFirstFill: Boolean;   { seed all species on the first population }
+
     FSectionsBuilt: Boolean;
-    FSecConcentrations: TSteadyStateSection;
+    FSecObservables: TSteadyStateSection;
     FSecJacobian:       TSteadyStateSection;
     FSecEigenvalues:    TSteadyStateSection;
     FSecElasticities:   TSteadyStateSection;
@@ -160,6 +192,12 @@ type
                                     const ATitle: string;
                                     const Sec: TSteadyStateSection);
 
+    { One grid as column-aligned text under its heading. '' when the
+      section has nothing in it, so an unpopulated grid contributes no
+      empty heading. }
+    function  SectionAsText(const ATitle: string;
+                            const Sec: TSteadyStateSection): string;
+
     procedure RepopulateAllFromCurrentState;
 
     procedure BuildOutputSectionsIfNeeded;
@@ -167,7 +205,7 @@ type
                             const ATitle: string;
                             AHost: TScrollBox);
 
-    procedure PopulateConcentrations;
+    procedure PopulateObservables;
     procedure PopulateJacobian;
     procedure PopulateEigenvalues;
     procedure PopulateElasticities;
@@ -224,6 +262,18 @@ type
       from EnsureSteadyState, immediately before solving. }
     procedure ApplyMetadataToEngine;
 
+    { Observables selector }
+    procedure CreateObservableSelector;
+    procedure ApplyObservableSelection;
+    procedure PopulateObservableLists;
+    procedure ClearObservableLists;
+    function  ActiveObservableList: TListBox;
+    procedure SetAllChecked(AList: TListBox; AChecked: Boolean);
+    function  SelectedObservables: TArray<string>;
+    procedure SetSelectedObservables(const ANames: TArray<string>);
+    procedure DoObsCheckChanged(Sender: TObject);
+    procedure SnapshotUserObservables;
+
     procedure InstallScrollBox;
     procedure UpdateContentHeight;
     procedure DoScrollResize(Sender: TObject);
@@ -244,6 +294,14 @@ type
     { Apply the named experiment to this panel and compute it — what
       Metadata ▸ Run Experiment dispatches here. }
     procedure RunExperiment(const ALabel: string);
+
+    { ITextViewProvider: every grid as text, for the shell's Text tab. }
+    function  GetTextView(ADecimals: Integer): string;
+    procedure SetDisplayDecimals(ADecimals: Integer);
+
+    { IPythonScriptExporter: a Tellurium script that solves the steady
+      state and prints the same quantities this panel shows. }
+    function  GetPythonScript(const AntimonyText: string): string;
   end;
 
 implementation
@@ -519,6 +577,7 @@ begin
   F3DWindows.Free;
   FGradientPos.Free;
   FGradientNeg.Free;
+  FUserObs.Free;
   FSelector.Free;
   FBaselineParams.Free;
   inherited;
@@ -583,7 +642,13 @@ procedure TFrameSteadyState.spnDecimalsChange(Sender: TObject);
 begin
  FDecimalPlaces := Round(spnDecimals.Value);
   if FHasData then
+  begin
     RepopulateAllFromCurrentState;
+    { The Text tab is read out of these grids, so it is stale the moment
+      they are re-rendered. No-op unless it is the tab showing. }
+    if FContext <> nil then
+      FContext.RefreshTextView;
+  end;
 end;
 
 function TFrameSteadyState.ReactionIds: TArray<string>;
@@ -649,7 +714,7 @@ procedure TFrameSteadyState.BuildOutputSectionsIfNeeded;
     Host := FContext.SteadyStateHost;
     if Host = nil then Exit;
 
-    CreateSection(FSecConcentrations, 'Concentrations',                    Host);
+    CreateSection(FSecObservables, 'Observables',                       Host);
     CreateSection(FSecJacobian,       'Jacobian',                          Host);
     CreateSection(FSecEigenvalues,    'Eigenvalues',                       Host);
     CreateSection(FSecElasticities,   'Elasticities',                      Host);
@@ -684,6 +749,10 @@ begin
   FHasData := False;
   ClearAllGrids;
   CloseAll3DWindows;     { NEW: species/reaction counts may have changed }
+
+  { First moment the model's names exist, and the moment they may have
+    changed. Rebuilt preserving what was checked, by name. }
+  PopulateObservableLists;
 end;
 
 { -- metadata presets ------------------------------------------------------ }
@@ -715,10 +784,271 @@ constructor TFrameSteadyState.Create(AOwner: TComponent);
 begin
   inherited;
   FBaselineParams := TStringList.Create;
+
+  FUserObs := TStringList.Create;
+  FUserObs.CaseSensitive := True;
+  FUserObs.Sorted        := True;
+  FUserObs.Duplicates    := dupIgnore;
+  FObsFirstFill := True;
+
   { Before the selector is built, so its strip lands inside the scroll box. }
   InstallScrollBox;
   BuildExperimentSelector;
+  CreateObservableSelector;
   UpdateContentHeight;
+end;
+
+{ ── observables selector ─────────────────────────────────────────────────── }
+
+{ Only the tabs and their listboxes: the group box, the tab control and the
+  two buttons are designed in the .fmx so they can be laid out in the IDE.
+  The tabs stay in code because what goes in them comes from the model. }
+procedure TFrameSteadyState.CreateObservableSelector;
+
+  procedure MakeTab(const ACaption: string; out AList: TListBox);
+  var
+    Tab: TTabItem;
+  begin
+    Tab := TTabItem.Create(Self);
+    Tab.Parent := tcObservables;
+    Tab.Text   := ACaption;
+
+    AList := TListBox.Create(Self);
+    AList.Parent         := Tab;
+    AList.Align          := TAlignLayout.Client;
+    AList.ShowCheckboxes := True;
+    AList.OnChangeCheck  := DoObsCheckChanged;
+  end;
+
+begin
+  if tcObservables = nil then Exit;
+
+  MakeTab('Species',  FLstSpecies);
+  MakeTab('Boundary', FLstBoundary);
+  MakeTab('Fluxes',   FLstFluxes);
+
+  if tcObservables.TabCount > 0 then
+    tcObservables.ActiveTab := tcObservables.Tabs[0];
+end;
+
+function TFrameSteadyState.ActiveObservableList: TListBox;
+begin
+  Result := nil;
+  if tcObservables = nil then Exit;
+  if      tcObservables.TabIndex = 0 then Result := FLstSpecies
+  else if tcObservables.TabIndex = 1 then Result := FLstBoundary
+  else if tcObservables.TabIndex = 2 then Result := FLstFluxes;
+end;
+
+procedure TFrameSteadyState.btnObsSelectAllClick(Sender: TObject);
+begin
+  SetAllChecked(ActiveObservableList, True);
+end;
+
+procedure TFrameSteadyState.btnObsUnselectAllClick(Sender: TObject);
+begin
+  SetAllChecked(ActiveObservableList, False);
+end;
+
+procedure TFrameSteadyState.SetAllChecked(AList: TListBox; AChecked: Boolean);
+var
+  I: Integer;
+begin
+  if AList = nil then Exit;
+  AList.BeginUpdate;
+  try
+    for I := 0 to AList.Count - 1 do
+      AList.ListItems[I].IsChecked := AChecked;
+  finally
+    AList.EndUpdate;
+  end;
+  DoObsCheckChanged(AList);
+end;
+
+{ Changing what is reported means the panel no longer describes the named
+  experiment — the same divergence editing a time box causes elsewhere. }
+procedure TFrameSteadyState.DoObsCheckChanged(Sender: TObject);
+begin
+  if FSelector = nil then Exit;
+  if FSelector.Suppressed then Exit;
+
+  FSelector.MarkDiverged;
+  UpdateExperimentSummary;
+
+  { Results on screen were computed for a different set. }
+  FHasData := False;
+end;
+
+function TFrameSteadyState.SelectedObservables: TArray<string>;
+var
+  Res: TStringList;
+
+  procedure Collect(AList: TListBox);
+  var
+    I: Integer;
+  begin
+    if AList = nil then Exit;
+    for I := 0 to AList.Count - 1 do
+      if AList.ListItems[I].IsChecked then
+        Res.Add(AList.ListItems[I].Text);
+  end;
+
+begin
+  Res := TStringList.Create;
+  try
+    { Model order within a category, categories in tab order — the order
+      the grid will show them in. }
+    Collect(FLstSpecies);
+    Collect(FLstBoundary);
+    Collect(FLstFluxes);
+    Result := Res.ToStringArray;
+  finally
+    Res.Free;
+  end;
+end;
+
+procedure TFrameSteadyState.SetSelectedObservables(const ANames: TArray<string>);
+var
+  Wanted: TStringList;
+
+  procedure Apply(AList: TListBox);
+  var
+    I: Integer;
+  begin
+    if AList = nil then Exit;
+    AList.BeginUpdate;
+    try
+      for I := 0 to AList.Count - 1 do
+        AList.ListItems[I].IsChecked :=
+          Wanted.IndexOf(AList.ListItems[I].Text) >= 0;
+    finally
+      AList.EndUpdate;
+    end;
+  end;
+
+var
+  N: string;
+  Id: string;
+begin
+  Wanted := TStringList.Create;
+  try
+    Wanted.Sorted        := True;
+    Wanted.CaseSensitive := True;
+    Wanted.Duplicates    := dupIgnore;
+
+    { Both spellings: the file says 'S1', the lists hold whatever
+      RoadRunner calls it. }
+    for N in ANames do
+    begin
+      Wanted.Add(N);
+      Id := ResolveModelId(N);
+      if (Id <> '') and (Id <> N) then
+        Wanted.Add(Id);
+    end;
+
+    Apply(FLstSpecies);
+    Apply(FLstBoundary);
+    Apply(FLstFluxes);
+  finally
+    Wanted.Free;
+  end;
+end;
+
+procedure TFrameSteadyState.SnapshotUserObservables;
+begin
+  if FHasUserObs then Exit;
+  FUserObs.Clear;
+  FUserObs.AddStrings(SelectedObservables);
+  FHasUserObs := True;
+end;
+
+procedure TFrameSteadyState.ClearObservableLists;
+begin
+  if FLstSpecies  <> nil then FLstSpecies.Clear;
+  if FLstBoundary <> nil then FLstBoundary.Clear;
+  if FLstFluxes   <> nil then FLstFluxes.Clear;
+end;
+
+{ Refilled on every reload, preserving what was checked by name — the model
+  may have gained or lost quantities, but the user's choices about the ones
+  that remain are still theirs. }
+procedure TFrameSteadyState.PopulateObservableLists;
+var
+  RR:   TRoadRunner;
+  Prev: TStringList;
+
+  procedure Fill(AList: TListBox; AIds: TStringList; ACheckAll: Boolean);
+  var
+    I:    Integer;
+    Item: TListBoxItem;
+  begin
+    AList.BeginUpdate;
+    try
+      AList.Clear;
+      for I := 0 to AIds.Count - 1 do
+      begin
+        Item        := TListBoxItem.Create(AList);
+        Item.Parent := AList;
+        Item.Text   := AIds[I];
+        Item.IsChecked := ACheckAll or (Prev.IndexOf(AIds[I]) >= 0);
+      end;
+    finally
+      AList.EndUpdate;
+    end;
+  end;
+
+  procedure FillFrom(AList: TListBox; AIds: TStringList; ACheckAll: Boolean);
+  begin
+    try
+      Fill(AList, AIds, ACheckAll);
+    finally
+      AIds.Free;
+    end;
+  end;
+
+begin
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then
+  begin
+    ClearObservableLists;
+    Exit;
+  end;
+
+  RR   := FContext.Session.RoadRunner;
+  Prev := TStringList.Create;
+  try
+    Prev.Sorted        := True;
+    Prev.CaseSensitive := True;
+    Prev.Duplicates    := dupIgnore;
+    Prev.AddStrings(SelectedObservables);
+
+    FSelector.Suppressed := True;
+    try
+      { First model of the session: every floating species, which is what
+        this panel showed before it had a selector at all. }
+      FillFrom(FLstSpecies,  RR.getFloatingSpeciesIds, FObsFirstFill);
+      FillFrom(FLstBoundary, RR.getBoundarySpeciesIds, False);
+      FillFrom(FLstFluxes,   RR.getReactionIds,        False);
+    finally
+      FSelector.Suppressed := False;
+    end;
+
+    FObsFirstFill := False;
+
+    { A different model may share none of the previous one's names, which
+      would leave nothing ticked and an empty Observables grid that looks
+      like a failed solve. Fall back to what this panel has always shown. }
+    if Length(SelectedObservables) = 0 then
+    begin
+      FSelector.Suppressed := True;
+      try
+        SetAllChecked(FLstSpecies, True);
+      finally
+        FSelector.Suppressed := False;
+      end;
+    end;
+  finally
+    Prev.Free;
+  end;
 end;
 
 { Move the designed controls into a vertical scroll box so the panel scrolls
@@ -898,6 +1228,33 @@ begin
     not change the model's behaviour on its own — the settings go in when
     Compute is pressed, which is the click that asks for a result. }
   FReportedFor := '';
+
+  { The observables ARE a panel control, so they are filled here like any
+    other preset. Capture the user's own set first, and again whenever we
+    are leaving '—': while it is selected the panel is their work. }
+  SnapshotUserObservables;
+  if AWasUnset and FHasUserObs then
+  begin
+    FUserObs.Clear;
+    FUserObs.AddStrings(SelectedObservables);
+  end;
+
+  FSelector.Suppressed := True;
+  try
+    { 'observables:' omitted means every floating species (spec 8.4), which
+      is also this panel's own default. }
+    if Length(TSteadyStateCommand(AExp.Task).Observables) > 0 then
+      SetSelectedObservables(TSteadyStateCommand(AExp.Task).Observables)
+    else
+    begin
+      SetAllChecked(FLstSpecies,  True);
+      SetAllChecked(FLstBoundary, False);
+      SetAllChecked(FLstFluxes,   False);
+    end;
+  finally
+    FSelector.Suppressed := False;
+  end;
+
   UpdateExperimentSummary;
 
   { Grids on screen were solved with other settings. }
@@ -910,6 +1267,18 @@ begin
   { Put the engine back as the user had it, not to solver defaults — they
     may have configured it themselves through the dialog. }
   RestoreSolverBaseline;
+
+  { And the panel back to the observables they had chosen. }
+  if FHasUserObs then
+  begin
+    FSelector.Suppressed := True;
+    try
+      SetSelectedObservables(FUserObs.ToStringArray);
+    finally
+      FSelector.Suppressed := False;
+    end;
+  end;
+
   UpdateExperimentSummary;
   FHasData := False;
   ClearAllGrids;
@@ -1072,9 +1441,8 @@ var
   Cmd:      TSteadyStateCommand;
   RR:       TRoadRunner;
   Unmet:    TStringList;
-  Sel:      TStringList;
-  IV:       TInitialValue;
-  Name, Id: string;
+  IV:       TSetValue;
+  Id:       string;
 begin
   Cmd := SelectedSteadyState;
   if Cmd = nil then Exit;
@@ -1116,40 +1484,34 @@ begin
         Unmet.Add('presimulate: this solver cannot pre-simulate');
     end;
 
-    { Initial values, applied before the solve. }
-    for IV in Cmd.Initial do
+    { 'set:' assignments, applied before the solve. The key may name
+      anything the model can set, so try the initial-value form first —
+      right for a species, and what makes the value survive a reset — then
+      fall back to setting the quantity itself, which is the only form a
+      global parameter or a compartment size has. }
+    for IV in Cmd.SetValues do
     begin
       Id := ResolveModelId(IV.Name);
       if Id = '' then
       begin
-        Unmet.Add('initial ' + IV.Name + ': no such quantity in the model');
+        Unmet.Add('set ' + IV.Name + ': no such quantity in the model');
         Continue;
       end;
       if not RR.setValue(AnsiString('init(' + Id + ')'), IV.Value) then
         if not RR.setValue(AnsiString('init(' +
                            CanonicalModelName(Id) + ')'), IV.Value) then
-          Unmet.Add('initial ' + IV.Name + ': could not be set');
+          if not RR.setValue(AnsiString(Id), IV.Value) then
+            if not RR.setValue(AnsiString(CanonicalModelName(Id)),
+                               IV.Value) then
+              Unmet.Add('set ' + IV.Name + ': could not be set');
     end;
 
-    { observables selects what the steady-state result reports. }
-    if Length(Cmd.Observables) > 0 then
-    begin
-      Sel := TStringList.Create;
-      try
-        for Name in Cmd.Observables do
-        begin
-          Id := ResolveModelId(Name);
-          if Id = '' then
-            Unmet.Add('observable ' + Name + ': no such quantity in the model')
-          else
-            Sel.Add(Id);
-        end;
-        if Sel.Count > 0 then
-          RR.setSteadyStateSelectionListEx(Sel);
-      finally
-        Sel.Free;
-      end;
-    end;
+    { 'observables:' is NOT applied to the engine here. It is a panel
+      control now: ApplyExperiment ticks it into the list, and Compute
+      builds the selection from the list — so what the user sees checked is
+      always what gets reported, whether the file chose it or they did.
+      Applying it from the command as well would let the two disagree the
+      moment the user touched a checkbox. See ApplyObservableSelection. }
 
     { Report once per experiment. Anything the block asked for and did not
       get has to reach the user — a steady state solved without the
@@ -1167,6 +1529,33 @@ begin
 end;
 
 { -- compute / populate --------------------------------------------------- }
+
+{ Put the checklist into RoadRunner's steady-state selection list, which is
+  what computeSteadyStateValues then reports. An empty selection is left
+  alone rather than sent: RoadRunner would reject it, and "nothing ticked"
+  is better answered by an empty grid than by a failed solve. }
+procedure TFrameSteadyState.ApplyObservableSelection;
+var
+  Sel:   TStringList;
+  Names: TArray<string>;
+  N:     string;
+begin
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+
+  Names := SelectedObservables;
+  if Length(Names) = 0 then Exit;
+
+  Sel := TStringList.Create;
+  try
+    Sel.CaseSensitive := True;
+    for N in Names do
+      if Sel.IndexOf(N) < 0 then
+        Sel.Add(N);
+    FContext.Session.RoadRunner.setSteadyStateSelectionListEx(Sel);
+  finally
+    Sel.Free;
+  end;
+end;
 
 function TFrameSteadyState.EnsureSteadyState: Boolean;
 begin
@@ -1190,6 +1579,10 @@ begin
   { A selected experiment's settings go into the engine here — on the
     click that asks for a result, not when it was selected. }
   ApplyMetadataToEngine;
+
+  { What to report, from the checklist. After ApplyMetadataToEngine, which
+    may have changed solver settings but no longer touches the selection. }
+  ApplyObservableSelection;
 
   try
     FContext.Session.RoadRunner.steadyState;
@@ -1262,7 +1655,7 @@ begin
 
   BuildOutputSectionsIfNeeded;
 
-  PopulateConcentrations;
+  PopulateObservables;
   PopulateJacobian;
   PopulateEigenvalues;
   PopulateElasticities;
@@ -1273,7 +1666,7 @@ begin
   PopulateConcentrationCC;
   FHasData := True;
 
-  FitSectionToContent(FSecConcentrations);
+  FitSectionToContent(FSecObservables);
   FitSectionToContent(FSecJacobian);
   FitSectionToContent(FSecEigenvalues);
   FitSectionToContent(FSecElasticities);
@@ -1313,14 +1706,14 @@ procedure TFrameSteadyState.ClearAllGrids;
 
 begin
   if not FSectionsBuilt then Exit;
-  ClearOne(FSecConcentrations);
+  ClearOne(FSecObservables);
   ClearOne(FSecJacobian);
   ClearOne(FSecEigenvalues);
   ClearOne(FSecElasticities);
   ClearOne(FSecFluxCC);
   ClearOne(FSecConcCC);
 
-  FitSectionToContent(FSecConcentrations);
+  FitSectionToContent(FSecObservables);
   FitSectionToContent(FSecJacobian);
   FitSectionToContent(FSecEigenvalues);
   FitSectionToContent(FSecElasticities);
@@ -1445,22 +1838,38 @@ end;
 { -- populate individual grids ------------------------------------------- }
 
 
-procedure TFrameSteadyState.PopulateConcentrations;
+{ The values of whatever the user ticked, in the order the selector lists
+  them. Read back through computeSteadyStateValues rather than per-quantity
+  getters: it answers for the selection list ApplyObservableSelection just
+  set, so the names and the numbers cannot get out of step. }
+procedure TFrameSteadyState.PopulateObservables;
 var
-  Species: TArray<string>;
-  G:       TStringGrid;
-  I:       Integer;
+  Names:  TArray<string>;
+  Values: TArray<Double>;
+  G:      TStringGrid;
+  I:      Integer;
 begin
-  Species := SpeciesIds;
-  SetupKeyValueGrid(FSecConcentrations, 'Species', 'Concentration',
-                    Length(Species));
-  G := FSecConcentrations.Grid;
+  Names := SelectedObservables;
+
+  SetupKeyValueGrid(FSecObservables, 'Observable', 'Value', Length(Names));
+  if Length(Names) = 0 then Exit;
+
+  Values := FContext.Session.RoadRunner.computeSteadyStateValues;
+
+  G := FSecObservables.Grid;
   G.BeginUpdate;
   try
-    for I := 0 to High(Species) do
+    for I := 0 to High(Names) do
     begin
-      G.Cells[0, I] := Species[I];
-      G.Cells[1, I] := FormatCell(FContext.Session.RoadRunner.getFloatingSpeciesByIndex(I), FDecimalPlaces);
+      G.Cells[0, I] := Names[I];
+      { A short answer is not an error worth an exception — RoadRunner can
+        return fewer values than asked for if it dropped a selection it
+        could not evaluate. Show the name with no value rather than
+        pairing it with the wrong number. }
+      if I <= High(Values) then
+        G.Cells[1, I] := FormatCell(Values[I], FDecimalPlaces)
+      else
+        G.Cells[1, I] := '';
     end;
   finally
     G.EndUpdate;
@@ -1683,6 +2092,290 @@ begin
   AWriter.WriteLine('');   { blank line separates sections }
 end;
 
+{ ── Python export ────────────────────────────────────────────────────────
+  A Tellurium script that reproduces what this panel does: solve, then print
+  the observables the user chose and each matrix the panel shows. Written
+  from the panel's current state — the observables checklist, the
+  Scaled/Unscaled combo, the decimals spin — so the script prints what is on
+  screen rather than some canonical default.
+
+  Matrices are printed through the model's own labels rather than as bare
+  arrays, since a control-coefficient matrix with no row and column names is
+  nearly unreadable. }
+
+function TFrameSteadyState.GetPythonScript(const AntimonyText: string): string;
+var
+  SB:      TStringBuilder;
+  Fmt:     TFormatSettings;
+  Obs:     TArray<string>;
+  Cmd:     TSteadyStateCommand;
+  IV:      TSetValue;
+  I:       Integer;
+  ScaleS:  string;
+  Solver:  string;
+
+  function PyStr(const S: string): string;
+  begin
+    { Double quotes: a rate-of-change id ends with an apostrophe. }
+    Result := '"' + S + '"';
+  end;
+
+  { A labelled matrix print, using RoadRunner's own accessor. }
+  procedure EmitMatrix(const ATitle, ACall: string);
+  begin
+    SB.AppendLine('print("' + ATitle + '")');
+    SB.AppendLine('m = ' + ACall);
+    SB.AppendLine('print(pd.DataFrame(m, index=m.rownames, ' +
+                  'columns=m.colnames).round(DECIMALS))');
+    SB.AppendLine('print()');
+  end;
+
+begin
+  Fmt := TFormatSettings.Invariant;
+
+  if FContext = nil then
+    Exit('# Iridium: no analysis context.');
+  if not FContext.Session.IsLoaded then
+    Exit('# Iridium: no model loaded.');
+
+  Obs := SelectedObservables;
+  if Scaled then ScaleS := 'Scaled' else ScaleS := 'Unscaled';
+
+  SB := TStringBuilder.Create;
+  try
+    SB.AppendLine('# Python script generated by Iridium steady state.');
+    SB.AppendLine('# Solves the steady state and prints the same values the');
+    SB.AppendLine('# Steady State panel shows.');
+    SB.AppendLine;
+    SB.AppendLine('import tellurium as te');
+    SB.AppendLine('import pandas as pd');
+    SB.AppendLine;
+    SB.AppendLine('DECIMALS = ' + IntToStr(FDecimalPlaces));
+    SB.AppendLine;
+
+    { ── Model ────────────────────────────────────────────────────────── }
+    SB.AppendLine('# ── Model ─────────────────────────────────────────────');
+    SB.AppendLine('r = te.loada(r"""');
+    SB.AppendLine(AntimonyText.TrimRight);
+    SB.AppendLine('""")');
+    SB.AppendLine;
+
+    { ── The experiment's own settings ────────────────────────────────── }
+    Cmd := SelectedSteadyState;
+    if Cmd <> nil then
+    begin
+      SB.AppendLine('# ── From the metadata experiment ' +
+                    FSelector.ActiveLabel + ' ──');
+      for IV in Cmd.SetValues do
+        SB.AppendLine(Format('r[%s] = %s',
+          [PyStr(IV.Name), FloatToStr(IV.Value, Fmt)]));
+      if Cmd.HasPreSimulate then
+        SB.AppendLine(Format('r.simulate(0, %s)   # presimulate',
+          [FloatToStr(Cmd.PreSimulate, Fmt)]));
+      SB.AppendLine;
+    end;
+
+    { The solver actually in effect, whether it came from the block or the
+      configuration dialog. }
+    Solver := '';
+    try
+      Solver := FContext.Session.RoadRunner.getCurrentSteadyStateSolverName;
+    except
+      { A solver that will not name itself simply goes unmentioned. }
+    end;
+    if Solver <> '' then
+    begin
+      SB.AppendLine('r.setSteadyStateSolver(' + PyStr(Solver) + ')');
+      SB.AppendLine;
+    end;
+
+    { ── Solve ────────────────────────────────────────────────────────── }
+    SB.AppendLine('# ── Steady state ──────────────────────────────────────');
+    if Length(Obs) > 0 then
+    begin
+      SB.Append('r.steadyStateSelections = [');
+      for I := 0 to High(Obs) do
+      begin
+        if I > 0 then SB.Append(', ');
+        SB.Append(PyStr(Obs[I]));
+      end;
+      SB.AppendLine(']');
+    end;
+    SB.AppendLine('r.steadyState()');
+    SB.AppendLine;
+
+    SB.AppendLine('print("Observables")');
+    SB.AppendLine('for name, value in zip(r.steadyStateSelections, ' +
+                  'r.getSteadyStateValues()):');
+    SB.AppendLine('    print(f"{name:<20} {value:.{DECIMALS}g}")');
+    SB.AppendLine('print()');
+    SB.AppendLine;
+
+    { ── The matrices, in panel order ─────────────────────────────────── }
+    SB.AppendLine('# ── ' + ScaleS + ' matrices, as shown on the panel ────');
+    EmitMatrix('Jacobian', 'r.getFullJacobian()');
+
+    { Not rounded and not put in a DataFrame: eigenvalues are complex, and
+      rounding a complex column is not something pandas will do. }
+    SB.AppendLine('print("Eigenvalues")');
+    SB.AppendLine('for ev in r.getFullEigenValues():');
+    SB.AppendLine('    print(f"  {ev:.{DECIMALS}g}")');
+    SB.AppendLine('print()');
+
+    if Scaled then
+    begin
+      EmitMatrix('Elasticities (scaled)',
+                 'r.getScaledElasticityMatrix()');
+      EmitMatrix('Flux Control Coefficients (scaled)',
+                 'r.getScaledFluxControlCoefficientMatrix()');
+      EmitMatrix('Concentration Control Coefficients (scaled)',
+                 'r.getScaledConcentrationControlCoefficientMatrix()');
+    end
+    else
+    begin
+      EmitMatrix('Elasticities (unscaled)',
+                 'r.getUnscaledElasticityMatrix()');
+      EmitMatrix('Flux Control Coefficients (unscaled)',
+                 'r.getUnscaledFluxControlCoefficientMatrix()');
+      EmitMatrix('Concentration Control Coefficients (unscaled)',
+                 'r.getUnscaledConcentrationControlCoefficientMatrix()');
+    end;
+
+    Result := SB.ToString;
+  finally
+    SB.Free;
+  end;
+end;
+
+{ ── the Text tab ─────────────────────────────────────────────────────────
+  The same six grids the output panel shows, as text. Column-aligned rather
+  than comma-separated: this is for reading on screen, and the CSV that Save
+  Results writes is the machine-readable form. Read out of the grids, so
+  what is shown is exactly what was computed and formatted for display —
+  including the decimals setting. }
+
+function TFrameSteadyState.SectionAsText(const ATitle: string;
+  const Sec: TSteadyStateSection): string;
+var
+  G:      TStringGrid;
+  R, C:   Integer;
+  Widths: TArray<Integer>;
+  SB:     TStringBuilder;
+  Line:   string;
+  Txt:    string;
+
+  function HeaderOf(ACol: Integer): string;
+  begin
+    if G.Columns[ACol] is TStringColumn then
+      Result := TStringColumn(G.Columns[ACol]).Header
+    else
+      Result := '';
+  end;
+
+begin
+  Result := '';
+  if (Sec.Grid = nil) or (Sec.Grid.ColumnCount = 0) or
+     (Sec.Grid.RowCount = 0) then Exit;
+
+  G := Sec.Grid;
+
+  { Widest cell per column, headers included, so the columns line up. }
+  SetLength(Widths, G.ColumnCount);
+  for C := 0 to G.ColumnCount - 1 do
+  begin
+    Widths[C] := Length(HeaderOf(C));
+    for R := 0 to G.RowCount - 1 do
+      if Length(G.Cells[C, R]) > Widths[C] then
+        Widths[C] := Length(G.Cells[C, R]);
+  end;
+
+  SB := TStringBuilder.Create;
+  try
+    SB.AppendLine(ATitle);
+    SB.AppendLine(StringOfChar('-', Length(ATitle)));
+
+    Line := '';
+    for C := 0 to G.ColumnCount - 1 do
+      Line := Line + HeaderOf(C).PadRight(Widths[C]) + '  ';
+    SB.AppendLine(Line.TrimRight);
+
+    for R := 0 to G.RowCount - 1 do
+    begin
+      Line := '';
+      for C := 0 to G.ColumnCount - 1 do
+      begin
+        Txt := G.Cells[C, R];
+        { Numbers right-aligned, names left — a column of figures is far
+          easier to compare down the decimal point. Column 0 is the row
+          label in every one of these grids. }
+        if C = 0 then
+          Line := Line + Txt.PadRight(Widths[C]) + '  '
+        else
+          Line := Line + Txt.PadLeft(Widths[C]) + '  ';
+      end;
+      SB.AppendLine(Line.TrimRight);
+    end;
+
+    SB.AppendLine('');
+    Result := SB.ToString;
+  finally
+    SB.Free;
+  end;
+end;
+
+{ Adopt the precision the user chose on the text output panel. Done by
+  moving this panel's own spin box, so the two controls agree and the one
+  handler does the re-rendering — rather than setting FDecimalPlaces behind
+  the spin's back and leaving it showing a number that is no longer true. }
+procedure TFrameSteadyState.SetDisplayDecimals(ADecimals: Integer);
+begin
+  if ADecimals <= 0 then Exit;
+  if Round(spnDecimals.Value) = ADecimals then Exit;
+
+  spnDecimals.Value := ADecimals;   { fires spnDecimalsChange }
+end;
+
+function TFrameSteadyState.GetTextView(ADecimals: Integer): string;
+var
+  SB:       TStringBuilder;
+  ScalingS: string;
+begin
+  if not FHasData then
+    Exit('No steady-state results yet — press Compute on the ' +
+         'Steady State panel.');
+
+  { ADecimals is deliberately ignored. This panel has its own Decimals spin
+    box, and that is what formatted the grids these lines are read from;
+    honouring the shell's plot-decimals here would mean re-rendering every
+    grid, so merely looking at the Text tab would silently change the
+    numbers on the panel behind it. }
+
+  if Scaled then ScalingS := 'Scaled' else ScalingS := 'Unscaled';
+
+  SB := TStringBuilder.Create;
+  try
+    SB.AppendLine('Steady-State Analysis Results');
+    SB.AppendLine('Generated: ' +
+                  FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+    SB.AppendLine('Scaling:   ' + ScalingS);
+    SB.AppendLine('');
+
+    SB.Append(SectionAsText('Observables',  FSecObservables));
+    SB.Append(SectionAsText('Jacobian',     FSecJacobian));
+    SB.Append(SectionAsText('Eigenvalues',  FSecEigenvalues));
+    SB.Append(SectionAsText('Elasticities (' + ScalingS + ')',
+                            FSecElasticities));
+    SB.Append(SectionAsText('Flux Control Coefficients (' + ScalingS + ')',
+                            FSecFluxCC));
+    SB.Append(SectionAsText('Concentration Control Coefficients (' +
+                            ScalingS + ')', FSecConcCC));
+
+    Result := SB.ToString;
+  finally
+    SB.Free;
+  end;
+end;
+
 procedure TFrameSteadyState.WriteCSV(AWriter: TTextWriter);
 var
   ScalingS: string;
@@ -1697,8 +2390,8 @@ begin
   AWriter.WriteLine('# Scaling: ' + ScalingS);
   AWriter.WriteLine('');
 
-  WriteSectionToCSV(AWriter, 'Concentrations',
-                    FSecConcentrations);
+  WriteSectionToCSV(AWriter, 'Observables',
+                    FSecObservables);
   WriteSectionToCSV(AWriter, 'Jacobian',
                     FSecJacobian);
   WriteSectionToCSV(AWriter, 'Eigenvalues',
@@ -1776,7 +2469,7 @@ begin
     matrices from RoadRunner, they don't re-trigger steadyState. So
     this is cheap: just re-renders the six grids with the new format
     (and re-applies coloring, which is fine -- MaxAbs is unchanged). }
-  PopulateConcentrations;
+  PopulateObservables;
   PopulateJacobian;
   PopulateEigenvalues;
   PopulateElasticities;

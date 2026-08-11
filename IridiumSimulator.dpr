@@ -70,6 +70,7 @@ uses
   uMetaSymbolProvider in 'uMetaSymbolProvider.pas',
   uMetaExperiments in 'uMetaExperiments.pas',
   uMetaSelector in 'uMetaSelector.pas',
+  uMetaSetValues in 'uMetaSetValues.pas',
   uMetaOutput in 'uMetaOutput.pas',
   uFrameMetadata in 'uFrameMetadata.pas' {FrameMetadata: TFrame},
   uMySplitter in 'uMySplitter.pas',

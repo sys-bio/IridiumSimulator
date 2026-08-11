@@ -146,7 +146,6 @@ type
     nubDecimalPlaces: TSpinBox;
     Label1: TLabel;
     btnCopyToClipBoard: TButton;
-    btnRefresh: TButton;
     tbSteadyState: TTabItem;
     sbSteadyState: TScrollBox;
     edtXMin: TEdit;
@@ -210,7 +209,6 @@ type
     procedure nubDecimalPlacesChange(Sender: TObject);
     procedure btnCopyToClipBoardClick(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
-    procedure btnRefreshClick(Sender: TObject);
     procedure moAntimony1PresentationNameChoosing(Sender: TObject;
       var PresenterName: string);
     procedure chkShowLineNumbersChange(Sender: TObject);
@@ -427,6 +425,7 @@ type
     procedure ExportTelluriumScript;
     procedure ExportSedML;
     function  SbmlRootNamespace(const ASbml: string): string;
+    function  BuildTextView: string;
     procedure ExportOmexArchive;
     { Somewhere to write to, defaulted from the model's own name. }
     function  AskExportPath(const ATitle, AFilter, ADefaultExt: string;
@@ -496,6 +495,7 @@ type
     function  GetSliderContainer: TFrameSliderContainer;
     function  GetSteadyStateHost: TScrollBox;
     procedure ShowSteadyStateTab;
+    procedure RefreshTextView;
     function  GetMetadata: TSimulationMetadata;
     function  GetMetaExperiments: TMetaExperimentSet;
     procedure ShowHelp(const ATopic: string);
@@ -2540,9 +2540,18 @@ begin
 end;
 
 procedure TfrmMain.nubDecimalPlacesChange(Sender: TObject);
+var
+  Provider: ITextViewProvider;
 begin
-  moTextView.Text := '';
-  moTextView.text := Plot.ExportCSVSeriesAsString(trunc (nubDecimalPlaces.Value), 14);
+  { For the plot-based panels this spin is the only notion of precision and
+    BuildTextView applies it directly. A panel that formats its own results
+    has its own decimals control as well, so tell it — otherwise turning
+    this dial would rebuild the text at a precision the panel's numbers do
+    not have, and appear to do nothing. }
+  if Supports(FActiveFrame, ITextViewProvider, Provider) then
+    Provider.SetDisplayDecimals(trunc(nubDecimalPlaces.Value));
+
+  moTextView.Text := BuildTextView;
 end;
 
 procedure TfrmMain.SessionModelReloaded(Sender: TObject;
@@ -2821,11 +2830,34 @@ begin
 end;
 
 
-procedure TfrmMain.btnShowDataClick(Sender: TObject);
-var astr : String;
+{ What the Text tab shows, for the panel showing now.
+
+  A panel whose results are grids rather than curves renders its own text;
+  everything else is a set of plot series and exports as CSV. Every path
+  that fills the memo must come through here — writing the plot export
+  directly is what emptied the memo whenever the steady-state panel was
+  active, since it has no simulation series to export. }
+function TfrmMain.BuildTextView: string;
+var
+  Provider: ITextViewProvider;
 begin
-  astr := Plot.ExportCSVSeriesAsString(trunc (nubDecimalPlaces.Value), 14);
-  moTextView.text := astr;
+  if Supports(FActiveFrame, ITextViewProvider, Provider) then
+    Result := Provider.GetTextView(trunc(nubDecimalPlaces.Value))
+  else
+    Result := Plot.ExportCSVSeriesAsString(trunc(nubDecimalPlaces.Value), 14);
+end;
+
+procedure TfrmMain.RefreshTextView;
+begin
+  { Only when it is on screen: rebuilding text nobody is looking at costs
+    a full re-render of the active panel's results. }
+  if TabControl1.ActiveTab = tbTextView then
+    moTextView.Text := BuildTextView;
+end;
+
+procedure TfrmMain.btnShowDataClick(Sender: TObject);
+begin
+  moTextView.Text := BuildTextView;
   TabControl1.ActiveTab := tbTextView;
 end;
 
@@ -3029,10 +3061,6 @@ begin
 end;
 
 
-procedure TfrmMain.btnRefreshClick(Sender: TObject);
-begin
-  moTextView.text := Plot.ExportCSVSeriesAsString(trunc (nubDecimalPlaces.Value), 14);
-end;
 
 procedure TfrmMain.btnSteadyStateClick(Sender: TObject);
 begin

@@ -55,7 +55,7 @@ uses
   FMX.Controls.Presentation, FMX.Edit, FMX.EditBox, FMX.NumberBox,
   FMX.Objects, FMX.Layouts, FMX.ScrollBox, FMX.ListBox,
   uRR2DSimpleMatrix,
-  uAnalysisTypes, uMetaExperiments, uMetaSelector, uMetaOutput,
+  uAnalysisTypes, uMetaExperiments, uMetaSelector, uMetaOutput, uMetaSetValues,
   Sim.Meta, Sim.Meta.Model,
   System.Skia, FMX.Skia;
 
@@ -136,6 +136,13 @@ type
       published field, so it is reached through GroupBox1.Parent. }
     FScroll:             TVertScrollBox;
     FContent:            TControl;
+
+    { The experiment whose unmet 'set:' values have already been reported,
+      so the message appears once rather than on every Simulate. }
+    FReportedSetFor:     string;
+    { What to write back to undo the selected experiment's 'set:' values.
+      Non-empty exactly while an experiment's values are in the engine. }
+    FActiveSetRestore:   TSetValueRestoreArray;
 
     { Canonical Y-axis selection — survives filter changes. Sorted, case-
       sensitive, no duplicates. The visible listbox is a view onto this. }
@@ -242,6 +249,13 @@ type
     function GetPythonScript(const AntimonyText: string): string;
 
     function  GetSelectedXAxisName:  string;
+
+    { Write the selected experiment's 'set:' values into the engine for the
+      duration of one run. Returns what RestoreSetValues needs to undo
+      them; empty when no experiment is selected or it has none. }
+    procedure ApplySelectedSetValues(AExp: TMetaExperiment);
+    procedure ClearSelectedSetValues;
+    procedure RefreshSlidersFromEngine;
 
     procedure InstallScrollBox;
     procedure UpdateContentHeight;
@@ -503,6 +517,10 @@ end;
 
 procedure TFrameTimeCourse.RestoreUserSettings(Sender: TObject);
 begin
+  { Before the early exit below: the engine has to be put back whether or
+    not there is a panel-settings snapshot to restore. }
+  ClearSelectedSetValues;
+
   if not FHasUserSettings then Exit;
 
   { A preset that never got applied must not be applied later just
@@ -638,6 +656,10 @@ begin
     FSuppressPlotUpdate  := False;
     FSelector.Suppressed := False;
   end;
+
+  { The experiment's 'set:' values go into the engine now and stay there
+    until it is left, so the sliders and the next run agree about them. }
+  ApplySelectedSetValues(AExp);
 
   { Settings changed, so anything on screen is stale. Nothing is
     recomputed: the user presses Simulate when they want a result. }
@@ -925,6 +947,11 @@ begin
       opening a second go wrong. }
     for Cat := Low(TObservableCategory) to High(TObservableCategory) do
       FCategoryIds[Cat].Clear;
+
+    { Dropped, NOT restored: those values belong to an engine that no longer
+      exists, and writing them into the next model would be inventing a
+      state nothing asked for. }
+    FActiveSetRestore := nil;
   end;
 end;
 
@@ -934,6 +961,14 @@ begin
   { Any cached data is from a pre-reload run; treat as invalid. }
   FHasData := False;
   PopulateAxisSelectors;
+
+  { A reload rebuilt the engine from the model text, so the selected
+    experiment's 'set:' values are no longer in it — and the restore data
+    describing the old engine is stale. Re-apply from scratch, or the panel
+    would go on naming an experiment whose conditions are not loaded. }
+  FActiveSetRestore := nil;
+  if FSelector <> nil then
+    ApplySelectedSetValues(FSelector.ActiveExperiment);
 end;
 
 { ── axis selector population ───────────────────────────────────────────── }
@@ -1535,6 +1570,75 @@ end;
 
 { ── simulate ───────────────────────────────────────────────────────────── }
 
+{ ── the selected experiment's 'set:' values ─────────────────────────────────
+  The invariant: **while an experiment is selected, the engine holds its
+  'set:' values.** They go in when it is applied and come out when it is
+  left, not around each run.
+
+  This is what makes the panel honest — the sliders show the values the next
+  run will use — and it is what lets the user explore the model *under* the
+  experiment's conditions, sliding away from k1: 10 rather than fighting a
+  value that was re-imposed on every compute. Applying per-run instead
+  looked tidier and was wrong twice over: the sliders showed the un-set
+  model, and moving one had no visible effect because the next run wrote the
+  file's value straight back over it. }
+
+procedure TFrameTimeCourse.ApplySelectedSetValues(AExp: TMetaExperiment);
+var
+  Unmet: TStringList;
+begin
+  if (FContext = nil) or (not FContext.Session.IsLoaded) then Exit;
+
+  { Whatever a previous experiment put in comes out first, so switching
+    between experiments cannot stack their values. }
+  ClearSelectedSetValues;
+
+  if (AExp = nil) or (not AExp.Usable) or (AExp.Task = nil) then Exit;
+  if Length(AExp.Task.SetValues) = 0 then Exit;
+
+  Unmet := TStringList.Create;
+  try
+    FActiveSetRestore :=
+      ApplySetValues(FContext.Session.RoadRunner, AExp.Task, Unmet);
+
+    { Once per experiment: a value the block asked for and did not get means
+      this is not the experiment the file describes. }
+    if (Unmet.Count > 0) and (FReportedSetFor <> AExp.LabelText) then
+    begin
+      FReportedSetFor := AExp.LabelText;
+      ShowMessage('Experiment ' + AExp.LabelText +
+        ': some ''set:'' values could not be applied.' + sLineBreak +
+        sLineBreak + Unmet.Text);
+    end;
+  finally
+    Unmet.Free;
+  end;
+
+  RefreshSlidersFromEngine;
+end;
+
+procedure TFrameTimeCourse.ClearSelectedSetValues;
+begin
+  if Length(FActiveSetRestore) = 0 then Exit;
+
+  if (FContext <> nil) and FContext.Session.IsLoaded then
+    RestoreSetValues(FContext.Session.RoadRunner, FActiveSetRestore);
+  FActiveSetRestore := nil;
+  RefreshSlidersFromEngine;
+end;
+
+{ The engine's values have moved, so anything showing them must re-read.
+  A slider disagreeing with the engine is worse than no slider. }
+procedure TFrameTimeCourse.RefreshSlidersFromEngine;
+begin
+  if FContext = nil then Exit;
+  if not FContext.Session.IsLoaded then Exit;
+  if not FContext.SliderContainer.ParamPanelVisible then Exit;
+
+  FContext.SliderContainer.RefreshValues(FContext.Session.GetTunableNames,
+                                         FContext.Session.GetTunableValues);
+end;
+
 function TFrameTimeCourse.RunSimulation: Boolean;
 var
   TimeStart, TimeEnd: Double;
@@ -1612,6 +1716,10 @@ begin
     if chkAlwaysReset.IsChecked then
       FContext.Session.RoadRunner.reset();
 
+    { No 'set:' handling here. The selected experiment's values are already
+      in the engine — they were written when it was selected and stay until
+      it is left — so a run simply uses them, and a slider moved since then
+      is not overwritten. See ApplySelectedSetValues. }
     Data := FContext.Session.RoadRunner.Simulate;
 
     { Cache for live updates triggered by subsequent selection changes. }
@@ -1755,6 +1863,11 @@ procedure TFrameTimeCourse.OnSliderChanged(Sender: TObject;
 begin
   if FContext = nil then Exit;
 
+  { A slider may move a quantity the experiment's 'set:' section wrote, and
+    that is fine: the value is in the engine, not re-imposed per run, so
+    sliding explores the model FROM the experiment's conditions. The
+    experiment stays selected — it still describes where the exploration
+    started. }
   FContext.Session.SetParameterValue(ASliderString, AValue);
   RunSimulation;
   if FContext.Session.IsLoaded then

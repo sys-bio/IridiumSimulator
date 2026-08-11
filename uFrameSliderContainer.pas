@@ -90,6 +90,10 @@ type
 
     { -- internal helpers -- }
     procedure RebuildListBox(const AFilter: string);
+    { The x10 / /10 range a value gets, so a row built now and a row
+      re-centred by RefreshValues agree. }
+    procedure RangeAround(const AValue: Double; out AMin, AMax: Single);
+
     { AAtTop puts the new row above the existing ones and scrolls it into
       view — for rows the user just picked, which they mean to use straight
       away. Bulk builds leave it False so the rows keep model order. }
@@ -177,16 +181,33 @@ const
   BTN_W   = 28;   { width of the left-side button column }
   BTN_H   = 18;   { visual height of the button itself   }
 
+{ Min, Max, Frequency and Value always move together — that is the whole
+  point of this routine, and assigning any of them on its own elsewhere is a
+  bug.
+
+  ORDER MATTERS. Frequency is the step a TTrackBar snaps its value to, and
+  the snap is applied when Value is assigned — so Value must be written
+  LAST, after the grid it will be quantised against is in place. Written
+  before, it is rounded onto the PREVIOUS range's grid: re-centring a row
+  from 0.035..3.5 onto 1..100 and then setting 10 produced 9.9, and coming
+  back produced 0.5024 instead of 0.35.
+
+  198 steps, not 200, so that the value a row is centred on falls exactly on
+  a step. RangeAround gives Min = v/10 and Max = 10v, a span of 9.9v; over
+  198 steps that is 0.05v each, and v itself is exactly 18 steps above Min.
+  With 200 it is 18.18 steps — off-grid, so the track would round the very
+  value it was being centred on. The zero and negative cases work out
+  exactly too. }
 procedure SetTrackRange(ATrack: TTrackBar; AMin, AMax, AValue: Single);
 const
-  STEPS_ACROSS_RANGE = 200;
+  STEPS_ACROSS_RANGE = 198;
 begin
   ATrack.BeginUpdate;
   try
-    ATrack.Min := AMin;
-    ATrack.Max := AMax;
-    ATrack.Value := EnsureRange(AValue, AMin, AMax);
+    ATrack.Min       := AMin;
+    ATrack.Max       := AMax;
     ATrack.Frequency := (AMax - AMin) / STEPS_ACROSS_RANGE;
+    ATrack.Value     := EnsureRange(AValue, AMin, AMax);
   finally
     ATrack.EndUpdate;
   end;
@@ -464,6 +485,31 @@ begin
   end;
 end;
 
+{ The range a slider gets for a value: x10 / /10 around it, so the handle
+  sits in the middle and there is a decade of travel either way. Zero has no
+  decade, so it falls back to [0, 1]. Shared by row creation and by
+  RefreshValues, which re-centres — the two must not drift apart, or a
+  refreshed row would sit differently from a freshly built one. }
+procedure TFrameSliderContainer.RangeAround(const AValue: Double;
+  out AMin, AMax: Single);
+begin
+  if AValue = 0.0 then
+  begin
+    AMin := 0.0;
+    AMax := 1.0;
+  end
+  else if AValue > 0.0 then
+  begin
+    AMin := AValue / 10.0;
+    AMax := AValue * 10.0;
+  end
+  else
+  begin
+    AMin := AValue * 10.0;
+    AMax := AValue / 10.0;
+  end;
+end;
+
 procedure TFrameSliderContainer.AddSliderRow(const AName: string;
   const AInitValue: Double; AAtTop: Boolean);
 var
@@ -476,23 +522,7 @@ const
 begin
   if IsActive(AName) then Exit;
 
-  { Range: x10 / /10 around initial value.
-    Guard against zero: fall back to [0, 1]. }
-  if AInitValue = 0.0 then
-  begin
-    RangeMin := 0.0;
-    RangeMax := 1.0;
-  end
-  else if AInitValue > 0.0 then
-  begin
-    RangeMin := AInitValue / 10.0;
-    RangeMax := AInitValue * 10.0;
-  end
-  else
-  begin
-    RangeMin := AInitValue * 10.0;
-    RangeMax := AInitValue / 10.0;
-  end;
+  RangeAround(AInitValue, RangeMin, RangeMax);
 
   Row.ParamName := AName;
 
@@ -724,8 +754,9 @@ end;
 procedure TFrameSliderContainer.RefreshValues(const ANames:  TArray<string>;
                                               const AValues: TArray<Double>);
 var
-  I, J:         Integer;
-  SavedHandler: TSliderChangedEvent;
+  I, J:            Integer;
+  SavedHandler:    TSliderChangedEvent;
+  NewMin, NewMax:  Single;
 begin
   if Length(FRows) = 0 then Exit;
 
@@ -737,9 +768,36 @@ begin
       if I >= Length(AValues) then Break;
       J := RowIndexOf(ANames[I]);
       if J >= 0 then
-        FRows[J].Track.Value := EnsureRange(AValues[I],
-                                            FRows[J].Track.Min,
-                                            FRows[J].Track.Max);
+      begin
+        { A value from outside the row's range is entirely ordinary — the
+          range is x10 / /10 around whatever the value was when the row was
+          built, so a preset holding k1 at 10 gives 1..100 and the model's
+          own 0.35 falls below it. Re-centre on the new value rather than
+          clamping to the old range.
+
+          Clamping was the original bug and the worse half of it: the track
+          is not written back to the engine here, so the slider would have
+          said 1.0 while the model ran at 0.35, with nothing on screen
+          admitting the two had parted company.
+
+          Only when the value does not fit. A value still inside the range
+          leaves it alone, so a range the user has widened themselves
+          survives an ordinary refresh. }
+        if (AValues[I] < FRows[J].Track.Min) or
+           (AValues[I] > FRows[J].Track.Max) then
+        begin
+          { Through SetTrackRange, never by assigning Min and Max directly:
+            it also recomputes Frequency, which is the step the track snaps
+            to. Leave Frequency describing the OLD range and the new value
+            is quantised against a grid that no longer belongs to it — the
+            slider lands on a neighbouring step instead of the value it was
+            given, and the steps are visibly the wrong size. }
+          RangeAround(AValues[I], NewMin, NewMax);
+          SetTrackRange(FRows[J].Track, NewMin, NewMax, AValues[I]);
+        end
+        else
+          FRows[J].Track.Value := AValues[I];
+      end;
     end;
   finally
     FOnSliderChanged := SavedHandler;
@@ -852,9 +910,10 @@ end;
 
 procedure TFrameSliderContainer.DoResetSingleSlider (Sender : TObject);
 var
-  Idx:      Integer;
-  InitVal:  Double;
-  Row:      TSliderRow;
+  Idx:            Integer;
+  InitVal:        Double;
+  Row:            TSliderRow;
+  NewMin, NewMax: Single;
 begin
   { Reset the slider whose own "R" button was clicked. The button carries
     its parameter name in TagString (set in AddSliderRow), so we look the
@@ -868,12 +927,18 @@ begin
   Row     := FRows[Idx];
   InitVal := InitialValueOf(Row.ParamName);
 
-  if InitVal < Row.Track.Min then Row.Track.Min := InitVal;
-  if InitVal > Row.Track.Max then Row.Track.Max := InitVal;
-
   Row.Track.OnChange := nil;
   try
-    Row.Track.Value := InitVal;
+    { Re-centre through SetTrackRange when the value falls outside, so the
+      track's Frequency is recomputed with it — assigning Min and Max on
+      their own leaves the snap grid describing the previous range. }
+    if (InitVal < Row.Track.Min) or (InitVal > Row.Track.Max) then
+    begin
+      RangeAround(InitVal, NewMin, NewMax);
+      SetTrackRange(Row.Track, NewMin, NewMax, InitVal);
+    end
+    else
+      Row.Track.Value := InitVal;
   finally
     Row.Track.OnChange := DoTrackBarChange;
   end;
@@ -886,9 +951,10 @@ end;
 
 procedure TFrameSliderContainer.DoBtnResetClick(Sender: TObject);
 var
-  I:        Integer;
-  InitVal:  Double;
-  Row:      TSliderRow;
+  I:              Integer;
+  InitVal:        Double;
+  Row:            TSliderRow;
+  NewMin, NewMax: Single;
 begin
   if Length(FRows) = 0 then Exit;
 
@@ -897,12 +963,17 @@ begin
     Row     := FRows[I];
     InitVal := InitialValueOf(Row.ParamName);
 
-    if InitVal < Row.Track.Min then Row.Track.Min := InitVal;
-    if InitVal > Row.Track.Max then Row.Track.Max := InitVal;
-
     Row.Track.OnChange := nil;
     try
-      Row.Track.Value := InitVal;
+      { See the note in DoBtnRowResetClick: Min/Max and Frequency go
+        together. }
+      if (InitVal < Row.Track.Min) or (InitVal > Row.Track.Max) then
+      begin
+        RangeAround(InitVal, NewMin, NewMax);
+        SetTrackRange(Row.Track, NewMin, NewMax, InitVal);
+      end
+      else
+        Row.Track.Value := InitVal;
     finally
       Row.Track.OnChange := DoTrackBarChange;
     end;

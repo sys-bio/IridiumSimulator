@@ -70,7 +70,7 @@ object frmMain: TfrmMain
       Size.Width = 610.909912109375000000
       Size.Height = 859.000000000000000000
       Size.PlatformDefault = False
-      TabIndex = 3
+      TabIndex = 0
       TabOrder = 1
       TabPosition = PlatformDefault
       OnChange = TabControl1Change
@@ -87,7 +87,7 @@ object frmMain: TfrmMain
         CustomIcon = <
           item
           end>
-        IsSelected = False
+        IsSelected = True
         Size.Width = 62.000000000000000000
         Size.Height = 26.000000000000000000
         Size.PlatformDefault = False
@@ -418,7 +418,7 @@ object frmMain: TfrmMain
           object btnExportCSV: TButton
             Position.X = 42.000000000000000000
             Position.Y = 31.000000000000000000
-            Size.Width = 88.000000000000000000
+            Size.Width = 104.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
@@ -444,7 +444,7 @@ object frmMain: TfrmMain
             TabOrder = 2
           end
           object btnCopyToClipBoard: TButton
-            Position.X = 36.000000000000000000
+            Position.X = 42.000000000000000000
             Position.Y = 61.000000000000000000
             Size.Width = 104.000000000000000000
             Size.Height = 22.000000000000000000
@@ -452,13 +452,6 @@ object frmMain: TfrmMain
             TabOrder = 3
             Text = 'Copy To ClipBoard'
             OnClick = btnCopyToClipBoardClick
-          end
-          object btnRefresh: TButton
-            Position.X = 163.000000000000000000
-            Position.Y = 57.000000000000000000
-            TabOrder = 4
-            Text = 'Refresh'
-            OnClick = btnRefreshClick
           end
         end
       end
@@ -489,7 +482,7 @@ object frmMain: TfrmMain
         CustomIcon = <
           item
           end>
-        IsSelected = True
+        IsSelected = False
         Size.Width = 45.000000000000000000
         Size.Height = 26.000000000000000000
         Size.PlatformDefault = False

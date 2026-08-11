@@ -36,6 +36,30 @@ type
     function GetPythonScript(const AntimonyText: string): string;
   end;
 
+  { Implemented by an analysis frame whose results are not a set of plot
+    series, and so cannot be rendered into the Text tab by exporting the
+    plot. The shell asks the active frame first and falls back to the plot
+    when it says nothing — so a panel that draws curves needs no code here,
+    and a panel that fills grids can still answer.
+
+    ADecimals is the panel's own decimal-places setting, passed in so the
+    text matches what the user has on screen rather than a second,
+    independent notion of precision. }
+  ITextViewProvider = interface
+    ['{2C1E4B77-6F3A-4E27-9B8D-6C3F4A50D2E1}']
+    function GetTextView(ADecimals: Integer): string;
+
+    { The user turned the decimals spin on the text output panel. A panel
+      that formats its own results adopts the new precision here — its
+      grids, its own decimals control and its text all move together.
+
+      Deliberately separate from GetTextView, which must stay free of side
+      effects: merely LOOKING at the Text tab calls that, and it must not
+      silently re-render the panel behind it. This is called only when the
+      user actually turns the dial. }
+    procedure SetDisplayDecimals(ADecimals: Integer);
+  end;
+
   { Implemented by an analysis frame whose results can satisfy an @output
     command. The shell asks the active frame for these when deciding
     whether to offer a Write button on the notice bar.
@@ -130,6 +154,12 @@ type
 
     function  GetSteadyStateHost: TScrollBox;
     procedure ShowSteadyStateTab;
+
+    { Re-render the Text tab from whatever the active panel currently
+      shows. For a panel whose results can change while that tab is
+      visible — a decimals setting, say — so the text does not go stale
+      behind the user. A no-op when the Text tab is not showing. }
+    procedure RefreshTextView;
 
     { Simulation metadata parsed from the model's own comment block.
 
