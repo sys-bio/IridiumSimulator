@@ -53,6 +53,7 @@ uses
   FMX.Objects,
   uBuiltInModels,
   uCommonTypes,
+  uPreferences,
   Sim.Meta,
   Sim.Meta.Types,
   Sim.Meta.Model,
@@ -69,7 +70,7 @@ uses
   System.Math, System.Threading, uBioModelsCache;
 
 const
-    VERSION = '0.985';
+    VERSION = '0.986';
 
 type
   TfrmMain = class(TForm, IAnalysisContext)
@@ -181,6 +182,8 @@ type
     mnuExportSEDMLFile: TMenuItem;
     mnuExportCOMBINEArchve: TMenuItem;
     MenuItem9: TMenuItem;
+    mnuSaveAs: TMenuItem;
+    mnuLoadRecentFile: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure btnTimeCourse1Click(Sender: TObject);
     procedure btnSteadyStateClick(Sender: TObject);
@@ -227,6 +230,7 @@ type
     procedure edtYMaxExit(Sender: TObject);
     procedure FormPaint(Sender: TObject; Canvas: TCanvas; const ARect: TRectF);
     procedure btnGeneratePythonClick(Sender: TObject);
+    procedure btnGenerateMetaScriptClick(Sender: TObject);
     procedure mnuGoToWedIridiumClick(Sender: TObject);
     procedure mnuGeneralHelpClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -245,6 +249,7 @@ type
     procedure mnuExportTelluriumScriptClick(Sender: TObject);
     procedure mnuExportSEDMLFileClick(Sender: TObject);
     procedure mnuExportCOMBINEArchveClick(Sender: TObject);
+    procedure mnuSaveAsClick(Sender: TObject);
   private
     FSession:          TModelSession;
     FSliderFrame:      TFrameSliderContainer;
@@ -301,6 +306,13 @@ type
     FBioSuppressSearch: Boolean;
 
     FCurrentFileName : String;
+    { Which example the Examples combo is showing, so a cancelled load can
+      put the box back on it. -1 until one has been loaded. }
+    FLastExampleIndex: Integer;
+
+    { Window bounds, splitter positions and the recent-files list, read at
+      startup and written at shutdown. Never nil once FormCreate has run. }
+    FPrefs: TIridiumPreferences;
     FireEvent: Boolean;
     FIsModifiedSinceLastSave: Boolean;
 
@@ -430,6 +442,46 @@ type
     { Somewhere to write to, defaulted from the model's own name. }
     function  AskExportPath(const ATitle, AFilter, ADefaultExt: string;
                             out APath: string): Boolean;
+
+    { Saving the model itself.
+
+        SaveModelToPath  writes to APath and adopts it as the model's own
+                         — name, caption, and the path metadata resolves a
+                         'file' key against.
+        DoSaveModelAs    always asks.
+        DoSaveModel      asks only when there is nowhere to write yet.
+
+      All three answer False when nothing was written, whether the user
+      cancelled or the write failed, so a caller can tell "saved" from
+      "not saved" — which is what an unsaved-changes prompt needs. }
+    function  SaveModelToPath(const APath: string): Boolean;
+    function  DoSaveModelAs: Boolean;
+    function  DoSaveModel: Boolean;
+
+    { May the current document be thrown away? Call this FIRST in anything
+      that replaces what is in the editor — Open, New, Import SBML, an
+      example, a BioModels download, closing the app.
+
+      AAction completes 'Save it before ...', e.g. 'opening another model'.
+      Answers True when there is nothing to lose, when the user saved, or
+      when they chose to discard; False when they cancelled or the save did
+      not happen — and False always means "do nothing at all", so a caller
+      must exit without touching the editor. }
+    function  ConfirmDiscardChanges(const AAction: string): Boolean;
+
+    { Open APath as the current model — the one route in, shared by
+      File > Open and the recent-files menu, so both leave the app in the
+      same state. Answers False if the file could not be read. Does NOT
+      ask about unsaved changes: the caller does that first, because only
+      the caller can word the question. }
+    function  LoadModelFromFile(const APath: string): Boolean;
+
+    { Preferences. Applied once the form exists and captured as it goes. }
+    procedure ApplyPreferences;
+    procedure CapturePreferences;
+    procedure RebuildRecentFilesMenu;
+    procedure RecentFileClick(Sender: TObject);
+    procedure NoteRecentFile(const APath: string);
     { Convert the current model to SBML. SED-ML references quantities by
       XPath into SBML, so the archive cannot be built without it. }
     function  BuildSbml(out ASbml: string; out AError: string): Boolean;
@@ -511,6 +563,12 @@ type
     procedure PlotEndRebuild;
     procedure PlotRecolorSimulationSeries(const ANextColor: TFunc<TAlphaColor>);
     procedure PlotApplyMetaStyle(ACmd: TPlotCommand);
+    { The '@plot' describing the figure currently on screen, over the task
+      ASourceLabel names. The shell builds this rather than the panel: the
+      plot is the shell's, and what is drawn is what the command must
+      describe. Caller frees. }
+    function  BuildMetaPlotCommand(const ASourceLabel: string;
+                                   const AYNames: TArray<string>): TPlotCommand;
     procedure PlotCaptureUserStyle;
     procedure PlotRestoreUserStyle;
     { Settings-store key for the active panel's pre-metadata styling, or ''
@@ -534,10 +592,17 @@ implementation
 {$R *.fmx}
 
 uses
-  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uRoadRunner, ufPlotEditor, uMySplitter, uLanguageKeywords;
+  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uRoadRunner, ufPlotEditor, uMySplitter, uLanguageKeywords,
+  uMetaScriptGen;
 
 const
   DEFAULT_SLIDER_HEIGHT = 322.0;
+
+  { TSkPlotPaintBox's own construction defaults. Used only to decide
+    whether a generated '@plot' should mention a font size at all — a
+    figure still at these sizes has nothing to say about them. }
+  DEFAULT_TITLE_FONT_SIZE = 16.0;
+  DEFAULT_AXES_FONT_SIZE  = 14.0;
 
   { Reserved settings-store key holding the plot's pristine styling, captured
     once at startup. Restored for any analysis panel that hasn't been visited
@@ -610,7 +675,15 @@ end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  { First, and outside the try below: the window is still whole here, so
+    its bounds and the splitter positions are still readable. Failing to
+    write them must not stop the app closing, which Save already
+    guarantees by swallowing its own errors. }
+  CapturePreferences;
+  FPrefs.Save;
+
   try
+    FreeAndNil(FPrefs);
     FSession.Free;
     // Frames and slider frame are owned by Self (TComponent ownership) and will be freed automatically.
     Action := TCloseAction.caFree;
@@ -625,12 +698,7 @@ end;
 
 procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  CanClose := True;
-  if FIsModifiedSinceLastSave then
-    CanClose := MessageDlg('The model has unsaved changes. Are you sure you want to quit?',
-                           TMsgDlgType.mtConfirmation,
-                           [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) = mrYes;
-
+  CanClose := ConfirmDiscardChanges('quitting');
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
@@ -666,6 +734,12 @@ begin
   FDataFilesByPanel := TObjectDictionary<string, TPanelDataFiles>.Create([doOwnsValues]);
   FSimColorByName := TDictionary<string, TAlphaColor>.Create;
 
+  { Before anything that might want them. Load never raises and never
+    leaves FPrefs nil, so the rest of startup can use it unguarded. }
+  FPrefs := TIridiumPreferences.Create;
+  FPrefs.Load;
+
+  FLastExampleIndex := -1;
   FireEvent := False;
 
   // Setting the default syntax and fonts
@@ -770,6 +844,12 @@ begin
   FAutoXTitle := Plot.XAxisTitle.Text;
 
   ShowAnalysisFrame(FFrameTimeCourse);   { default view }
+
+  { Last, once every panel and splitter exists: applying a stored layout
+    before the controls it sizes are in place would be measured against
+    the designed sizes and then overwritten. }
+  ApplyPreferences;
+  RebuildRecentFilesMenu;
 
   FireEvent := True;
 end;
@@ -1761,7 +1841,19 @@ begin
   if FBioFetching then Exit;
 
   Title := Item.Text;
-  HideBioList;
+
+  { Hide now, empty later. TCustomListBox.MouseUp goes on using Item after
+    OnItemClick returns (MouseSelectFinish, Item.ScreenToLocal, Item.MouseUp),
+    so clearing the list here — which destroys every item, this one included —
+    leaves that return path walking freed memory. Windows' allocator keeps the
+    block readable and it survives; macOS returns it and the click AVs. }
+  FBioSearchList.Visible := False;
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if (FBioSearchList <> nil) and (not FBioSearchList.Visible) then
+        FBioSearchList.Clear;
+    end);
 
   FBioFetching := True;
   FBioSearchEdit.Enabled := False;
@@ -1839,6 +1931,13 @@ begin
                 'The model may use SBML features Antimony cannot express.');
     Exit;
   end;
+
+  { Asked here rather than before the download: the search dropdown fires
+    this off a click, and the model is already on the wire by the time
+    anything can be shown. Wasting the fetch is better than replacing the
+    editor without asking. Runs on the UI thread (TThread.Queue), so a
+    modal prompt is safe. }
+  if not ConfirmDiscardChanges('loading the downloaded model') then Exit;
 
   FSession.Unload;
   ClearPlotAndLoadedData;
@@ -2344,6 +2443,8 @@ end;
 procedure TfrmMain.mnuImportSBMLClick(Sender: TObject);
 var SBMLString: String;
 begin
+  if not ConfirmDiscardChanges('importing an SBML model') then Exit;
+
   if OpenSBMLDialog.Execute then
     begin
       SBMLString := TFile.ReadAllText(OpenSBMLDialog.FileName);
@@ -2354,47 +2455,79 @@ begin
       moAntimony.SetText (uAntimonyAPI.getAntimonyFromSBML(SBMLString));
       FCurrentFilePath := '';
       FSession.ClearDirty;
+      FIsModifiedSinceLastSave := False;
       { SBML carries no metadata block, so this normally just clears the
         previous model's experiments — which is the point. }
       ParseMetadata(True);
     end;
 end;
 
+function TfrmMain.LoadModelFromFile(const APath: string): Boolean;
+var
+  Text: string;
+begin
+  Result := False;
+
+  { Read before anything is torn down. A file that cannot be read must
+    leave the model on screen exactly as it was — unloading first and
+    failing afterwards would cost the user the document they still had. }
+  try
+    Text := TFile.ReadAllText(APath);
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Could not read' + sLineBreak + APath + sLineBreak +
+                  sLineBreak + E.Message);
+      Exit;
+    end;
+  end;
+
+  FSession.Unload;
+  ClearPlotAndLoadedData;
+  moAntimony.SetText(Text);
+
+  FCurrentFileName := ExtractFileName(APath);
+  FCurrentFilePath := APath;
+  Caption := 'Iridium II: ' + FCurrentFileName;
+  FSession.ClearDirty;
+  { Freshly installed document: unmodified by definition. SetText raises
+    no OnChange, so nothing would otherwise clear a flag left True by
+    edits to the model this one replaced — and Save would then write
+    without asking, or the close prompt would nag about changes that no
+    longer exist. }
+  FIsModifiedSinceLastSave := False;
+  ParseMetadata(True);
+
+  NoteRecentFile(APath);
+  Result := True;
+end;
+
 procedure TfrmMain.mnuLoadFileClick(Sender: TObject);
 begin
- if OpenDialogAnt.Execute then
-    begin
-    FSession.Unload;
-    ClearPlotAndLoadedData;
-    //moAntimony.Text := TFile.ReadAllText(OpenDialogAnt.FileName);
-    moAntimony.SetText (TFile.ReadAllText(OpenDialogAnt.FileName));
-
-    FCurrentFileName := ExtractFileName(OpenDialogAnt.FileName);
-    FCurrentFilePath := OpenDialogAnt.FileName;
-    Caption := 'Iridium II: ' + FCurrentFileName;
-    FSession.ClearDirty;
-    ParseMetadata(True);
-    end;
+  if not ConfirmDiscardChanges('opening another model') then Exit;
+  if OpenDialogAnt.Execute then
+    LoadModelFromFile(OpenDialogAnt.FileName);
 end;
 
 procedure TfrmMain.mnuNewClick(Sender: TObject);
 var
-  Msg: string;
+  WasModified: Boolean;
 begin
-  { New discards the model text along with the plot and every loaded data
-    overlay, and none of it can be recovered — so confirm before wiping.
-    An empty editor has nothing to lose, so don't nag in that case. }
-  if Trim(moAntimony.GetText) <> '' then
-    begin
-    if FIsModifiedSinceLastSave then
-      Msg := 'The model has unsaved changes. Clear it and start a new model?'
-    else
-      Msg := 'Clear the current model and start a new model?';
+  { Read before the guard: a successful save inside it clears the flag, and
+    the second question below must not then fire as well. }
+  WasModified := FIsModifiedSinceLastSave;
 
-    if MessageDlg(Msg, TMsgDlgType.mtConfirmation,
+  if not ConfirmDiscardChanges('starting a new model') then Exit;
+
+  { New discards the plot and every loaded data overlay along with the text,
+    and none of that can be recovered — so it confirms even when nothing has
+    been edited, which is the one case the guard above says nothing about.
+    An empty editor has nothing to lose, so don't nag in that case. }
+  if (not WasModified) and (Trim(moAntimony.GetText) <> '') then
+    if MessageDlg('Clear the current model and start a new model?',
+                  TMsgDlgType.mtConfirmation,
                   [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
       Exit;
-    end;
 
   //moAntimony.Text := '';
   moAntimony.SetText('');
@@ -2405,9 +2538,10 @@ begin
   { Back to the untitled state — the old file name no longer describes what is
     in the editor. Set after Unload: the session's state-changed listener
     rewrites Caption, so this has to be the last word. }
-  FCurrentFileName := 'untitled.txt';
+  FCurrentFileName := 'untitled.ant';
   FCurrentFilePath := '';
   Caption := 'Iridium II: ' + FCurrentFileName;
+  FIsModifiedSinceLastSave := False;
   { An empty editor has no experiments; this clears the previous model's. }
   ParseMetadata(True);
 end;
@@ -2417,13 +2551,256 @@ begin
   Close;
 end;
 
+{ -- preferences --------------------------------------------------------- }
+
+procedure TfrmMain.ApplyPreferences;
+var
+  L, T, W, H: Integer;
+begin
+  if FPrefs = nil then Exit;
+
+  if FPrefs.HasWindowBounds then
+  begin
+    L := FPrefs.WindowLeft;
+    T := FPrefs.WindowTop;
+    W := FPrefs.WindowWidth;
+    H := FPrefs.WindowHeight;
+
+    { Sanity-checked, not trusted. The screen this was saved on may be
+      gone — an unplugged second monitor leaves bounds that put the window
+      somewhere the user cannot reach, and a window they cannot reach is
+      worse than one in the wrong place. Anything implausible falls back to
+      the designed size, centred. }
+    if (W < 640) or (H < 480) or
+       (L < Screen.DesktopLeft - W + 100) or
+       (L > Screen.DesktopLeft + Screen.DesktopWidth - 100) or
+       (T < Screen.DesktopTop) or
+       (T > Screen.DesktopTop + Screen.DesktopHeight - 100) then
+    begin
+      Position := TFormPosition.ScreenCenter;
+    end
+    else
+    begin
+      Position := TFormPosition.Designed;
+      SetBounds(L, T, W, H);
+    end;
+  end;
+
+  { Splitter positions. Applied as the size of the panel each splitter
+    resizes: Splitter1 sizes SliderContainer from the bottom, Splitter2
+    sizes Layout3 from the right. Guarded against a stored value that
+    would leave nothing of the editor visible. }
+  if (FPrefs.SliderPanelHeight > 50) and
+     (FPrefs.SliderPanelHeight < ClientHeight - 150) then
+    SliderContainer.Height := FPrefs.SliderPanelHeight;
+
+  if (FPrefs.OutputPanelWidth > 100) and
+     (FPrefs.OutputPanelWidth < ClientWidth - 200) then
+    Layout3.Width := FPrefs.OutputPanelWidth;
+end;
+
+procedure TfrmMain.CapturePreferences;
+begin
+  if FPrefs = nil then Exit;
+
+  { Bounds are only worth remembering from a normal window: a maximised or
+    minimised one reports the screen, or nothing, and restoring that as a
+    "size" loses whatever the user had actually arranged. }
+  if WindowState = TWindowState.wsNormal then
+  begin
+    FPrefs.WindowLeft   := Round(Left);
+    FPrefs.WindowTop    := Round(Top);
+    FPrefs.WindowWidth  := Round(Width);
+    FPrefs.WindowHeight := Round(Height);
+    FPrefs.HasWindowBounds := True;
+  end;
+
+  FPrefs.SliderPanelHeight := SliderContainer.Height;
+  FPrefs.OutputPanelWidth  := Layout3.Width;
+end;
+
+procedure TfrmMain.NoteRecentFile(const APath: string);
+begin
+  if FPrefs = nil then Exit;
+  FPrefs.AddRecentFile(APath);
+  RebuildRecentFilesMenu;
+  { Written now rather than only at shutdown: a crash or a kill should not
+    cost the user the list, and it is one small file. }
+  FPrefs.Save;
+end;
+
+procedure TfrmMain.RebuildRecentFilesMenu;
+var
+  I:    Integer;
+  Item: TMenuItem;
+  Path: string;
+begin
+  if mnuLoadRecentFile = nil then Exit;
+
+  while mnuLoadRecentFile.ItemsCount > 0 do
+    mnuLoadRecentFile.Items[0].Free;
+
+  if (FPrefs = nil) or (FPrefs.RecentCount = 0) then
+  begin
+    { An always-empty submenu is a dead end. Say why it is empty. }
+    Item := TMenuItem.Create(Self);
+    Item.Parent  := mnuLoadRecentFile;
+    Item.Text    := 'No recent files';
+    Item.Enabled := False;
+    Exit;
+  end;
+
+  for I := 0 to FPrefs.RecentCount - 1 do
+  begin
+    Path := FPrefs.RecentFiles[I];
+    Item := TMenuItem.Create(Self);
+    Item.Parent := mnuLoadRecentFile;
+    { '&' in a path would otherwise be eaten as an accelerator, and a
+      folder called 'R&D' would come out as 'RD'. }
+    Item.Text      := StringReplace(Path, '&', '&&', [rfReplaceAll]);
+    { The path travels on the item, not in its caption: the caption is for
+      reading and may be escaped or shortened, the tag is what we open. }
+    Item.TagString := Path;
+    Item.OnClick   := RecentFileClick;
+  end;
+end;
+
+procedure TfrmMain.RecentFileClick(Sender: TObject);
+var
+  Path: string;
+begin
+  if not (Sender is TMenuItem) then Exit;
+  Path := TMenuItem(Sender).TagString;
+  if Path = '' then Exit;
+
+  { Checked before the discard prompt, so a file that has been moved or
+    deleted does not first make the user decide about saving. }
+  if not TFile.Exists(Path) then
+  begin
+    ShowMessage('This file is no longer there:' + sLineBreak + Path +
+                sLineBreak + sLineBreak +
+                'It has been removed from the recent files list.');
+    FPrefs.RemoveRecentFile(Path);
+    RebuildRecentFilesMenu;
+    FPrefs.Save;
+    Exit;
+  end;
+
+  if not ConfirmDiscardChanges('opening another model') then Exit;
+  LoadModelFromFile(Path);
+end;
+
+function TfrmMain.ConfirmDiscardChanges(const AAction: string): Boolean;
+var
+  Answer: Integer;
+begin
+  Result := True;
+
+  { Nothing to lose: never nag. An untouched document and an empty editor
+    are both safe to replace without a word. }
+  if not FIsModifiedSinceLastSave then Exit;
+  if Trim(moAntimony.GetText) = '' then Exit;
+
+  { Three answers, not two. The old wording ('...are you sure?') made the
+    user choose between losing their work and abandoning what they were
+    trying to do — when what they almost always want is the third thing,
+    to keep both. Cancel stays, because changing your mind about the
+    action itself is a different answer from discarding the model. }
+  Answer := MessageDlg(
+    Format('%s has unsaved changes.' + sLineBreak + sLineBreak +
+           'Save it before %s?', [FCurrentFileName, AAction]),
+    TMsgDlgType.mtConfirmation,
+    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo, TMsgDlgBtn.mbCancel], 0);
+
+  case Answer of
+    { DoSaveModel prompts for a path when the model has never been written,
+      and answers False if that dialog was cancelled or the write failed.
+      Carrying that answer out is what stops a cancelled Save As from
+      quietly discarding the model anyway. }
+    mrYes: Result := DoSaveModel;
+    mrNo:  Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+function TfrmMain.SaveModelToPath(const APath: string): Boolean;
+begin
+  Result := False;
+  if APath = '' then Exit;
+
+  { Guarded: a read-only file, a removed USB stick or a path the user has
+    no rights to all raise here, and an unhandled exception out of a Save
+    looks to the user like the save silently worked. }
+  try
+    TFile.WriteAllText(APath, moAntimony.GetText);
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Could not save the model to' + sLineBreak + APath +
+                  sLineBreak + sLineBreak + E.Message);
+      Exit;
+    end;
+  end;
+
+  { The file just written IS the model now. The path matters beyond the
+    caption: metadata resolves a 'file' key against the directory holding
+    the model (spec 11.4), so an '@output file: "run.csv"' follows the
+    model to wherever it was saved. }
+  FCurrentFilePath := APath;
+  FCurrentFileName := ExtractFileName(APath);
+  Caption := 'Iridium II: ' + FCurrentFileName;
+  FIsModifiedSinceLastSave := False;
+
+  { A model just written IS a file the user has been working on, and the
+    one they are most likely to want back — Save As in particular creates a
+    path that has never been through Open. }
+  NoteRecentFile(APath);
+  Result := True;
+end;
+
+function TfrmMain.DoSaveModelAs: Boolean;
+begin
+  { Default to where the model already lives, under the name it already
+    has — Save As is nearly always "the same thing, somewhere else" or
+    "a variant beside the original", and both start from here. }
+  if FCurrentFilePath <> '' then
+  begin
+    SaveDialogAnt.InitialDir := ExtractFilePath(FCurrentFilePath);
+    SaveDialogAnt.FileName   := ExtractFileName(FCurrentFilePath);
+  end
+  else if FCurrentFileName <> '' then
+    SaveDialogAnt.FileName := FCurrentFileName;
+
+  { '.ant' is what Iridium names models itself — the built-in models, a
+    BioModels download — so it is what a name typed without an extension
+    should become. The dialog still offers .txt, which older models use. }
+  SaveDialogAnt.DefaultExt := 'ant';
+
+  Result := SaveDialogAnt.Execute;
+  if Result then
+    Result := SaveModelToPath(SaveDialogAnt.FileName);
+end;
+
+function TfrmMain.DoSaveModel: Boolean;
+begin
+  { No path means the model has never been written: an untitled document,
+    a built-in example, a BioModels download or an imported SBML. There is
+    nothing to overwrite, so Save has to ask — which is Save As. }
+  if FCurrentFilePath = '' then
+    Result := DoSaveModelAs
+  else
+    Result := SaveModelToPath(FCurrentFilePath);
+end;
+
+procedure TfrmMain.mnuSaveAsClick(Sender: TObject);
+begin
+  DoSaveModelAs;
+end;
+
 procedure TfrmMain.mnuSaveClick(Sender: TObject);
 begin
-  if SaveDialogAnt.Execute then
-     begin
-     TFile.WriteAllText(SaveDialogAnt.FileName, moAntimony.GetText);
-     FIsModifiedSinceLastSave := False;
-     end;
+  DoSaveModel;
 end;
 
 procedure TfrmMain.moAntimony1ChangeTracking(Sender: TObject);
@@ -2889,6 +3266,194 @@ begin
   end;
 end;
 
+
+{ ── Generating a metadata block from the panel on screen ─────────────────── }
+
+function TfrmMain.BuildMetaPlotCommand(const ASourceLabel: string;
+  const AYNames: TArray<string>): TPlotCommand;
+var
+  I:      Integer;
+  Ser:    TPlotSeries;
+  Canon:  string;
+  Style:  TSeriesStyle;
+  Wanted: TStringList;
+begin
+  Result := TPlotCommand.Create;
+  Result.Name   := 'plot';
+  Result.Source := [ASourceLabel];
+  Result.Y      := AYNames;
+  MarkWritten(Result, 'source');
+  MarkWritten(Result, 'y', True);
+
+  { 'x' is deliberately not written. Its default is time, which is right
+    for a time course, and a scan derives its own x from the measure —
+    the scanned parameter for a scalar measure, time for an overlay — so
+    naming one here could only contradict the panel. 'xlabel' below still
+    records what the axis actually says. }
+
+  { Both, as PlotGetSimulationSeriesInfo tests: the series list is a
+    separate object and is not guaranteed to exist just because the plot
+    does. Testing only 'Plot = nil' left Plot.Series.Count below able to
+    fault. }
+  if (Plot = nil) or (Plot.Series = nil) then Exit;
+
+  if Plot.ChartTitle.Visible then
+    Result.Title := Plot.ChartTitle.Text;
+  Result.XLabel := Plot.XAxisTitle.Text;
+  Result.YLabel := Plot.YAxisTitle.Text;
+  Result.LogX   := Plot.AxisStyle.LogX;
+  Result.LogY   := Plot.AxisStyle.LogY;
+  Result.GridX  := Plot.GridStyle.XMajorVisible;
+  Result.GridY  := Plot.GridStyle.YMajorVisible;
+
+  { Font sizes, but only where they say something the designed plot does
+    not already. Writing the component's own defaults into every generated
+    block would be noise in a file whose whole job is to be read. }
+  if Plot.ChartTitle.FontSize <> DEFAULT_TITLE_FONT_SIZE then
+    Result.TitleFontSize := Plot.ChartTitle.FontSize;
+
+  { One key covers four properties, so it can only be written back when
+    all four agree. Where the user has sized titles and ticks differently
+    in the plot editor, the format cannot describe that state — and a
+    single number that silently flattened them would make the file
+    disagree with the figure it claims to describe. Omitted instead. }
+  if (Plot.XAxisTitle.FontSize = Plot.YAxisTitle.FontSize) and
+     (Plot.XAxisFontSize       = Plot.YAxisFontSize) and
+     (Plot.XAxisTitle.FontSize = Plot.XAxisFontSize) and
+     (Plot.XAxisTitle.FontSize <> DEFAULT_AXES_FONT_SIZE) then
+    Result.AxesFontSize := Plot.XAxisTitle.FontSize;
+
+  { Placement is only meaningful with a legend to place. }
+  if Plot.LegendStyle.Visible then
+    case Plot.LegendStyle.Location of
+      llTopLeft:     Result.LegendPosition := lpTopLeft;
+      llTopRight:    Result.LegendPosition := lpTopRight;
+      llBottomLeft:  Result.LegendPosition := lpBottomLeft;
+      llBottomRight: Result.LegendPosition := lpBottomRight;
+    end;
+
+  { Series colours, so the block describes the figure on screen and not
+    merely the run behind it — the point of having a writer at all.
+
+    Only series whose name IS one of the requested observables. A data
+    overlay must never be described (it is the user's measurements, not
+    an output of the model), and a scan overlay names its traces
+    '[S1]  X0=0.5' — one per scan point — which is no observable's name
+    and would emit a 'series:' key nothing could ever match. }
+  Wanted := TStringList.Create;
+  try
+    Wanted.CaseSensitive := True;
+    Wanted.AddStrings(AYNames);
+
+    for I := 0 to Plot.Series.Count - 1 do
+    begin
+      Ser := Plot.Series[I];
+      if Ser.SeriesKind <> skSimulation then Continue;
+      Canon := CanonicalModelName(Ser.Name);
+      if Wanted.IndexOf(Canon) < 0 then Continue;
+
+      Style := Result.AddStyle(Canon);
+      Style.HasColor := True;
+      Style.Color    := Cardinal(Ser.LineColor);
+    end;
+  finally
+    Wanted.Free;
+  end;
+end;
+
+procedure TfrmMain.btnGenerateMetaScriptClick(Sender: TObject);
+var
+  Provider:  IMetaScriptProvider;
+  Cmds:      TArray<TMetaCommandBase>;
+  YNames:    TArray<string>;
+  Cmd:       TMetaCommandBase;
+  Prefix:    string;
+  PanelName: string;
+  TaskLabel: string;
+  Block:     string;
+begin
+  { A panel that cannot describe itself says so by not implementing the
+    interface — the Metadata panel reports on a block rather than setting
+    up a run, so it has nothing of its own to write. }
+  if not Supports(FActiveFrame, IMetaScriptProvider, Provider) then
+  begin
+    ShowMessage('This panel has no run settings for the metadata format ' +
+                'to describe. Switch to Time Course, Steady State or ' +
+                'Parameter Scan and try again.');
+    Exit;
+  end;
+
+  if ActiveAnalysisKey = 'TimeCourse' then
+  begin
+    Prefix := 'sim';      PanelName := 'Time Course';
+  end
+  else if ActiveAnalysisKey = 'ParameterScan' then
+  begin
+    Prefix := 'scan';     PanelName := 'Parameter Scan';
+  end
+  else if ActiveAnalysisKey = 'SteadyState' then
+  begin
+    Prefix := 'ss';       PanelName := 'Steady State';
+  end
+  else
+    { Only reachable if a panel starts implementing IMetaScriptProvider
+      without ActiveAnalysisKey learning its name. Falling through to the
+      steady-state labels would have written a block describing the wrong
+      panel, which is worse than declining. }
+    Exit;
+
+  { Reserved together with the '_run' the scan panel derives from it, so a
+    second Generate cannot land a task on a label the first one used.
+    FMeta describes the editor as it was last parsed; the Metadata menu
+    re-parses on open, and so does every reload, so it is current here. }
+  TaskLabel := UniqueMetaLabel(FMeta, Prefix, ['_run']);
+
+  Cmds := Provider.GetMetaCommands(TaskLabel, YNames);
+  if Length(Cmds) = 0 then
+  begin
+    ShowMessage('There is nothing to describe yet — no observable is ' +
+                'selected on this panel.');
+    Exit;
+  end;
+
+  try
+    { The task the figure belongs to is the LAST command the panel
+      returned: a scan hands back the '@simulate' it repeats followed by
+      the '@scan' itself, and it is the scan the plot draws. }
+    if Length(YNames) > 0 then
+      Cmds := Cmds + [BuildMetaPlotCommand(Cmds[High(Cmds)].CmdLabel, YNames)];
+
+    Block := MetaBlockText(Cmds, PanelName, 'Iridium ' + VERSION);
+  finally
+    for Cmd in Cmds do
+      Cmd.Free;
+  end;
+
+  if Trim(Block) = '' then Exit;
+
+  { Appended as a new block rather than merged into one already there. A
+    file may hold any number of command regions, in any number of
+    comments, processed in file order as if concatenated (spec 3.1) — so
+    this is always well-formed, and it never rewrites text the user wrote
+    by hand. }
+  moAntimony.SetText(moAntimony.GetText.TrimRight + sLineBreak + sLineBreak +
+                     Block);
+
+  { Marked by hand because the editor deliberately does not raise OnChange
+    for SetText — loading a document is not an edit, which is right for
+    File ▸ Open and wrong here: this IS an edit, just one Iridium made.
+    Without both, the block can be generated and the app closed without
+    ever offering to save it. }
+  FIsModifiedSinceLastSave := True;
+  FSession.MarkDirty;
+
+  { Read it straight back, so the block the user just generated is in the
+    experiment selectors before they look for it. Not applied: applying
+    would overwrite the very settings it was generated from, and the panel
+    is already holding them. }
+  ParseMetadata(False);
+end;
+
 procedure TfrmMain.btnLighDarkClick(Sender: TObject);
 begin
   { One button toggling between the two themes. ApplyTheme resets every
@@ -3072,14 +3637,30 @@ var Model : TBuiltInModel;
 begin
   if not FireEvent then exit;
 
+  if not ConfirmDiscardChanges('loading an example model') then
+  begin
+    { The combo has already moved to what was picked. Put it back, with the
+      event suppressed so the restore does not re-enter here — otherwise the
+      box would go on naming a model that was never loaded. }
+    FireEvent := False;
+    try
+      cboExampleModels.ItemIndex := FLastExampleIndex;
+    finally
+      FireEvent := True;
+    end;
+    Exit;
+  end;
+  FLastExampleIndex := cboExampleModels.ItemIndex;
+
   Model := (cboExampleModels.Items.Objects[cboExampleModels.ItemIndex]) as TBuiltInModel;
   FSession.Unload;
   ClearPlotAndLoadedData;
   moAntimony.SetText (Model.ModelStr);
-  FCurrentFileName := 'untitled.txt';
+  FCurrentFileName := 'untitled.ant';
   FCurrentFilePath := '';
   Caption := 'Iridium II: ' + FCurrentFileName;
   FSession.ClearDirty;
+  FIsModifiedSinceLastSave := False;
   FFrameTimeCourse.SetSimulationParameters(Model.timeEnd, Model.NumberOfPoints);
   { After the built-in model's own defaults, so a metadata block in the
     example wins over them. }
@@ -3361,6 +3942,39 @@ begin
 
   if ACmd.WasWritten('logx') then Plot.AxisStyle.LogX := ACmd.LogX;
   if ACmd.WasWritten('logy') then Plot.AxisStyle.LogY := ACmd.LogY;
+
+  { Font sizes, in points, both > 0 where written — the validator has
+    already rejected anything else, so a positive value here is the only
+    signal needed and an absent key leaves Iridium's own size alone
+    (spec 11.6 sets no numeric default deliberately). }
+  if ACmd.TitleFontSize > 0 then
+    Plot.ChartTitle.FontSize := ACmd.TitleFontSize;
+
+  if ACmd.AxesFontSize > 0 then
+  begin
+    { All four. 'axesfontsize' sizes the axis labels AND the tick labels —
+      a user asking for larger axis text means the numbers as well as the
+      words (spec 11.6) — and this plot keeps those as separate
+      properties: the titles on TTextProperty, the ticks on the chart. }
+    Plot.XAxisTitle.FontSize := ACmd.AxesFontSize;
+    Plot.YAxisTitle.FontSize := ACmd.AxesFontSize;
+    Plot.XAxisFontSize       := ACmd.AxesFontSize;
+    Plot.YAxisFontSize       := ACmd.AxesFontSize;
+  end;
+
+  { Legend placement. lpDefault means the key was absent, which leaves
+    placement to Iridium — the format has no value naming that behaviour
+    and none turning the legend off, because visibility follows from the
+    plot rather than from where the legend sits (spec 11.7). The corners
+    are spelled top/bottom in the format and TopRight/… here; the mapping
+    is the whole of the difference. }
+  case ACmd.LegendPosition of
+    lpTopLeft:     Plot.LegendStyle.Location := llTopLeft;
+    lpTopRight:    Plot.LegendStyle.Location := llTopRight;
+    lpBottomLeft:  Plot.LegendStyle.Location := llBottomLeft;
+    lpBottomRight: Plot.LegendStyle.Location := llBottomRight;
+    lpDefault:     ;
+  end;
 
   { Per-series styling, matched by name against the series actually drawn.
     Only simulation series: a data overlay may share a name with its

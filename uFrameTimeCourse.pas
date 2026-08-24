@@ -56,6 +56,7 @@ uses
   FMX.Objects, FMX.Layouts, FMX.ScrollBox, FMX.ListBox,
   uRR2DSimpleMatrix,
   uAnalysisTypes, uMetaExperiments, uMetaSelector, uMetaOutput, uMetaSetValues,
+  uMetaScriptGen,
   Sim.Meta, Sim.Meta.Model,
   System.Skia, FMX.Skia;
 
@@ -81,7 +82,8 @@ type
   );
   TObservableCategorySet = set of TObservableCategory;
 
-  TFrameTimeCourse = class(TFrame, IPythonScriptExporter, IMetaOutputProvider)
+  TFrameTimeCourse = class(TFrame, IPythonScriptExporter, IMetaOutputProvider,
+                           IMetaScriptProvider)
     btnSimulate: TButton;
     btnReset: TButton;
     Layout5: TLayout;
@@ -207,6 +209,11 @@ type
       setup. }
     function GetOutputExperiment: TMetaExperiment;
     function GetOutputData: T2DMatrix;
+
+    { IMetaScriptProvider — this panel as one '@simulate'. }
+    function GetMetaCommands(const ATaskLabel: string;
+                             out APlotY: TArray<string>
+                            ): TArray<TMetaCommandBase>;
 
     procedure ApplyExperiment(AExp: TMetaExperiment; AWasUnset: Boolean);
     procedure RestoreUserSettings(Sender: TObject);
@@ -818,6 +825,44 @@ begin
     Result := FLastData
   else
     Result := nil;
+end;
+
+{ ── @simulate generation ─────────────────────────────────────────────────── }
+
+function TFrameTimeCourse.GetMetaCommands(const ATaskLabel: string;
+  out APlotY: TArray<string>): TArray<TMetaCommandBase>;
+var
+  Sim: TSimulateCommand;
+  I:   Integer;
+begin
+  Result := nil;
+  APlotY := nil;
+
+  { Nothing selected is nothing to describe: a '@plot' with an empty 'y'
+    is invalid, and a '@simulate' whose figure draws nothing is not worth
+    writing either. }
+  if FSelectedYNames.Count = 0 then Exit;
+
+  Sim := TSimulateCommand.Create;
+  Sim.Name      := 'simulate';
+  Sim.CmdLabel  := ATaskLabel;
+  Sim.TimeStart := edtTimeStart.Value;
+  Sim.TimeEnd   := edtTimeEnd.Value;
+  Sim.Points    := Trunc(edtNumberofPoints.Value);
+  { 'points' rather than 'steps': the panel counts output rows, and the
+    two spellings differ by one (points = steps + 1). Echoing the wrong
+    one would move the last sample. }
+  Sim.Spelling  := csPoints;
+  MarkWritten(Sim, 'timestart');
+  MarkWritten(Sim, 'timeend');
+  MarkWritten(Sim, 'points');
+
+  { The model's own spelling: the selection is keyed on RoadRunner's
+    '[S1]', the file beside it says 'S1'. }
+  for I := 0 to FSelectedYNames.Count - 1 do
+    APlotY := APlotY + [CanonicalModelName(FSelectedYNames[I])];
+
+  Result := [Sim];
 end;
 
 procedure TFrameTimeCourse.ApplyPlotMetadata;

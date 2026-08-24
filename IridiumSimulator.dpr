@@ -68,6 +68,8 @@ uses
   Sim.Meta.SedML.Export in '..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Export.pas',
   Sim.Meta.Omex in '..\..\Antimony_MetaData_Support\Sim.Meta.Omex.pas',
   uMetaSymbolProvider in 'uMetaSymbolProvider.pas',
+  uMetaScriptGen in 'uMetaScriptGen.pas',
+  uPreferences in 'uPreferences.pas',
   uMetaExperiments in 'uMetaExperiments.pas',
   uMetaSelector in 'uMetaSelector.pas',
   uMetaSetValues in 'uMetaSetValues.pas',

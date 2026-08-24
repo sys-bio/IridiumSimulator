@@ -1060,6 +1060,18 @@ object frmMain: TfrmMain
           Size.PlatformDefault = False
         end
       end
+      object btnGenerateMetaScript: TSpeedButton
+        Hint = 'Generate a metadata block describing this panel'
+        Position.X = 330.000000000000000000
+        Position.Y = 7.000000000000000000
+        Size.Width = 42.000000000000000000
+        Size.Height = 38.000000000000000000
+        Size.PlatformDefault = False
+        ParentShowHint = False
+        ShowHint = True
+        Text = '@sim'
+        OnClick = btnGenerateMetaScriptClick
+      end
     end
   end
   object Layout6: TLayout
@@ -1094,12 +1106,14 @@ object frmMain: TfrmMain
       TabOrder = 1
       object Layout7: TLayout
         Align = Bottom
+        ClipChildren = True
         Position.Y = 417.000000000000000000
         Size.Width = 441.000000000000000000
         Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         object chkShowLineNumbers: TCheckBox
+          Anchors = [akLeft, akTop, akRight]
           IsChecked = True
           Position.X = 208.000000000000000000
           Position.Y = 18.000000000000000000
@@ -1114,7 +1128,7 @@ object frmMain: TfrmMain
           Touch.InteractiveGestures = [LongTap, DoubleTap]
           TabOrder = 1
           Cursor = crIBeam
-          Position.X = 76.000000000000000000
+          Position.X = 68.000000000000000000
           Position.Y = 13.000000000000000000
           Size.Width = 109.000000000000000000
           Size.Height = 24.000000000000000000
@@ -1256,6 +1270,10 @@ object frmMain: TfrmMain
         Text = 'Load...'
         OnClick = mnuLoadFileClick
       end
+      object mnuLoadRecentFile: TMenuItem
+        Locked = True
+        Text = 'Load Recent Files...'
+      end
       object MenuItem1: TMenuItem
         Locked = True
         Text = '-'
@@ -1285,6 +1303,11 @@ object frmMain: TfrmMain
         Locked = True
         Text = 'Save'
         OnClick = mnuSaveClick
+      end
+      object mnuSaveAs: TMenuItem
+        Locked = True
+        Text = 'SaveAs...'
+        OnClick = mnuSaveAsClick
       end
       object MenuItem2: TMenuItem
         Locked = True

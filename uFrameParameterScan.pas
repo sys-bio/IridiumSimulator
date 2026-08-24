@@ -14,6 +14,7 @@ uses
   uMetaExperiments,
   uMetaSelector,
   uMetaSetValues,
+  uMetaScriptGen,
   Sim.Meta.Model,
   uRR2DSimpleMatrix,
   uColorList,
@@ -41,7 +42,8 @@ type
     Observables: TArray<string>;
   end;
 
-  TFrameParameterScan = class(TFrame, IPythonScriptExporter)
+  TFrameParameterScan = class(TFrame, IPythonScriptExporter,
+                              IMetaScriptProvider)
     grpParameter:          TGroupBox;
     lblParameter:          TLabel;
     cbParameter:           TComboBox;
@@ -155,7 +157,18 @@ type
     FReportedSetFor:    string;
     { What to write back to undo the selected experiment's 'set:' values. }
     FActiveSetRestore:  TSetValueRestoreArray;
+    { The experiment whose @plot has already been reported on, so the
+      "drew the first only" / "y names something not scanned" notice
+      appears once rather than on every Run Scan. Cleared by a re-parse. }
+    FWarnedPlotFor:     string;
     procedure ApplyPendingExperiment;
+
+    { Overlay the selected experiment's @plot onto the freshly drawn scan.
+      AMeasure is the mode the sweep ran in: it decides how the series are
+      named, and so what a 'series:' block can match. Returns True when the
+      command wrote an 'xlabel:', which is the caller's cue to leave the
+      x-axis title alone rather than overwrite it with the derived one. }
+    function  ApplyPlotMetadata(AMeasure: TOutputMeasure): Boolean;
 
     procedure ApplyExperiment(AExp: TMetaExperiment; AWasUnset: Boolean);
     procedure RestoreUserState(Sender: TObject);
@@ -197,6 +210,12 @@ type
     function  ParseValueList(const AText: string): TArray<Double>;
 
     function GetPythonScript(const AntimonyText: string): string;
+
+    { IMetaScriptProvider — this panel as an '@simulate' the scan repeats
+      plus the '@scan' itself. }
+    function GetMetaCommands(const ATaskLabel: string;
+                             out APlotY: TArray<string>
+                            ): TArray<TMetaCommandBase>;
 
     { Extract a scalar from one simulation result matrix.
         AData       – T2DMatrix returned by simulateEx
@@ -249,6 +268,7 @@ implementation
 uses
   System.Math,
   uRoadRunner,
+  uMetaSymbolProvider,
   uPlotSeries;
 
 const
@@ -346,6 +366,12 @@ begin
   finally
     FSelector.Suppressed := False;
   end;
+
+  { The plot's appearance is as much part of "my own settings" as the
+    numbers were: a title or a log axis a preset switched on has to go
+    with it. }
+  if FContext <> nil then
+    FContext.PlotRestoreUserStyle;
 end;
 
 function TFrameParameterScan.CapturePanelState: TScanPanelState;
@@ -509,6 +535,10 @@ procedure TFrameParameterScan.MetadataChanged(AApply: Boolean);
 begin
   if (FContext = nil) or (FSelector = nil) then Exit;
 
+  { A fresh parse may have changed an experiment's @plot commands, so
+    whatever we declined to honour last time is worth saying again. }
+  FWarnedPlotFor := '';
+
   FSelector.Rebuild(FContext.MetaExperiments);
   if AApply then
     FSelector.ApplyFirstUsable(FContext.MetaExperiments);
@@ -543,6 +573,12 @@ begin
   if (not FHasUserState) or AWasUnset then
   begin
     FUserState    := CapturePanelState;
+    { The plot's appearance too. A @plot switches on log axes, grids and
+      titles, and those outlive the series they were applied to — so
+      without this, stepping back to '—' returns the numbers but leaves
+      the file's log axis and title in place. }
+    if FContext <> nil then
+      FContext.PlotCaptureUserStyle;
     FHasUserState := True;
   end;
 
@@ -696,9 +732,19 @@ begin
   if FContext.Session.IsDirty then
     FHasData := False;
 
-  { Dropped, NOT restored: those values describe an engine that is gone. }
+  { Model gone (File ▸ New, a failed parse, a model swap). }
   if not FContext.Session.IsLoaded then
+  begin
+    { Dropped, NOT restored: those values describe an engine that is gone. }
     FActiveSetRestore := nil;
+
+    { The lists and the parameter combo name quantities the next model may
+      not have, so they go with it. Only on unload — a dirty source is
+      still the same model. }
+    FHasData := False;
+    ClearObservableLists;
+    cbParameter.Clear;
+  end;
 end;
 
 procedure TFrameParameterScan.SessionModelReloaded(Sender: TObject;
@@ -733,6 +779,205 @@ begin
     new scan parameter needs to be locked. }
   if (FContext <> nil) and FContext.SliderContainer.ParamPanelVisible then
     UpdateScanParameterLock;
+end;
+
+{ ── @scan generation ─────────────────────────────────────────────────────── }
+
+function TFrameParameterScan.GetMetaCommands(const ATaskLabel: string;
+  out APlotY: TArray<string>): TArray<TMetaCommandBase>;
+var
+  Sim:  TSimulateCommand;
+  Scan: TScanCommand;
+  Fmt:  TFormatSettings;
+  N:    string;
+begin
+  Result  := nil;
+  APlotY  := nil;
+  Fmt     := TFormatSettings.Invariant;
+
+  if (cbParameter.ItemIndex < 0) or
+     (cbParameter.ItemIndex >= cbParameter.Items.Count) then Exit;
+  if Length(FSelectedObsNames) = 0 then Exit;
+
+  { The time course each scan point runs. A '@scan' carries no time keys —
+    'start'/'end'/'points' there are the swept parameter's range — so the
+    run it repeats has to be a task of its own for 'source' to name.
+    Reading it back is the mirror of ApplyExperiment, which fills these
+    same three edits from the scan's source. }
+  Sim := TSimulateCommand.Create;
+  Sim.Name      := 'simulate';
+  Sim.CmdLabel  := ATaskLabel + '_run';
+  Sim.TimeStart := StrToFloatDef(edtTimeStart.Text, 0, Fmt);
+  Sim.TimeEnd   := StrToFloatDef(edtTimeEnd.Text, 10, Fmt);
+  Sim.Points    := Max(2, StrToIntDef(edtNumPoints.Text, 100));
+  Sim.Spelling  := csPoints;
+  MarkWritten(Sim, 'timestart');
+  MarkWritten(Sim, 'timeend');
+  MarkWritten(Sim, 'points');
+
+  Scan := TScanCommand.Create;
+  Scan.Name     := 'scan';
+  Scan.CmdLabel := ATaskLabel;
+  Scan.Source   := [Sim.CmdLabel];
+  MarkWritten(Scan, 'source');
+
+  { The model's own spelling, not RoadRunner's: the block is read beside
+    the model file, where a species is 'S1' and never '[S1]'. }
+  Scan.Parameter := CanonicalModelName(
+    cbParameter.Items[cbParameter.ItemIndex]);
+
+  case ActiveRangeMode of
+    srmList:
+      begin
+        Scan.HasRange := False;
+        Scan.Values   := ParseValueList(edtValueList.Text);
+        MarkWritten(Scan, 'values', True);
+      end;
+  else
+    Scan.HasRange    := True;
+    Scan.RangeStart  := StrToFloatDef(edtScanStart.Text, 0, Fmt);
+    Scan.RangeEnd    := StrToFloatDef(edtScanEnd.Text, 1, Fmt);
+    Scan.RangePoints := Max(2, StrToIntDef(edtScanNPoints.Text, 10));
+    Scan.LogSpacing  := ActiveRangeMode = srmLog;
+  end;
+
+  for N in FSelectedObsNames do
+  begin
+    Scan.Observables := Scan.Observables + [CanonicalModelName(N)];
+    APlotY           := APlotY + [CanonicalModelName(N)];
+  end;
+  MarkWritten(Scan, 'observables', True);
+
+  case ActiveOutputMeasure of
+    omPeakValue:  Scan.Measure := mkPeakValue;
+    omTimeToPeak: Scan.Measure := mkTimeToPeak;
+    omTimeCourseOverlay: Scan.Measure := mkTimecourse;
+  else
+    Scan.Measure  := mkSampleAt;
+    Scan.SampleAt := StrToFloatDef(edtSampleTime.Text, Sim.TimeEnd, Fmt);
+  end;
+
+  Result := [Sim, Scan];
+end;
+
+{ ── @plot ───────────────────────────────────────────────────────────────── }
+
+function TFrameParameterScan.ApplyPlotMetadata(AMeasure: TOutputMeasure): Boolean;
+var
+  Exp:      TMetaExperiment;
+  P:        TPlotCommand;
+  Skipped:  TArray<TPlotCommand>;
+  Notes:    TArray<string>;
+  Names, Y: string;
+  I:        Integer;
+
+  { Is AName one of the observables this sweep actually reported? The
+    metadata spells a species 'S1' and the engine '[S1]', so try both
+    forms — the same two spellings ApplyExperiment offers going the other
+    way. 'time' belongs to no observable category and is always legal. }
+  function IsReported(const AName: string): Boolean;
+  var
+    N: string;
+  begin
+    Result := SameText(AName, TIME_COLUMN_LABEL);
+    if Result then Exit;
+    for N in FSelectedObsNames do
+      if (N = AName) or (N = '[' + AName + ']') then
+        Exit(True);
+  end;
+
+begin
+  Result := False;
+  if (FContext = nil) or (FSelector = nil) then Exit;
+
+  Exp := FSelector.ActiveExperiment;
+  if (Exp = nil) or (not Exp.Usable) then Exit;
+
+  P := Exp.FirstPlot;
+  if P = nil then Exit;
+
+  { Rebase before overlaying, exactly as the time-course panel does: a
+    @plot is applied key by key, and "a key this command didn't write"
+    has to mean the user's own baseline rather than whatever the previous
+    experiment's @plot left behind. Without the reset, styling
+    accumulates across experiments and no file describes its own figure.
+
+    The rebase is also why this runs BEFORE the caller sets the derived
+    x-axis title: the snapshot it restores carries an axis title of its
+    own — the previous run's — so a title set first would simply be
+    undone here. The caller sets it afterwards, and skips it when this
+    returns True. }
+  FContext.PlotRestoreUserStyle;
+  FContext.PlotApplyMetaStyle(P);
+  Result := P.WasWritten('xlabel');
+
+  { ── What we could not honour ──────────────────────────────────────────
+    Collected into one notice shown once per experiment. A dialog per Run
+    Scan would be punishment, and the user cannot act on it any faster
+    the fifth time. }
+  if FWarnedPlotFor = Exp.LabelText then Exit;
+
+  Notes := [];
+
+  { C6: one plot surface, so only the first @plot is drawn. }
+  Skipped := Exp.SkippedPlots;
+  if Length(Skipped) > 0 then
+  begin
+    Names := '';
+    for I := 0 to High(Skipped) do
+    begin
+      if Names <> '' then Names := Names + ', ';
+      Names := Names + Skipped[I].DisplayName;
+    end;
+    Notes := Notes + ['Iridium has a single plot surface, so it drew the ' +
+      'first plot and did not draw: ' + Names + '.'];
+  end;
+
+  { 'y:' does not select on a scan — 'observables:' is required on @scan
+    and already fills the checklist, and the checklist is the single
+    authority for what the sweep reports (the same rule the steady-state
+    Observables list follows). So 'y' is redundant here and is honoured by
+    being consistent; where it is not, the figure differs from what the
+    file asks for and that must be said rather than silently ignored. }
+  Names := '';
+  for Y in P.Y do
+    if not IsReported(Y) then
+    begin
+      if Names <> '' then Names := Names + ', ';
+      Names := Names + Y;
+    end;
+  if Names <> '' then
+    Notes := Notes + ['The plot asks to draw ' + Names + ', which the scan ' +
+      'does not report. On a scan the ''observables:'' list decides what is ' +
+      'computed; add the name there to see it.'];
+
+  { An overlay sweep names each trace '[S1]  X0=0.5' — one per observable
+    per scan point — so a 'series:' block keyed on an observable name
+    matches none of them. Chart-level keys are unaffected. }
+  if (AMeasure = omTimeCourseOverlay) and (P.Series.Count > 0) then
+    Notes := Notes + ['Per-series styling was not applied: a time-course ' +
+      'overlay draws one trace per scan point, so its series are named ' +
+      'after the observable and the parameter value together rather than ' +
+      'after the observable alone.'];
+
+  { Spec 11.7: an overlay scan has no legend worth placing — every scan
+    point would need its own entry — so a 'legendposition' on one is
+    reported rather than quietly honoured on a legend nobody can read. }
+  if (AMeasure = omTimeCourseOverlay) and
+     (P.LegendPosition <> lpDefault) then
+    Notes := Notes + ['The plot sets a legend position, but a time-course ' +
+      'overlay gives every scan point its own trace — there is no legend ' +
+      'worth placing. Use a scalar measure (sample at, peak value, time ' +
+      'to peak) for a figure with one entry per observable.'];
+
+  if Length(Notes) = 0 then Exit;
+
+  FWarnedPlotFor := Exp.LabelText;
+  Names := '';
+  for I := 0 to High(Notes) do
+    Names := Names + Notes[I] + sLineBreak + sLineBreak;
+  ShowMessage('Experiment ' + Exp.LabelText + ':' + sLineBreak + sLineBreak +
+              Trim(Names));
 end;
 
 { ── Population helpers ───────────────────────────────────────────────────── }
@@ -1351,15 +1596,20 @@ begin
     { Re-apply this frame's saved styling to the freshly built series. }
     FContext.PlotEndRebuild;
 
-    { Set the x-axis title AFTER PlotEndRebuild. The styling snapshot it restores
-      carries the previous run's x-axis title — so a time-course-overlay scan's
-      'time' would clobber the parameter name on a following endpoint scan, and
-      vice versa. The scan x-axis is mode-derived and always authoritative here:
-      time for overlay traces, the scanned parameter for scalar measures. }
-    if Measure = omTimeCourseOverlay then
-      FContext.PlotSetXAxisTitle(TIME_COLUMN_LABEL)
-    else
-      FContext.PlotSetXAxisTitle(ParamName);
+    { Set the x-axis title AFTER PlotEndRebuild — and after the @plot, which
+      also restores a styling snapshot. Either one carries the previous run's
+      x-axis title, so a time-course-overlay scan's 'time' would otherwise
+      clobber the parameter name on a following endpoint scan, and vice versa.
+      Failing an explicit 'xlabel:', the scan x-axis is mode-derived: time for
+      overlay traces, the scanned parameter for scalar measures. }
+    if not ApplyPlotMetadata(Measure) then
+    begin
+      if Measure = omTimeCourseOverlay then
+        FContext.PlotSetXAxisTitle(TIME_COLUMN_LABEL)
+      else
+        FContext.PlotSetXAxisTitle(ParamName);
+    end;
+
     FContext.PlotRedraw;
 
     FHasData := True;

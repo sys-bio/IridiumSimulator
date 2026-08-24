@@ -1,4 +1,4 @@
-unit uAnalysisTypes;
+﻿unit uAnalysisTypes;
 
 { Shared types used across the analysis-frame architecture.
 
@@ -76,6 +76,32 @@ type
     function GetOutputExperiment: TMetaExperiment;
     { The result those commands would be written from. }
     function GetOutputData: T2DMatrix;
+  end;
+
+
+  { Implemented by an analysis panel that can describe its own settings as
+    metadata commands — the return leg of the block, which until now only
+    ever travelled from the file into the panels.
+
+    The panel answers with the TASK it is set up to run. It does not build
+    the '@plot': the plot belongs to the shell, and what is on screen is
+    what the figure should be described from. APlotY is how the panel says
+    what a plot over this task would draw, which the shell cannot read off
+    the plot itself — a scan overlay names its series '[S1]  X0=0.5', after
+    the observable and the parameter value together, and those are not
+    model ids. An empty APlotY means "no figure": a steady state produces a
+    table, so the format gives it '@output' rather than '@plot'.
+
+    ATaskLabel is chosen by the shell so it cannot collide with a label
+    already in the file; a panel emitting more than one command derives the
+    rest from it by suffix.
+
+    The caller owns the returned commands and frees them. }
+  IMetaScriptProvider = interface
+    ['{5E7A1C33-9D42-4B0E-8F16-2A7C4D3B9E51}']
+    function GetMetaCommands(const ATaskLabel: string;
+                             out APlotY: TArray<string>
+                            ): TArray<TMetaCommandBase>;
   end;
 
 

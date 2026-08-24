@@ -31,7 +31,7 @@ uses
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Controls.Presentation, FMX.Grid, FMX.Grid.Style,
   FMX.ScrollBox, FMX.Layouts, FMX.ListBox, FMX.Edit, FMX.TabControl,
-  uAnalysisTypes, uMetaExperiments, uMetaSelector, Sim.Meta.Model,
+  uAnalysisTypes, uMetaExperiments, uMetaSelector, uMetaScriptGen, Sim.Meta.Model,
   uFrameSliderContainer, uRR2DSimpleMatrix, FMX.EditBox,
   FMX.Text,
   System.Generics.Collections,
@@ -53,7 +53,8 @@ type
     Grid:   TStringGrid;
   end;
 
-  TFrameSteadyState = class(TFrame, ITextViewProvider, IPythonScriptExporter)
+  TFrameSteadyState = class(TFrame, ITextViewProvider, IPythonScriptExporter,
+                            IMetaScriptProvider)
     Layout1: TLayout;
     Label1: TLabel;
     LayoutToolbar: TLayout;
@@ -302,6 +303,11 @@ type
     { IPythonScriptExporter: a Tellurium script that solves the steady
       state and prints the same quantities this panel shows. }
     function  GetPythonScript(const AntimonyText: string): string;
+
+    { IMetaScriptProvider — this panel as one '@steadystate'. }
+    function  GetMetaCommands(const ATaskLabel: string;
+                              out APlotY: TArray<string>
+                             ): TArray<TMetaCommandBase>;
   end;
 
 implementation
@@ -741,6 +747,23 @@ begin
     FHasData := False;
     ClearAllGrids;
   end;
+
+  { Model gone (File ▸ New, a failed parse, a model swap) — the observables
+    name quantities that no longer exist, so they go with it. Only on
+    unload: a dirty source is still the same model, and clearing a
+    selection the user is part-way through editing would be its own bug. }
+  if not FContext.Session.IsLoaded then
+  begin
+    FSelector.Suppressed := True;
+    try
+      ClearObservableLists;
+    finally
+      FSelector.Suppressed := False;
+    end;
+    { So the next model gets this panel's default of all floating species
+      rather than inheriting an empty selection. }
+    FObsFirstFill := True;
+  end;
 end;
 
 procedure TFrameSteadyState.SessionModelReloaded(Sender: TObject;
@@ -877,6 +900,42 @@ begin
 
   { Results on screen were computed for a different set. }
   FHasData := False;
+end;
+
+{ ── @steadystate generation ──────────────────────────────────────────────── }
+
+function TFrameSteadyState.GetMetaCommands(const ATaskLabel: string;
+  out APlotY: TArray<string>): TArray<TMetaCommandBase>;
+var
+  SS:   TSteadyStateCommand;
+  Obs:  TArray<string>;
+  N:    string;
+begin
+  Result := nil;
+
+  { A steady state is a name/value table, not a curve, so there is nothing
+    for a '@plot' to draw from it (spec 8) — the format reports it with
+    '@output' instead. An empty APlotY is how the panel says so. }
+  APlotY := nil;
+
+  Obs := SelectedObservables;
+  if Length(Obs) = 0 then Exit;
+
+  SS := TSteadyStateCommand.Create;
+  SS.Name     := 'steadystate';
+  SS.CmdLabel := ATaskLabel;
+
+  { 'solver', 'tolerance', 'maxiter' and 'presimulate' are engine settings
+    with no controls on this panel — they arrive from a block and are
+    applied to RoadRunner at Compute. There is therefore nothing on screen
+    to read them back from, and inventing values would put settings in the
+    file the user never chose. Only the Observables checklist, which IS a
+    panel control, is written. }
+  for N in Obs do
+    SS.Observables := SS.Observables + [CanonicalModelName(N)];
+  MarkWritten(SS, 'observables', True);
+
+  Result := [SS];
 end;
 
 function TFrameSteadyState.SelectedObservables: TArray<string>;
