@@ -70,6 +70,20 @@ only caller reads ASCII element names out of the result, so it is latent.)
   **Exporting** below. Unlike the trees above, this is the user's own project and a bug
   in it is fixed there rather than worked around here.
 
+- `..\..\libAntimonyAPI\` — the maintained libantimony wrapper (`uAntimonyAPI.pas`,
+  `uAntimonyRaw.pas`, `uAntimonyTypes.pas`). **This replaced the old in-repo
+  `uAntimonyAPI.pas`, which is gone.** `TModelErrorState` now lives in `uAntimonyTypes`
+  and nowhere else. Two things to know: the raw unit binds ~135 entry points and
+  **refuses to load if any is missing**, so an older `libantimony.dll` makes the app halt
+  at start-up with "Unable to find the Antimony library" — the matching DLL is the one in
+  `libAntimonyAPI\binary\lib\`. And `freeAll` must be called after a batch of queries,
+  because the library leaks without it.
+- `..\..\RateLawChecker\` — the rate law checker (`RateLaw.*.pas`), with its own console
+  test harness. **RTL-only by design**: nothing in it may reference FMX, libantimony or
+  libRoadRunner, which is what lets it be tested without a GUI or a DLL and reused later.
+  Iridium contributes exactly two things — `uRateLawModelSource.pas`, an `IModelSource`
+  over libantimony, and the UI in `ufRateLawOptions.pas`. See **Rate law checking** below.
+
 The in-repo `RichMemo\` folder is the syntax-highlighting Antimony code editor
 (`Syntax.Code.Antimony.pas`, `FMX.RichEdit.Style.pas`, `SpellChecker.pas`).
 
@@ -322,6 +336,166 @@ external validator will tell you about:
   from the real document via `SbmlRootNamespace`, which reads the `xmlns` off the `<sbml>`
   root rather than assuming a level and version.
 
+### Rate law checking
+
+`btnModelChecker` and the code-built **Check** menu run the checker and write a report to
+the Text tab. The engine lives in `..\..\RateLawChecker\`; read
+`specification_rate_law_checker_iridium.md` before changing behaviour.
+
+The one idea everything follows from: **the set of rate laws checked is data, not code.**
+A law is a JSON registry entry giving a canonical expression, the roles of its symbols, and
+the behavioural invariants it guarantees. Adding a law must need no new checking code — if
+a defect class ever has to ask *which* law it is looking at, that is a failure of the design
+and should be logged as one.
+
+Things that are easy to get wrong:
+
+- **The adapter snapshots; it does not query lazily.** libantimony has one current model per
+  process, and Iridium reloads it constantly — `EnsureLoaded` on every edit, SBML import,
+  BioModels download. A source that called through on each method would answer about
+  whatever was loaded most recently. `TAntimonyModelSource`'s constructor loads, copies
+  everything out, calls `freeAll`, and never touches the library again.
+- **The checker reads the editor, not the session.** A model with a malformed rate law is
+  exactly what this is for, and such a model often will not load into RoadRunner at all.
+- **Two trees are kept for every expression, pre- and post-canonicalisation.** A misplaced
+  parenthesis is visible only before normalising (normalising is what erases it); a
+  duplicated operand only after. Both are needed and neither is redundant.
+- **Names bind last, not first.** Parameter roles are bound by *shape* — every permutation
+  scored against the law — and the name only breaks ties. Binding `Km` to the `Km` role
+  first cannot detect a transposition, because that binding is exactly what undoes it.
+- **The behavioural half is opt-in** (`Check ▸ Rate Laws and Options...`). It samples each
+  law over a grid, so it is orders of magnitude more work, and the report says which half
+  ran — otherwise "no problems found" overstates what was looked at.
+- **Adding a rate law is a JSON file, not code.** `..\..\RateLawChecker\RATE_LAW_MANUAL.md`
+  is the authoring guide, reachable in the app from **Help ▸ Rate Law Help**: the schema, the ten invariant types, families such as mass
+  action, annotations, and what each rejection code means. If a new law ever needs an
+  engine change, that is a defect in the engine and worth recording as one.
+#### Where it stands, and how to work on it
+
+Milestones **M0–M14 are built**; `specification_rate_law_checker_iridium.md` §18 carries the
+status table, the measured numbers, and — more useful — the deviations and findings, including
+every place the design had to give. Read §18.3 and §18.4 before changing engine behaviour.
+
+**M17 is done and its findings have been acted on.** The first run over the 1075 curated
+BioModels had **33% of models reporting an error**, and since BioModels is curated those
+were false positives. After the fixes it is **19%**, with silent models up from 35% to
+53% and association up from 17% to 39%. §18.6 has the original numbers and the six causes;
+**§18.7 has what fixing them cost and bought, and is the more useful of the two.**
+
+The lesson §18.7 records, worth having before touching this code: **four of the six causes
+were things every SBML model contains that no part of the engine had heard of** — the
+compartment volume factor, `EmptySet`, `time`/`pi`, and a clamped species. Each was
+therefore treated as an ordinary identifier and bound to a kinetic role. Before adding a
+check, ask what it does with those four.
+
+**Do not read the synthetic corpus as evidence the checker is ready.** It stayed green
+through every one of these fixes, including the two passes that made the real numbers
+*worse*. Its cases are expressions written as laws; real models are SBML, and the two
+disagree about what a rate law looks like. Re-run the corpus after any engine change.
+
+**One capability was deliberately given up.** Mutation detection is 57/62, not 61/61: the
+subset admission that caught a dropped term by inference is gone, because it accused a
+correct model every single time it fired (659 findings, none right). The case still fires
+when the reaction is annotated. Do not restore that admission to make the number go back up.
+
+**§18.8 said where the errors came from and §18.9 acted on it**: 52% were reactions whose
+rate law depends on a **modifier** rather than its substrate. Two entries close it —
+`catalytic_mass_action` and `modifier_proportional` — and the second is not optional: adding
+the first alone moved errors the *wrong* way, 16.6% → 21.3%, because a reaction that is zero
+order in the substrate it consumes then matched a law insisting on a substrate term.
+
+**A law may declare `"association_floor"`.** Looseness is a property of the law, not of the
+registry: "k times some species" sits near a great deal, and the two catalytic entries
+declare 0.08 so they claim only near-exact matches. This is *not* the global floor §18.8
+refused to lower — a ceiling on a law with no defect class of its own to catch is a
+different thing. A declared ceiling gates the same-symbols admission too, which is how
+`alpha1/(1+V^3)` was being claimed at **d = 1.000**.
+
+**Antimony has almost no declared modifiers**, and this will bite anything that asks for
+them. It records one only where the modeller drew an interaction arrow, and `sbmlToAntimony`
+does not create arrows from SBML's `listOfModifiers`. Use `EffectiveModifiers` in
+`RateLaw.Generative`, which infers them, and note it lives in the engine rather than in
+Iridium's adapter on purpose: in the adapter, the fixture and real models would behave
+differently.
+
+**Do not try to normalise a lumped rate constant.** `IXa*VIIIa/r26_c` is mass action with
+k = 1/r26_c, and collapsing constant factors so a role can bind to it was implemented and
+removed: it hides the defects that consist of matching the wrong law. §18.8 has the three
+variants tried and what each cost — the worst took detection from 57 to 35. Same wall as
+the association floor, from the other side.
+
+Still open: the rest of **M15** (a defect-code reference and a worked walkthrough; the
+authoring manual itself is done), **M16** (Layer 3 simulation checks, `D101`–`D106`), and
+the association floor question — `S011` (247 models) and `S006` (181) are what is left, and
+no global threshold separates them from the founding defect at d=0.125.
+
+Build and test, from `..\..\RateLawChecker\`:
+
+**`-NUdcu` is not optional.** Without it `dcc64` writes its DCUs beside the
+sources, and that directory is on Iridium's unit search path — so the next
+Iridium build finds compiled units there and uses them instead of recompiling
+the `.pas`. The symptom is the IDE silently ignoring changes to the checker:
+edit a law, rebuild, and yesterday's registry is still what runs. If that
+happens, delete `..\..\RateLawChecker\*.dcu` and
+`Win64\Debug\dcu\*.dcu`, then rebuild.
+
+```
+dcc64 -B -NUdcu RateLawChecker_Project.dpr  (after sourcing rsvars.bat)
+RateLawChecker_Project                      the whole suite
+RateLawChecker_Project -coverage            the mutation matrix, per law
+RateLawChecker_Project -laws                every registered law and whether it validates
+RateLawChecker_Project -check <case>        one corpus case, in full
+RateLawChecker_Project -bind <case>         which law each candidate binds to, and how far off
+RateLawChecker_Project -expr "<expr>"       parse one expression, both trees
+```
+
+and from `Win64\Debug`, against real models:
+
+```
+CheckAntFile *.ant                      one line per file
+CheckAntFile -report <model.ant>        exactly what the Text tab shows
+CheckAntFile -laws <folder> <model>     with a folder of your own .json laws
+```
+
+**Baseline as of 2026-08-28, after the M17 fixes and the Hill/catalytic entries — a change that moves these down is a
+regression, with the one documented exception noted in the table:**
+
+| | |
+| :---- | :---- |
+| corpus cases | 51/51 |
+| role-binding cases | 8/8 |
+| malformed registry entries rejected | 11/11 |
+| registered laws, all self-validating | 18 |
+| mutation coverage: correct forms left clean | 18/18 |
+| mutation coverage: detected at all | 69/83 — the shortfall is deliberate, see §18.7 |
+| mutation coverage: classified exactly right | 57/83 |
+| Iridium's own `.ant` models | 20/23 associated, 0 errors |
+| BioModels: models reporting an error | 159/1013 (15.7%), from 33.1% — see §18.7, §18.9 |
+| BioModels: models reporting anything | 339/1013 (33.5%), from 64.9% |
+| BioModels: models entirely silent | 674/1013 (66.5%), from 35.1% |
+| BioModels: reactions associated | 18271/45319 (40.3%), from 17.1% |
+
+The first and fifth rows matter most. **A correct model reporting anything is worse than a
+defect being missed** — that is the failure that gets a checker switched off — and the three
+unassociated reactions are `Lorenz.ant`, which is not kinetics and correctly matches nothing.
+The exact-classification rate falls as laws are added and will keep falling; most misses are
+`S002` between laws that differ in one place, where refusing to guess is right.
+
+- `CheckAntFile.dpr` builds a console tool into `Win64\Debug` that runs the checker over
+  `.ant` files (`CheckAntFile *.ant`). Not part of Iridium; it is how the false-positive
+  rate on real models is measured. It also reads **SBML** (`.xml`), converting with
+  `sbmlToAntimony` first, and `-csv <prefix>` writes three machine-readable tables
+  (files, diagnostics, associations) instead of prose.
+  `-md` prints the markdown rendering the GUI's report panel shows, so it can be
+  eyeballed and diffed against `-report` without driving the GUI.
+- `corpus/` drives the BioModels evaluation (§18.6): `fetch.sh` downloads the 1075-model
+  mirror, `run.sh` runs `CheckAntFile` over it and merges the tables, `report.py` prints the
+  figures. The corpus itself is ~171 MB and is **not** checked in — fetch it to a scratch
+  directory. Two things `run.sh` does deliberately: it chunks the corpus, because
+  libantimony is a C++ library behind an FFI and a model that takes it down should cost one
+  chunk rather than the run; and it gives each chunk its own CSV prefix, because `-csv`
+  appends and parallel writers to one file interleave rows mid-line.
+
 ### The Text tab
 
 The output area's Text tab shows the active panel's results as text. `TfrmMain.BuildTextView`
@@ -364,6 +538,16 @@ loads it through the same sequence as Import SBML (`Unload` → `ClearPlotAndLoa
 
 - `.fmx` files are FireMonkey form designers paired with their `.pas`; `ufMain.fmx` is very
   large (multi-MB). Edit form structure through the matching `.pas` declarations where possible.
+- **A new form gets a designed `.fmx`, always.** Not `TForm.CreateNew` with the controls
+  assembled in code: that form cannot be opened in the IDE, so it cannot be laid out by
+  eye or even looked at without running the app. Saving a file is a maintainer's
+  convenience bought at the owner's expense. Register it in the `.dpr` as
+  `unit in 'unit.pas' {frmName}` and in the `.dproj` with `<Form>` and
+  `<FormType>fmx</FormType>`, or the IDE will not list it. Give buttons real
+  `Position.X`/`Y` rather than `Align`, so they can be dragged. Only what genuinely
+  cannot be designed — list contents driven by data — stays in code.
+  `ufRateLawOptions` is the worked example. **Menus are the exception**: those are still
+  built in code, because editing the multi-megabyte `ufMain.fmx` is its own hazard.
 - **A `TFrame` descendant must have a `.fmx`, even an empty one.** `TFrame.Create` calls
   `InitInheritedComponent` and raises `EResNotFound` without one — which surfaces as a
   startup access violation once `FormCreate` has bailed out half-constructed.
@@ -396,5 +580,15 @@ loads it through the same sequence as Import SBML (`Unload` → `ClearPlotAndLoa
   `TfrmMain` tracks the auto-derived title (`FAutoXTitle` / `FSnapshotAutoXTitle`) and
   reinstates it only when the restored text is still the old auto value — so a title the
   user typed, or one an `@plot xlabel:` set, is left alone.
+- **Help documents master in their own project and are COPIED into `Win64\Debug\Help\`.**
+  `METADATA_MANUAL.md` lives in `..\..\Antimony_MetaData_Support\` and
+  `RATE_LAW_MANUAL.md` in `..\..\RateLawChecker\`; the copies under `Win64\` are a
+  deploy target, not a source, and are git-ignored. Edit the master and re-copy — a fix
+  made to the deployed copy is lost at the next clean build. **Copy into BOTH
+  `Win64\Debug\Help\` and `Win64\Release\Help\`**: the viewer resolves everything
+  relative to the running executable, so a document deployed to only one configuration
+  is missing from the other and reports itself as not found. Adding a document is an
+  entry in `HELP_DOCS` plus a button on the Help tab, and nothing else in the help code
+  needs to know.
 - `__history/` and `__recovery/` are IDE backup folders (git-ignored) — ignore them.
 - Compiler binaries (`*.dcu`, `*.exe`, `*.dll`, `*.local`, `*.cfg`) are git-ignored.

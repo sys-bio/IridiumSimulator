@@ -17,7 +17,25 @@ uses
   uRR2DSimpleMatrix in '..\..\CommonCode\libRoadRunner\uRR2DSimpleMatrix.pas',
   uRRList in '..\..\CommonCode\libRoadRunner\uRRList.pas',
   uRRTypes in '..\..\CommonCode\libRoadRunner\uRRTypes.pas',
-  uAntimonyAPI in 'uAntimonyAPI.pas',
+  uAntimonyTypes in '..\..\libAntimonyAPI\uAntimonyTypes.pas',
+  uAntimonyRaw in '..\..\libAntimonyAPI\uAntimonyRaw.pas',
+  uAntimonyAPI in '..\..\libAntimonyAPI\uAntimonyAPI.pas',
+  RateLaw.Types in '..\..\RateLawChecker\RateLaw.Types.pas',
+  RateLaw.Ast in '..\..\RateLawChecker\RateLaw.Ast.pas',
+  RateLaw.Parser in '..\..\RateLawChecker\RateLaw.Parser.pas',
+  RateLaw.Canonical in '..\..\RateLawChecker\RateLaw.Canonical.pas',
+  RateLaw.BuiltInLaws in '..\..\RateLawChecker\RateLaw.BuiltInLaws.pas',
+  RateLaw.Diff in '..\..\RateLawChecker\RateLaw.Diff.pas',
+  RateLaw.Registry in '..\..\RateLawChecker\RateLaw.Registry.pas',
+  RateLaw.Generative in '..\..\RateLawChecker\RateLaw.Generative.pas',
+  RateLaw.Bind in '..\..\RateLawChecker\RateLaw.Bind.pas',
+  RateLaw.Associate in '..\..\RateLawChecker\RateLaw.Associate.pas',
+  RateLaw.Eval in '..\..\RateLawChecker\RateLaw.Eval.pas',
+  RateLaw.Dynamic in '..\..\RateLawChecker\RateLaw.Dynamic.pas',
+  RateLaw.Report in '..\..\RateLawChecker\RateLaw.Report.pas',
+  RateLaw.Static in '..\..\RateLawChecker\RateLaw.Static.pas',
+  ufRateLawOptions in 'ufRateLawOptions.pas' {frmRateLawOptions},
+  uRateLawModelSource in 'uRateLawModelSource.pas',
   uCommonTypes in 'uCommonTypes.pas',
   uFrameTimeCourse in 'uFrameTimeCourse.pas' {FrameTimeCourse: TFrame},
   uFrameSteadyState in 'uFrameSteadyState.pas' {FrameSteadyState: TFrame},
@@ -48,10 +66,6 @@ uses
   uPlotJsonUtils in '..\RhodyComponents\PlottingComponent\Source\uPlotJsonUtils.pas',
   uPlotMapper in '..\RhodyComponents\PlottingComponent\Source\uPlotMapper.pas',
   uPlotSeries in '..\RhodyComponents\PlottingComponent\Source\uPlotSeries.pas',
-  { Simulation-metadata library. Lives in its own project (with its own
-    test harness) and is referenced rather than copied, so a fix there is
-    a fix here. RTL-only by design — nothing below may pull in FMX or
-    libRoadRunner. }
   Sim.Meta.Types in '..\..\Antimony_MetaData_Support\Sim.Meta.Types.pas',
   Sim.Meta.Lexer in '..\..\Antimony_MetaData_Support\Sim.Meta.Lexer.pas',
   Sim.Meta.Ast in '..\..\Antimony_MetaData_Support\Sim.Meta.Ast.pas',
@@ -60,8 +74,6 @@ uses
   Sim.Meta.Validate in '..\..\Antimony_MetaData_Support\Sim.Meta.Validate.pas',
   Sim.Meta.Model in '..\..\Antimony_MetaData_Support\Sim.Meta.Model.pas',
   Sim.Meta in '..\..\Antimony_MetaData_Support\Sim.Meta.pas',
-  { The Python exporter re-uses the writer to echo a command's source
-    text, so the writer comes in with it. }
   Sim.Meta.Writer in '..\..\Antimony_MetaData_Support\Sim.Meta.Writer.pas',
   Sim.Meta.Python in '..\..\Antimony_MetaData_Support\Sim.Meta.Python.pas',
   Sim.Meta.SedML.Types in '..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Types.pas',
@@ -77,7 +89,8 @@ uses
   uFrameMetadata in 'uFrameMetadata.pas' {FrameMetadata: TFrame},
   uMySplitter in 'uMySplitter.pas',
   ufConfigureCVODE in 'ufConfigureCVODE.pas' {frmConfigCVODE},
-  ufConfigureSteadyState in 'ufConfigureSteadyState.pas' {frmConfigSteadyState};
+  ufConfigureSteadyState in 'ufConfigureSteadyState.pas' {frmConfigSteadyState},
+  ufPlotEditor in '..\RhodyComponents\PlottingComponent\Source\ufPlotEditor.pas' {FrmPlotEditor};
 
 {$R *.res}
 
@@ -90,5 +103,6 @@ begin
   Application.Initialize;
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmAbout, frmAbout);
+  Application.CreateForm(TFrmPlotEditor, FrmPlotEditor);
   Application.Run;
 end.

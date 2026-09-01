@@ -4,11 +4,12 @@
         <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">OSXARM64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>135171</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>IridiumSimulator.dpr</MainSource>
+        <ProjectName Condition="'$(ProjectName)'==''">IridiumSimulator</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -144,7 +145,7 @@
         <Manifest_File>(None)</Manifest_File>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_Keys>CFBundleName=Iridium II;CFBundleDisplayName=Iridium II;CFBundleIdentifier=$(MSBuildProjectName);CFBundleVersion=1.0.0;CFBundleShortVersionString=1.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName);NSHighResolutionCapable=true;LSApplicationCategoryType=public.app-category.utilities;NSLocationUsageDescription=The reason for accessing the location information of the user;NSContactsUsageDescription=The reason for accessing the contacts;NSCalendarsUsageDescription=The reason for accessing the calendar data;NSRemindersUsageDescription=The reason for accessing the reminders;NSCameraUsageDescription=The reason for accessing the camera;NSMicrophoneUsageDescription=The reason for accessing the microphone;NSMotionUsageDescription=The reason for accessing the accelerometer;NSDesktopFolderUsageDescription=The reason for accessing the Desktop folder;NSDocumentsFolderUsageDescription=The reason for accessing the Documents folder;NSDownloadsFolderUsageDescription=The reason for accessing the Downloads folder;NSNetworkVolumesUsageDescription=The reason for accessing files on a network volume;NSRemovableVolumesUsageDescription=The reason for accessing files on a removable volume;NSSpeechRecognitionUsageDescription=The reason for requesting to send user data to Apple&apos;s speech recognition servers;ITSAppUsesNonExemptEncryption=false;NSBluetoothAlwaysUsageDescription=The reason for accessing the Bluetooth interface</VerInfo_Keys>
-        <DCC_UnitSearchPath>D:\Documents\Embarcadero\Studio\Projects\FMX\RhodyComponents\RhoMarkDownViewer\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\RhodyComponents\RhoMarkDownViewer\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
@@ -169,7 +170,7 @@
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <DCC_DcuOutput>.\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
         <VerInfo_Keys>CFBundleName=Iridium II;CFBundleDisplayName=Iridium II;CFBundleIdentifier=$(MSBuildProjectName);CFBundleVersion=1.0.0;CFBundleShortVersionString=1.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName);NSHighResolutionCapable=true;LSApplicationCategoryType=public.app-category.utilities;NSLocationUsageDescription=The reason for accessing the location information of the user;NSContactsUsageDescription=The reason for accessing the contacts;NSCalendarsUsageDescription=The reason for accessing the calendar data;NSRemindersUsageDescription=The reason for accessing the reminders;NSCameraUsageDescription=The reason for accessing the camera;NSMicrophoneUsageDescription=The reason for accessing the microphone;NSMotionUsageDescription=The reason for accessing the accelerometer;NSDesktopFolderUsageDescription=The reason for accessing the Desktop folder;NSDocumentsFolderUsageDescription=The reason for accessing the Documents folder;NSDownloadsFolderUsageDescription=The reason for accessing the Downloads folder;NSNetworkVolumesUsageDescription=The reason for accessing files on a network volume;NSRemovableVolumesUsageDescription=The reason for accessing files on a removable volume;NSSpeechRecognitionUsageDescription=The reason for requesting to send user data to Apple&apos;s speech recognition servers;ITSAppUsesNonExemptEncryption=false;NSBluetoothAlwaysUsageDescription=The reason for accessing the Bluetooth interface</VerInfo_Keys>
-        <DCC_UnitSearchPath>D:\Documents\Embarcadero\Studio\Projects\FMX\RhodyComponents\RhoMarkDownViewer\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\RhodyComponents\RhoMarkDownViewer\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -197,7 +198,27 @@
         <DCCReference Include="..\..\CommonCode\libRoadRunner\uRR2DSimpleMatrix.pas"/>
         <DCCReference Include="..\..\CommonCode\libRoadRunner\uRRList.pas"/>
         <DCCReference Include="..\..\CommonCode\libRoadRunner\uRRTypes.pas"/>
-        <DCCReference Include="uAntimonyAPI.pas"/>
+        <DCCReference Include="..\..\libAntimonyAPI\uAntimonyTypes.pas"/>
+        <DCCReference Include="..\..\libAntimonyAPI\uAntimonyRaw.pas"/>
+        <DCCReference Include="..\..\libAntimonyAPI\uAntimonyAPI.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Types.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Ast.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Parser.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Canonical.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.BuiltInLaws.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Diff.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Registry.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Generative.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Bind.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Associate.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Eval.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Dynamic.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Report.pas"/>
+        <DCCReference Include="..\..\RateLawChecker\RateLaw.Static.pas"/>
+        <DCCReference Include="ufRateLawOptions.pas">
+            <Form>frmRateLawOptions</Form>
+        </DCCReference>
+        <DCCReference Include="uRateLawModelSource.pas"/>
         <DCCReference Include="uCommonTypes.pas"/>
         <DCCReference Include="uFrameTimeCourse.pas">
             <Form>FrameTimeCourse</Form>
@@ -277,6 +298,10 @@
         </DCCReference>
         <DCCReference Include="ufConfigureSteadyState.pas">
             <Form>frmConfigSteadyState</Form>
+        </DCCReference>
+        <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\ufPlotEditor.pas">
+            <Form>FrmPlotEditor</Form>
+            <FormType>fmx</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -477,6 +502,12 @@
                 <DeployFile LocalName="Win64\Debug\IridiumSimulator.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>IridiumSimulator.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\IridiumSimulator.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>IridiumSimulator.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

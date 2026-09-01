@@ -1,4 +1,4 @@
-unit uPreferences;
+﻿unit uPreferences;
 
 { User preferences, persisted as JSON.
 
@@ -55,6 +55,14 @@ type
       Zero means "never saved", so the designed layout stands. }
     SliderPanelHeight: Double;
     OutputPanelWidth:  Double;
+
+    { Rate law checker. A setting the user chose once and should not have to
+      choose again -- which is the test for whether something belongs here. }
+    CheckDynamic:   Boolean;
+    CheckShowNotes: Boolean;
+    { Law ids the user switched off. Kept as text rather than as flags on the
+      registry, which is rebuilt from disk on every check. }
+    CheckDisabledLaws: TArray<string>;
 
     constructor Create;
     destructor  Destroy; override;
@@ -207,6 +215,20 @@ begin
     if not Lay.TryGetValue<Double>('outputPanelWidth', OutputPanelWidth) then
       OutputPanelWidth := 0;
   end;
+
+  var Chk := AJson.GetValue('rateLawCheck') as TJSONObject;
+  if Chk <> nil then
+  begin
+    if not Chk.TryGetValue<Boolean>('dynamic', CheckDynamic) then
+      CheckDynamic := False;
+    if not Chk.TryGetValue<Boolean>('showNotes', CheckShowNotes) then
+      CheckShowNotes := True;
+    var LawArr := Chk.GetValue('disabled') as TJSONArray;
+    CheckDisabledLaws := nil;
+    if LawArr <> nil then
+      for var K := 0 to LawArr.Count - 1 do
+        CheckDisabledLaws := CheckDisabledLaws + [LawArr.Items[K].Value];
+  end;
 end;
 
 function TIridiumPreferences.WriteJson: TJSONObject;
@@ -236,6 +258,14 @@ begin
   Lay := TJSONObject.Create;
   Lay.AddPair('sliderPanelHeight', TJSONNumber.Create(SliderPanelHeight));
   Lay.AddPair('outputPanelWidth',  TJSONNumber.Create(OutputPanelWidth));
+
+  var Chk := TJSONObject.Create;
+  Chk.AddPair('dynamic',   TJSONBool.Create(CheckDynamic));
+  Chk.AddPair('showNotes', TJSONBool.Create(CheckShowNotes));
+  var LawArr := TJSONArray.Create;
+  for var LawId in CheckDisabledLaws do LawArr.Add(LawId);
+  Chk.AddPair('disabled', LawArr);
+  Result.AddPair('rateLawCheck', Chk);
   Result.AddPair('layout', Lay);
 end;
 
@@ -249,6 +279,9 @@ begin
   HasWindowBounds   := False;
   SliderPanelHeight := 0;
   OutputPanelWidth  := 0;
+  CheckDynamic      := False;
+  CheckShowNotes    := True;
+  CheckDisabledLaws := nil;
   FRecentFiles.Clear;
 
   try

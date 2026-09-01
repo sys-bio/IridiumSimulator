@@ -96,7 +96,7 @@ type
 implementation
 
 uses
-  uAntimonyAPI, uCommonTypes, IOUtils;
+  uAntimonyAPI, uAntimonyTypes, uCommonTypes, IOUtils;
 
 { ── method-pointer equality ──────────────────────────────────────────────── }
 
@@ -281,7 +281,7 @@ begin
   try
     { No AnsiString cast: that would re-encode the text to the system
       codepage and corrupt every non-ASCII character on the way in. }
-    SbmlInfo := getSBMLFromAntimony(AntText);
+    SbmlInfo := antimonyToSBML(AntText);
     if not SbmlInfo.ok then
       raise Exception.Create('Antimony parse failed: ' + SbmlInfo.errMsg);
 

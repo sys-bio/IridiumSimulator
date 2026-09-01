@@ -67,7 +67,10 @@ uses
   FMX.ListBox,
   System.Math.Vectors, FMX.Controls3D,
   FMX.Layers3D, uSkiaCodeEditor, uPlotAnnotation, uRhoMarkdownViewer,
-  System.Math, System.Threading, uBioModelsCache;
+  System.Math, System.Threading, uBioModelsCache,
+  { The checker: its options record and registry appear in the class
+    declaration below, so both belong in the interface uses. }
+  ufRateLawOptions, RateLaw.Registry;
 
 const
     VERSION = '0.986';
@@ -184,6 +187,14 @@ type
     MenuItem9: TMenuItem;
     mnuSaveAs: TMenuItem;
     mnuLoadRecentFile: TMenuItem;
+    btnModelChecker: TSpeedButton;
+    Image5: TImage;
+    tbMarkdownOutput: TTabItem;
+    Layout11: TLayout;
+    ReportViewer: TRhoMarkdownViewer;
+    btnReportLighDark: TButton;
+    btnCopyReport: TButton;
+    btnSaveReportToPDF: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btnTimeCourse1Click(Sender: TObject);
     procedure btnSteadyStateClick(Sender: TObject);
@@ -230,6 +241,8 @@ type
     procedure edtYMaxExit(Sender: TObject);
     procedure FormPaint(Sender: TObject; Canvas: TCanvas; const ARect: TRectF);
     procedure btnGeneratePythonClick(Sender: TObject);
+    procedure btnModelCheckerClick(Sender: TObject);
+    procedure RateLawOptionsClick(Sender: TObject);
     procedure btnGenerateMetaScriptClick(Sender: TObject);
     procedure mnuGoToWedIridiumClick(Sender: TObject);
     procedure mnuGeneralHelpClick(Sender: TObject);
@@ -245,11 +258,16 @@ type
       const ContentSizeChanged: Boolean);
     procedure btnAntimonyHelpClick(Sender: TObject);
     procedure btnSimulationHelpClick(Sender: TObject);
+    procedure btnRateLawHelpClick(Sender: TObject);
     procedure btnLighDarkClick(Sender: TObject);
+
     procedure mnuExportTelluriumScriptClick(Sender: TObject);
     procedure mnuExportSEDMLFileClick(Sender: TObject);
     procedure mnuExportCOMBINEArchveClick(Sender: TObject);
     procedure mnuSaveAsClick(Sender: TObject);
+    procedure btnReportLighDarkClick(Sender: TObject);
+    procedure btnCopyReportClick(Sender: TObject);
+    procedure btnSaveReportToPDFClick(Sender: TObject);
   private
     FSession:          TModelSession;
     FSliderFrame:      TFrameSliderContainer;
@@ -319,6 +337,16 @@ type
     FSavedViewport : TPointF;
     FDragging  : Boolean;
 
+    { The rate law report, as markdown, held so the Copy button has a source
+      and so the viewer can be refilled after a theme switch. It is NOT
+      consulted by the Text tab: the report has its own panel, which is what
+      lets BuildTextView go back to meaning "the active panel's results". }
+    FRateLawReport: string;
+
+    { The checker's settings, restored from preferences at start-up.
+      Held here rather than on the registry because the registry is
+      rebuilt from disk on every check and would not carry them. }
+    FRateLawOptions: TRateLawOptions;
     { Loaded CSV overlays, one catalogue per analysis panel, keyed by
       ActiveAnalysisKey. Owns its values. Reach it through CurrentPanelData
       rather than indexing directly — panels are created on first use. }
@@ -437,6 +465,12 @@ type
     procedure ExportTelluriumScript;
     procedure ExportSedML;
     function  SbmlRootNamespace(const ASbml: string): string;
+    function  BuildRateLawRegistry: TRateLawRegistry;
+    function  RateLawUserDir: string;
+    function  RateLawProjectDir: string;
+    procedure SaveRateLawOptions;
+    procedure ShowRateLawReport;
+    procedure CreateRateLawMenu;
     function  BuildTextView: string;
     procedure ExportOmexArchive;
     { Somewhere to write to, defaulted from the model's own name. }
@@ -577,6 +611,8 @@ type
     function  PlotGetSimulationSeriesInfo: TArray<TPlotSeriesColorInfo>;
     function  PlotGetPlotInfo: TPlotInfo;
 
+    function SelectPdfFileForSaving : string;
+
     procedure CopyTextToTextWindow (AString : String);
   public
     { Public declarations }
@@ -592,8 +628,10 @@ implementation
 {$R *.fmx}
 
 uses
-  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uRoadRunner, ufPlotEditor, uMySplitter, uLanguageKeywords,
-  uMetaScriptGen;
+  IOUtils, uPlotSeries, uColorManager, uAntimonyAPI, uAntimonyTypes, uRoadRunner, ufPlotEditor, uMySplitter, uLanguageKeywords,
+  uMetaScriptGen,
+  uRateLawModelSource,
+  RateLaw.Types, RateLaw.Static, RateLaw.Report;
 
 const
   DEFAULT_SLIDER_HEIGHT = 322.0;
@@ -792,6 +830,17 @@ begin
   CreateMetaBar;
   CreateMetaMenu;
   CreateBioModelsSearch;
+
+  { Restored before the menu is built, so the first check uses what the
+    user chose last time rather than the defaults. }
+  FRateLawOptions := TRateLawOptions.Default;
+  if FPrefs <> nil then
+  begin
+    FRateLawOptions.Dynamic     := FPrefs.CheckDynamic;
+    FRateLawOptions.ShowNotes   := FPrefs.CheckShowNotes;
+    FRateLawOptions.DisabledIds := FPrefs.CheckDisabledLaws;
+  end;
+  CreateRateLawMenu;
   UpdateExportMenuState;
   OutputStateChanged;
 
@@ -1144,11 +1193,11 @@ end;
 
 function TfrmMain.BuildSbml(out ASbml: string; out AError: string): Boolean;
 var
-  Info: uCommonTypes.TModelErrorState;
+  Info: uAntimonyTypes.TModelErrorState;
 begin
   ASbml  := '';
   AError := '';
-  Info := getSBMLFromAntimony(GetAntimonyText);
+  Info := antimonyToSBML(GetAntimonyText);
   Result := Info.ok;
   if Result then
     ASbml := Info.sbmlStr
@@ -1397,9 +1446,10 @@ type
 const
   { Adding a document is an entry here plus a button; nothing else in the
     help code knows how many there are. }
-  HELP_DOCS: array[0..1] of THelpDoc = (
+  HELP_DOCS: array[0..2] of THelpDoc = (
     (Id: 'antimony'; FileName: 'ANTIMONY_MANUAL.md'; Title: 'The Antimony language'),
-    (Id: 'metadata'; FileName: 'METADATA_MANUAL.md'; Title: 'Simulation metadata')
+    (Id: 'metadata'; FileName: 'METADATA_MANUAL.md'; Title: 'Simulation metadata'),
+    (Id: 'ratelaws'; FileName: 'RATE_LAW_MANUAL.md'; Title: 'Adding a rate law')
   );
 
 function TfrmMain.FindHelpFile(const AFileName: string;
@@ -1917,6 +1967,7 @@ end;
 procedure TfrmMain.LoadBiomodelSBML(const ASBML, AModelID, ATitle: string);
 var
   Ant: string;
+  AntInfo: uAntimonyTypes.TModelErrorState;
 begin
   if Trim(ASBML) = '' then
   begin
@@ -1924,11 +1975,13 @@ begin
     Exit;
   end;
 
-  Ant := uAntimonyAPI.getAntimonyFromSBML(ASBML);
-  if Trim(Ant) = '' then
+  AntInfo := uAntimonyAPI.sbmlToAntimony(ASBML);
+  Ant := AntInfo.sbmlStr;   { holds the Antimony; the field name is historical }
+  if (not AntInfo.ok) or (Trim(Ant) = '') then
   begin
     ShowMessage('Could not convert ' + AModelID + ' to Antimony. ' +
-                'The model may use SBML features Antimony cannot express.');
+                'The model may use SBML features Antimony cannot express.' +
+                sLineBreak + sLineBreak + AntInfo.errMsg);
     Exit;
   end;
 
@@ -2442,6 +2495,7 @@ end;
 
 procedure TfrmMain.mnuImportSBMLClick(Sender: TObject);
 var SBMLString: String;
+    AntInfo: uAntimonyTypes.TModelErrorState;
 begin
   if not ConfirmDiscardChanges('importing an SBML model') then Exit;
 
@@ -2449,10 +2503,23 @@ begin
     begin
       SBMLString := TFile.ReadAllText(OpenSBMLDialog.FileName);
       if SBMLString = '' then exit;
+
+      { Converted before anything is torn down. The old code assigned the
+        result straight into the editor, so a document Antimony could not
+        express replaced the user's model with an empty buffer and said
+        nothing. }
+      AntInfo := uAntimonyAPI.sbmlToAntimony(SBMLString);
+      if (not AntInfo.ok) or (Trim(AntInfo.sbmlStr) = '') then
+        begin
+        ShowMessage('Could not convert this SBML to Antimony. The model may ' +
+                    'use SBML features Antimony cannot express.' +
+                    sLineBreak + sLineBreak + AntInfo.errMsg);
+        Exit;
+        end;
+
       FSession.Unload;
       ClearPlotAndLoadedData;
-      //moAntimony.text := uAntimonyAPI.getAntimonyFromSBML(SBMLString);
-      moAntimony.SetText (uAntimonyAPI.getAntimonyFromSBML(SBMLString));
+      moAntimony.SetText (AntInfo.sbmlStr);   { holds the Antimony }
       FCurrentFilePath := '';
       FSession.ClearDirty;
       FIsModifiedSinceLastSave := False;
@@ -3161,6 +3228,52 @@ begin
   mnuSaveClick(Sender);
 end;
 
+// The Save As dialog's PDF twin. It defaults to the document's own name with a
+// .pdf extension, so exporting an open file needs no typing.
+function TfrmMain.SelectPdfFileForSaving : string;
+var
+  SaveDialog: TSaveDialog;
+begin
+  SaveDialog := TSaveDialog.Create(nil);
+  try
+    SaveDialog.Title := 'Export as PDF';
+    SaveDialog.Filter := 'PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*';
+    SaveDialog.FilterIndex := 1;
+    SaveDialog.DefaultExt := 'pdf';
+    if FCurrentFileName <> '' then
+    begin
+      SaveDialog.InitialDir := ExtractFilePath(FCurrentFileName);
+      SaveDialog.FileName := ChangeFileExt(ExtractFileName(FCurrentFileName), '.pdf');
+    end
+    else
+      SaveDialog.InitialDir := GetCurrentDir;
+    SaveDialog.Options := [TOpenOption.ofOverwritePrompt];
+
+    Result := '';
+    if SaveDialog.Execute then
+      Result := SaveDialog.FileName;
+  finally
+    SaveDialog.Free;
+  end;
+end;
+
+procedure TfrmMain.btnSaveReportToPDFClick(Sender: TObject);
+var
+  FileName: string;
+  Pages: Integer;
+begin
+  FileName := SelectPdfFileForSaving;
+  if FileName = '' then
+    Exit;
+  if ExtractFileExt(FileName) = '' then
+    FileName := FileName + '.pdf';
+  Pages := ReportViewer.SaveToPdf(FileName);
+  //if Pages = 1 then
+  //  ShowMessage(Format('Exported 1 page to'#13#10'%s', [FileName]))
+  //else
+  //  ShowMessage(Format('Exported %d pages to'#13#10'%s', [Pages, FileName]));
+end;
+
 procedure TfrmMain.btnScanClick(Sender: TObject);
 begin
   ShowAnalysisFrame(FFrameParameterScan);
@@ -3187,8 +3300,26 @@ begin
   Plot.Redraw;
 end;
 
+procedure TfrmMain.btnCopyReportClick(Sender: TObject);
+begin
+  { The viewer's own copy, so what reaches the clipboard is the markdown the
+    report was written as -- headings, table and all -- rather than the
+    rendered glyphs. It pastes into a document or an email still readable, and
+    anything that understands markdown can render it again.
+
+    Cleared afterwards: SelectAll leaves the whole report highlighted, and a
+    page that stays inverted after a button press looks like something went
+    wrong. }
+  if FRateLawReport = '' then Exit;
+  ReportViewer.SelectAll;
+  ReportViewer.CopySelection;
+  ReportViewer.ClearSelection;
+end;
+
 procedure TfrmMain.btnCopyToClipBoardClick(Sender: TObject);
 begin
+  { This button sits inside tbTextView and so is only ever visible with the
+    memo. The report panel has its own -- btnCopyReport. }
   moTextView.SelectAll;
   moTextView.CopyToClipboard;
 end;
@@ -3206,6 +3337,160 @@ begin
   end;
 end;
 
+
+
+{ ---------------------------------------------------------------------------
+  Rate law checking.
+
+  Reads the editor's Antimony directly rather than going through the session:
+  a model whose rate law is malformed is exactly the model this is for, and
+  such a model frequently will not load into RoadRunner at all. Requiring a
+  successful simulation first would make the checker unavailable at the moment
+  it is most useful.
+
+  The report itself is built in the library (RateLaw.Report), not here, so the
+  console harness and any future batch tool describe a model the same way.
+  --------------------------------------------------------------------------- }
+
+function TfrmMain.RateLawUserDir: string;
+begin
+  { Beside the preferences, which is where a per-user setting belongs. Not
+    created here: a directory that appears merely because the program ran is
+    clutter. The options dialog creates it when the user asks to see it. }
+  Result := TPath.Combine(TPath.GetHomePath, 'Iridium');
+  Result := TPath.Combine(Result, 'RateLaws');
+end;
+
+function TfrmMain.RateLawProjectDir: string;
+begin
+  { A law set travelling with the model, so a project can carry its own.
+    Empty until the model has been saved somewhere. }
+  Result := '';
+  if FCurrentFilePath = '' then Exit;
+  Result := TPath.Combine(ExtractFilePath(FCurrentFilePath), 'ratelaws');
+end;
+
+function TfrmMain.BuildRateLawRegistry: TRateLawRegistry;
+var
+  Id: string;
+begin
+  Result := TRateLawRegistry.Create;
+  Result.LoadDefaults(TPath.Combine(TPath.GetHomePath, 'Iridium\RateLaws'),
+                      RateLawProjectDir);
+  { Applied after loading, because a law the user switched off must still be
+    listed in the options dialog -- switching one off is not deleting it. }
+  for Id in FRateLawOptions.DisabledIds do
+    Result.Disable(Id);
+end;
+
+procedure TfrmMain.btnModelCheckerClick(Sender: TObject);
+var
+  Source:   TAntimonyModelSource;
+  Src:      IModelSource;
+  Registry: TRateLawRegistry;
+  Res:      TCheckResult;
+  Opts:     TReportOptions;
+begin
+  Source := TAntimonyModelSource.Create(GetAntimonyText);
+  { Held as the interface from here on, so the reference count owns it. }
+  Src := Source;
+
+  Registry := BuildRateLawRegistry;
+  try
+    if not Source.Ok then
+    begin
+      FRateLawReport := '# Rate law check' + sLineBreak + sLineBreak
+        + 'The model could not be read.' + sLineBreak + sLineBreak
+        + '```' + sLineBreak + Source.LastError + sLineBreak + '```';
+      ShowRateLawReport;
+      Exit;
+    end;
+
+    { The behavioural half is orders of magnitude more work, so it is opt-in
+      and the report says which was run -- otherwise 'no problems found'
+      overstates what was actually looked at. }
+    Res := CheckModel(Registry, Src, FRateLawOptions.Dynamic);
+    try
+      Opts := TReportOptions.Default;
+      Opts.IncludeNotes  := FRateLawOptions.ShowNotes;
+      Opts.DynamicWasRun := FRateLawOptions.Dynamic;
+      FRateLawReport := RateLaw.Report.AsMarkdown(Res, Registry,
+                                                  Src.ReactionCount, Opts);
+      ShowRateLawReport;
+    finally
+      Res.Free;
+    end;
+  finally
+    Registry.Free;
+  end;
+end;
+
+procedure TfrmMain.RateLawOptionsClick(Sender: TObject);
+var
+  Registry: TRateLawRegistry;
+begin
+  { Loaded fresh, so the dialog shows what is on disk now -- a law the user
+    has just edited, or a project directory that arrived with the model they
+    opened since. }
+  Registry := BuildRateLawRegistry;
+  try
+    if EditRateLawOptions(Self, Registry, RateLawUserDir, RateLawProjectDir,
+                          FRateLawOptions) then
+      SaveRateLawOptions;
+  finally
+    Registry.Free;
+  end;
+end;
+
+{ Shows the pinned report. The tab is switched FIRST and the memo filled
+  afterwards, because switching raises OnChange, which refills the memo from
+  BuildTextView -- so filling it first and switching second writes the text
+  and then immediately throws it away. }
+procedure TfrmMain.ShowRateLawReport;
+begin
+  ReportViewer.MarkdownText := FRateLawReport;
+  { ApplyTheme resets every colour surface, so a document set after the theme
+    was switched has to have it re-applied -- the same rule as ShowHelpDoc. }
+  if FHelpDark then
+    ReportViewer.ApplyTheme(rtDark)
+  else
+    ReportViewer.ApplyTheme(rtLight);
+  TabControl1.ActiveTab := tbMarkdownOutput;
+end;
+
+procedure TfrmMain.SaveRateLawOptions;
+begin
+  if FPrefs = nil then Exit;
+  FPrefs.CheckDynamic      := FRateLawOptions.Dynamic;
+  FPrefs.CheckShowNotes    := FRateLawOptions.ShowNotes;
+  FPrefs.CheckDisabledLaws := FRateLawOptions.DisabledIds;
+  FPrefs.Save;
+end;
+
+procedure TfrmMain.CreateRateLawMenu;
+var
+  Top, Item: TMenuItem;
+begin
+  { In code, for the same reason the Metadata menu is: the .fmx is
+    multi-megabyte and does not need editing for two menu items. }
+  Top := TMenuItem.Create(Self);
+  MainMenu1.InsertObject(3, Top);
+  Top.Text := 'Check';
+
+  Item := TMenuItem.Create(Self);
+  Item.Parent  := Top;
+  Item.Text    := 'Check Rate Laws';
+  Item.OnClick := btnModelCheckerClick;
+
+  Item := TMenuItem.Create(Self);
+  Item.Parent := Top;
+  Item.Text   := '-';
+
+  Item := TMenuItem.Create(Self);
+  Item.Parent  := Top;
+  Item.Text    := 'Rate Laws and Options...';
+  Item.OnClick := RateLawOptionsClick;
+end;
 
 { What the Text tab shows, for the panel showing now.
 
@@ -3241,6 +3526,23 @@ end;
 procedure TfrmMain.btnSimulationHelpClick(Sender: TObject);
 begin
   ShowHelpDoc('metadata');
+end;
+
+procedure TfrmMain.btnRateLawHelpClick(Sender: TObject);
+begin
+  ShowHelpDoc('ratelaws');
+end;
+
+procedure TfrmMain.btnReportLighDarkClick(Sender: TObject);
+begin
+  { One button toggling between the two themes. ApplyTheme resets every
+    colour surface, so a document loaded later has to have the current
+    theme re-applied — see ShowHelpDoc. }
+  FHelpDark := not FHelpDark;
+  if FHelpDark then
+    ReportViewer.ApplyTheme(rtDark)
+  else
+    ReportViewer.ApplyTheme(rtLight);
 end;
 
 procedure TfrmMain.btnExportCSVClick(Sender: TObject);
@@ -3545,6 +3847,7 @@ begin
      Plot.Redraw;
      end;
 end;
+
 
 procedure TfrmMain.cboLoadedFilenameChange(Sender: TObject);
 var i : integer;

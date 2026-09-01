@@ -7,11 +7,11 @@ Uses System.Classes,
      uPlotSeries;
 
 type
-  TModelErrorState = record
-      errMsg : String;
-      sbmlStr : String;
-      ok : Boolean;
-  end;
+  { TModelErrorState used to be declared here as well as in the Antimony
+    wrapper. Two identical records with the same name are not the same type
+    to Delphi, so which one a unit saw depended on its uses order. It now
+    lives only in uAntimonyTypes, which is where the functions returning it
+    live; take it from there. }
 
   TLoadDataFile = class
       FileName : string;
