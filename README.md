@@ -1,4 +1,4 @@
-# Iridium
+﻿# Iridium
 
 <table style="width:100%">
   <tr>
@@ -280,7 +280,7 @@ differently placed checkout will not build.
 | [`ModelCheckerLib`](https://github.com/sys-bio/ModelCheckerLib) | the model checking engine (currently rate laws) |
 | [`Antimony_Metadata_Library`](https://github.com/sys-bio/Antimony_Metadata_Library) | the simulation-metadata parser, writer and exporters |
 | `RhodyComponents` | the source of the Step 1 components — the `.dpr` compiles ~12 units from `RhodyComponents\PlottingComponent\Source\` directly, so the tree must be present even though the components are also installed |
-| `T3DBarGraph-main` | the 3D bar graph for control coefficients |
+| [`T3DBarGraph`](https://github.com/hsauro/T3DBarGraph) | the 3D bar graph for control coefficients |
 
 Note the `-main` suffix on `T3DBarGraph-main`: that is the folder name a GitHub zip download
 produces, and it is what the `.dpr` expects.
