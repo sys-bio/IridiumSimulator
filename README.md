@@ -275,12 +275,12 @@ first, then come back here.
 Links to Component Repos:
 
 Plotting Component: https://github.com/hsauro/Plot2DComponent
+
 Markdown Viewer: https://github.com/hsauro/RhoMarkdownViewer
+
 Code Editor: https://github.com/hsauro/RhoSkiaCodeEditor
 
-<!-- TODO: add the repository links for the three components above. -->
-
-These are design-time packages: once installed they appear on the component palette, which is
+These are all design-time packages: once installed they appear on the component palette, which is
 what lets `ufMain.fmx` and the analysis frames open in the form designer. If you open the
 project without them, the IDE will report unknown component classes and offer to drop the
 controls from the forms — **say no**, and install the components instead.
