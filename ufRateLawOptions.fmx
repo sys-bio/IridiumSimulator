@@ -1,0 +1,171 @@
+object frmRateLawOptions: TfrmRateLawOptions
+  Left = 0
+  Top = 0
+  Caption = 'Rate law checker'
+  ClientHeight = 560
+  ClientWidth = 744
+  Position = MainFormCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object chkDynamic: TCheckBox
+    Align = Top
+    Margins.Left = 12.000000000000000000
+    Margins.Top = 10.000000000000000000
+    Margins.Right = 12.000000000000000000
+    Position.X = 12.000000000000000000
+    Position.Y = 10.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 26.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Text = 
+      'Also check behaviour (evaluates each law over a range of values;' +
+      ' slower)'
+  end
+  object chkNotes: TCheckBox
+    Align = Top
+    Margins.Left = 12.000000000000000000
+    Margins.Top = 2.000000000000000000
+    Margins.Right = 12.000000000000000000
+    Margins.Bottom = 8.000000000000000000
+    Position.X = 12.000000000000000000
+    Position.Y = 38.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 26.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Text = 'Show notes as well as errors and warnings'
+  end
+  object lstLaws: TListBox
+    Align = Client
+    Margins.Left = 12.000000000000000000
+    Margins.Right = 12.000000000000000000
+    Margins.Bottom = 4.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 304.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    DisableFocusEffect = True
+    ItemHeight = 19.000000000000000000
+    DefaultItemStyles.ItemStyle = ''
+    DefaultItemStyles.GroupHeaderStyle = ''
+    DefaultItemStyles.GroupFooterStyle = ''
+    ShowCheckboxes = True
+    OnChange = lstLawsChange
+    Viewport.Width = 716.000000000000000000
+    Viewport.Height = 300.000000000000000000
+  end
+  object lblDetail: TLabel
+    Align = Bottom
+    StyledSettings = [Family, Style, FontColor]
+    Margins.Left = 12.000000000000000000
+    Margins.Top = 4.000000000000000000
+    Margins.Right = 12.000000000000000000
+    Position.X = 12.000000000000000000
+    Position.Y = 384.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 96.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+  end
+  object lblWhere: TLabel
+    Align = Bottom
+    StyledSettings = [Family, Style, FontColor]
+    Margins.Left = 12.000000000000000000
+    Margins.Top = 2.000000000000000000
+    Margins.Right = 12.000000000000000000
+    Position.X = 12.000000000000000000
+    Position.Y = 482.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 36.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 11.000000000000000000
+    TabOrder = 4
+  end
+  object pnlButtons: TLayout
+    Align = Bottom
+    Position.Y = 518.000000000000000000
+    Size.Width = 744.000000000000000000
+    Size.Height = 42.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 5
+    object btnAll: TButton
+      Position.X = 12.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 60.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'All'
+      OnClick = btnAllClick
+    end
+    object btnNone: TButton
+      Position.X = 78.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 60.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'None'
+      OnClick = btnNoneClick
+    end
+    object btnOpenFolder: TButton
+      Hint = 
+        'Opens the folder your own rate laws are read from. A .json file ' +
+        'there replaces the built-in law of the same name.'
+      Position.X = 158.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 110.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'Open Folder'
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = btnOpenFolderClick
+    end
+    object btnSaveCopies: TButton
+      Hint = 
+        'Copies the built-in laws into your own folder as editable .json ' +
+        'files. An edited copy replaces the built-in law of the same name' +
+        ', which is how you change a law without changing the program. Fi' +
+        'les already there are never overwritten.'
+      Position.X = 274.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 110.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      Text = 'Copy Built-Ins'
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = btnSaveCopiesClick
+    end
+    object btnOK: TButton
+      Anchors = [akTop, akRight]
+      Default = True
+      ModalResult = 1
+      Position.X = 540.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 90.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Text = 'OK'
+    end
+    object btnCancel: TButton
+      Anchors = [akTop, akRight]
+      Cancel = True
+      ModalResult = 2
+      Position.X = 642.000000000000000000
+      Position.Y = 6.000000000000000000
+      Size.Width = 90.000000000000000000
+      Size.Height = 28.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 5
+      Text = 'Cancel'
+    end
+  end
+end

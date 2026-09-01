@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{212FBF27-F6A0-4CAB-9083-0496CCF09B4D}</ProjectGuid>
         <ProjectVersion>20.3</ProjectVersion>
@@ -92,7 +92,7 @@
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <SanitizedProjectName>IridiumSimulator</SanitizedProjectName>
-        <DCC_UnitSearchPath>..\RhodyComponents\PlottingComponent\Source;..\RhodyComponents\RhoEditor\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\RhodyComponents\PlottingComponent\Source;..\RhodyComponents\RhoEditor\Source;..\RhodyComponents\RhoMarkDownViewer\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_Define>SKIA;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_OSX64)'!=''">
@@ -188,33 +188,28 @@
         <DCCReference Include="ufMain.pas">
             <Form>frmMain</Form>
         </DCCReference>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uComplex.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uEigenvalues.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uIMSLLib.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uJVector.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uMatrix.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uRoadRunner.API.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uRoadRunner.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uRR2DSimpleMatrix.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uRRList.pas"/>
-        <DCCReference Include="..\..\CommonCode\libRoadRunner\uRRTypes.pas"/>
-        <DCCReference Include="..\..\libAntimonyAPI\uAntimonyTypes.pas"/>
-        <DCCReference Include="..\..\libAntimonyAPI\uAntimonyRaw.pas"/>
-        <DCCReference Include="..\..\libAntimonyAPI\uAntimonyAPI.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Types.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Ast.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Parser.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Canonical.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.BuiltInLaws.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Diff.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Registry.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Generative.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Bind.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Associate.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Eval.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Dynamic.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Report.pas"/>
-        <DCCReference Include="..\..\RateLawChecker\RateLaw.Static.pas"/>
+        <DCCReference Include="..\libRoadRunner_Delphi_Bindings\uRoadRunner.API.pas"/>
+        <DCCReference Include="..\libRoadRunner_Delphi_Bindings\uRoadRunner.pas"/>
+        <DCCReference Include="..\libRoadRunner_Delphi_Bindings\uRR2DSimpleMatrix.pas"/>
+        <DCCReference Include="..\libRoadRunner_Delphi_Bindings\uRRList.pas"/>
+        <DCCReference Include="..\libRoadRunner_Delphi_Bindings\uRRTypes.pas"/>
+        <DCCReference Include="..\libAntimony_Delphi_Bindings\uAntimonyTypes.pas"/>
+        <DCCReference Include="..\libAntimony_Delphi_Bindings\uAntimonyRaw.pas"/>
+        <DCCReference Include="..\libAntimony_Delphi_Bindings\uAntimonyAPI.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Types.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Ast.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Parser.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Canonical.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.BuiltInLaws.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Diff.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Registry.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Generative.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Bind.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Associate.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Eval.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Dynamic.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Report.pas"/>
+        <DCCReference Include="..\ModelCheckerLib\RateLaw.Static.pas"/>
         <DCCReference Include="ufRateLawOptions.pas">
             <Form>frmRateLawOptions</Form>
         </DCCReference>
@@ -267,19 +262,19 @@
         <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotJsonUtils.pas"/>
         <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotMapper.pas"/>
         <DCCReference Include="..\RhodyComponents\PlottingComponent\Source\uPlotSeries.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Types.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Lexer.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Ast.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Registry.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Parser.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Validate.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Model.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Writer.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Python.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Types.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.SedML.Export.pas"/>
-        <DCCReference Include="..\..\Antimony_MetaData_Support\Sim.Meta.Omex.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Types.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Lexer.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Ast.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Registry.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Parser.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Validate.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Model.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Writer.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Python.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.SedML.Types.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.SedML.Export.pas"/>
+        <DCCReference Include="..\Antimony_MetaData_Support\Sim.Meta.Omex.pas"/>
         <DCCReference Include="uMetaSymbolProvider.pas"/>
         <DCCReference Include="uMetaScriptGen.pas"/>
         <DCCReference Include="uPreferences.pas"/>

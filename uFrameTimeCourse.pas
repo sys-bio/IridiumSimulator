@@ -1135,9 +1135,10 @@ begin
   FCategoryIds[ocAssignmentRules].Clear;
   if FCategoryIds[ocGlobalParameters].Count = 0 then Exit;
 
-  { getSBML returns AnsiString; cast widens but keeps the bytes since
-    libsbml emits UTF-8 ASCII for tag/attribute syntax. }
-  SBML := string(FContext.Session.RoadRunner.getSBML);
+  { getSBML decodes the library's UTF-8 at the boundary and returns a string,
+    so nothing is needed here. It used to return AnsiString, which tagged
+    UTF-8 bytes with the system codepage and mis-decoded any non-ASCII name. }
+  SBML := FContext.Session.RoadRunner.getSBML;
   if SBML = '' then Exit;
 
   RuleSet := TStringList.Create;

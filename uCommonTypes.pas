@@ -1,4 +1,4 @@
-unit uCommonTypes;
+﻿unit uCommonTypes;
 
 interface
 
@@ -92,3 +92,4 @@ begin
 end;
 
 end.
+
