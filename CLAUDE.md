@@ -88,9 +88,14 @@ Iridium's side of the boundary instead.
 That constraint no longer applies to `libRoadRunner_Delphi_Bindings`, which is Iridium's own
 copy — but the caution it encodes still does, in a weaker form: a signature change here makes
 the copy harder to reconcile with `CommonCode\libRoadRunner` later, so it is still worth
-proposing rather than doing. (A known example left alone deliberately:
-`TRoadRunner.getSBML : AnsiString` mis-decodes non-ASCII SBML, but its
-only caller reads ASCII element names out of the result, so it is latent.)
+proposing rather than doing.
+
+`TRoadRunner.getSBML` was the first such change and is **done**: it returned `AnsiString`,
+which tagged the library's UTF-8 bytes with the system codepage, so a `τ` in a name came back
+as `Ï„`. It now returns `string`, decoding at the boundary via `string(UTF8String(p))`. The
+one caller (`uFrameTimeCourse`) lost its cast. Verified byte-identical on ASCII models, so
+nothing that worked before changed. `CommonCode\libRoadRunner` still has the old version —
+that is now a behavioural difference between the two copies, not just a file-list one.
 - `..\T3DBarGraph-main\U3DBarGraph.pas` — the 3D bar-graph component (control-coefficient plots).
 - `..\Antimony_Metadata_Library\` — the `Sim.Meta.*` simulation-metadata library
   (see **Simulation metadata** below). Its own project, with its own console test
