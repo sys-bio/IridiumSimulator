@@ -22,6 +22,16 @@ simulation engine and is fully [SBML](https://github.com/sbmlteam/libsbml) compl
 
 ---
 
+## Acknowledgements
+
+I would like to thank Guillermo Canedo Ramirez who did an excellent job in making the 3D bar plotting compoment (https://github.com/gcanedo/T3DBarGraph)
+
+The web version which runs inside the browser can be found at
+
+Source code: https://github.com/sys-bio/WebIridium
+
+GitHub page: https://sys-bio.github.io/WebIridium/
+
 ## Why you might want it
 
 Most simulation work happens in a notebook: a model file over here, a script that simulates
