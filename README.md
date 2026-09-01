@@ -278,7 +278,7 @@ differently placed checkout will not build.
 | [`libRoadRunner_Delphi_Bindings`](https://github.com/sys-bio/libRoadRunner_Delphi_Bindings) | the RoadRunner Pascal wrapper |
 | [`libAntimony_Delphi_Bindings`](https://github.com/sys-bio/libAntimony_Delphi_Bindings) | the libantimony wrapper |
 | [`ModelCheckerLib`](https://github.com/sys-bio/ModelCheckerLib) | the model checking engine (currently rate laws) |
-| `Antimony_MetaData_Support` | the simulation-metadata parser, writer and exporters |
+| `Antimony_MetaData_Library` | the simulation-metadata parser, writer and exporters |
 | `RhodyComponents` | the source of the Step 1 components — the `.dpr` compiles ~12 units from `RhodyComponents\PlottingComponent\Source\` directly, so the tree must be present even though the components are also installed |
 | `T3DBarGraph-main` | the 3D bar graph for control coefficients |
 
