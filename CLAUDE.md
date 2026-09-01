@@ -92,7 +92,7 @@ proposing rather than doing. (A known example left alone deliberately:
 `TRoadRunner.getSBML : AnsiString` mis-decodes non-ASCII SBML, but its
 only caller reads ASCII element names out of the result, so it is latent.)
 - `..\T3DBarGraph-main\U3DBarGraph.pas` — the 3D bar-graph component (control-coefficient plots).
-- `..\Antimony_MetaData_Support\` — the `Sim.Meta.*` simulation-metadata library
+- `..\Antimony_Metadata_Library\` — the `Sim.Meta.*` simulation-metadata library
   (see **Simulation metadata** below). Its own project, with its own console test
   harness; referenced rather than copied so a fix there is a fix here. **RTL-only by
   design** — nothing in it may reference FMX or libRoadRunner, which is what will let
@@ -247,7 +247,7 @@ must not follow the user across a panel switch:
 
 A model may describe the experiments run on it, in an Antimony block comment whose
 first non-whitespace character is `@`. The format, its conformance rules and Iridium's
-own documented behaviour are specified in `..\Antimony_MetaData_Support\`
+own documented behaviour are specified in `..\Antimony_Metadata_Library\`
 (`simulation-metadata-spec.md`, `implementation.md`, `HANDOFF.md`) — read the spec
 before changing behaviour, since §13 records Iridium as the reference implementation.
 
@@ -620,7 +620,7 @@ loads it through the same sequence as Import SBML (`Unload` → `ClearPlotAndLoa
   reinstates it only when the restored text is still the old auto value — so a title the
   user typed, or one an `@plot xlabel:` set, is left alone.
 - **Help documents master in their own project and are COPIED into `Win64\Debug\Help\`.**
-  `METADATA_MANUAL.md` lives in `..\Antimony_MetaData_Support\` and
+  `METADATA_MANUAL.md` lives in `..\Antimony_Metadata_Library\` and
   `RATE_LAW_MANUAL.md` in `..\ModelCheckerLib\`; the copies under `Win64\` are a
   deploy target, not a source, and are git-ignored. Edit the master and re-copy — a fix
   made to the deployed copy is lost at the next clean build. **Copy into BOTH

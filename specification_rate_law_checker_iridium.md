@@ -66,7 +66,7 @@ as such, not quietly absorbed.
 ## 4. Placement: a sibling library, not an Iridium unit
 
 The checker is written as its own project in a sibling directory, referenced by Iridium
-through relative paths in the `.dpr`, exactly as `..\Antimony_MetaData_Support\` is:
+through relative paths in the `.dpr`, exactly as `..\Antimony_Metadata_Library\` is:
 
     ..\ModelCheckerLib\
         RateLaw.*.pas               the library
@@ -77,7 +77,7 @@ through relative paths in the `.dpr`, exactly as `..\Antimony_MetaData_Support\`
 
 As built this is flat, and the units are `RateLaw.Ast`, `RateLaw.Parser` and so on rather
 than the `uRateLaw*` the draft proposed. Both changes follow
-`..\Antimony_MetaData_Support\`, which is flat and uses `Sim.Meta.*`: matching the
+`..\Antimony_Metadata_Library\`, which is flat and uses `Sim.Meta.*`: matching the
 sibling library the design was modelled on beats matching this document.
 
 The default registry ships compiled in (§7.1) rather than as a `laws\` directory, so a
@@ -102,7 +102,7 @@ Iridium contributes exactly two things: an `IModelSource` implementation over
 `uAntimonyAPI`, and the UI (§14).
 
 **Consequence to accept deliberately:** this is a third external source root to keep in sync
-across machines, alongside `Antimony_MetaData_Support` and `libAntimony_Delphi_Bindings`. Unlike
+across machines, alongside `Antimony_Metadata_Library` and `libAntimony_Delphi_Bindings`. Unlike
 libRoadRunner and RhodyComponents, it is the user's own project with no other consumers, so
 a bug in it is fixed there rather than worked around in Iridium.
 
@@ -449,7 +449,7 @@ Iridium already parses `@`-prefixed Antimony comments for simulation metadata
 
 **Open decision:** whether this is a standalone comment form or an addition to the metadata
 block grammar. The block is specified in
-`Antimony_MetaData_Support\simulation-metadata-spec.md`, which records Iridium as its
+`Antimony_Metadata_Library\simulation-metadata-spec.md`, which records Iridium as its
 reference implementation — so adding a command there is a change to *that* spec and must be
 made there, not improvised here. A standalone `# @ratelaw` line avoids that entirely and is
 per-reaction rather than per-model, which fits better. Recommend standalone.

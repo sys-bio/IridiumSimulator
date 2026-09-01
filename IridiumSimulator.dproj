@@ -277,20 +277,20 @@
             <Form>FrmPlotEditor</Form>
             <FormType>fmx</FormType>
         </DCCReference>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Ast.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Lexer.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Model.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Omex.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Parser.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Python.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Registry.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.SedML.Export.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.SedML.Types.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.TestCorpus.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Types.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Validate.pas"/>
-        <DCCReference Include="..\Antimony_MetaData_Library\Sim.Meta.Writer.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Ast.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Lexer.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Model.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Omex.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Parser.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Python.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Registry.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.SedML.Export.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.SedML.Types.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.TestCorpus.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Types.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Validate.pas"/>
+        <DCCReference Include="..\Antimony_Metadata_Library\Sim.Meta.Writer.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
