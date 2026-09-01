@@ -3,7 +3,7 @@
 <table style="width:100%">
   <tr>
     <td><img alt="Licence" src="https://img.shields.io/badge/License-MIT-yellowgreen"></td>
-    <td><img alt="Funding" src="https://img.shields.io/badge/Funding-NIH%20(GM123032)-blue"></td>
+    <td><img alt="Funding" src="https://img.shields.io/badge/Funding-NIH/NIBIB%20(P41EB023912)-blue"></td>
     <td><img alt="Language" src="https://img.shields.io/badge/Delphi-13-blue.svg"></td>
     <td><img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS-lightgrey"></td>
     <td><img alt="GitHub all releases" src="https://img.shields.io/github/downloads/sys-bio/IridiumSimulator/total?color=red&style=plastic"></td>
