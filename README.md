@@ -32,7 +32,7 @@ Source code: https://github.com/sys-bio/WebIridium
 
 GitHub page: https://sys-bio.github.io/WebIridium/
 
-This work is supported by NIH grant GM123032.
+This work is supported by NIH/NIBIB center grant P41EB023912
 
 ## Why you might want it
 
