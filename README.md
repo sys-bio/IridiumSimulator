@@ -235,24 +235,6 @@ between sessions (**File ▸ Load Recent Files**). Preferences live in a small J
 
 ---
 
-## The web version
-
-A version that runs in the browser is available separately:
-
-- Source: https://github.com/sys-bio/WebIridium
-- Live: https://sys-bio.github.io/WebIridium/
-
----
-
-## Acknowledgements
-
-Thanks to **Guillermo Canedo Ramirez**, who did an excellent job on the 3D bar plotting
-component used for the control coefficient plots — https://github.com/gcanedo/T3DBarGraph
-
-This work is supported by NIH grant GM123032.
-
----
-
 ## For developers
 
 Iridium is a [FireMonkey](https://www.embarcadero.com/products/rad-studio/fm-application-platform)
