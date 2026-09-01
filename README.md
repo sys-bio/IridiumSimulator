@@ -272,6 +272,12 @@ first, then come back here.
 | Markdown viewer | `TRhoMarkdownViewer` | the Help tab and the Reports tab |
 | Code editor | `TSkiaCodeEditor` | the Antimony editor |
 
+Links to Component Repos:
+
+Plotting Component: https://github.com/hsauro/Plot2DComponent
+Markdown Viewer: https://github.com/hsauro/RhoMarkdownViewer
+Code Editor: https://github.com/hsauro/RhoSkiaCodeEditor
+
 <!-- TODO: add the repository links for the three components above. -->
 
 These are design-time packages: once installed they appear on the component palette, which is
