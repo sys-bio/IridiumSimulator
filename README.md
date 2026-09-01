@@ -32,6 +32,8 @@ Source code: https://github.com/sys-bio/WebIridium
 
 GitHub page: https://sys-bio.github.io/WebIridium/
 
+This work is supported by NIH grant GM123032.
+
 ## Why you might want it
 
 Most simulation work happens in a notebook: a model file over here, a script that simulates
