@@ -11,6 +11,11 @@ to SBML, and simulates them with the [libRoadRunner](https://github.com/sys-bio/
 engine. Features: time-course simulation, steady-state, interactive slider-driven
 simulation, parameter scans, and MCA-style sensitivity (control-coefficient) analysis.
 
+`README.md` is the public-facing document — what Iridium does, and how a developer gets it
+building. This file is the interior view: the invariants, the reasons, and the things that
+are easy to break. Where they overlap (the dependency list, the build command, the platform
+targets) **they must not drift apart**, because the README is what a newcomer reads first.
+
 ## Build / Run
 
 This is a Delphi project — there is no make/npm. Build with the RAD Studio command-line
@@ -25,8 +30,10 @@ compiler or the IDE.
   cmd /c '"C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat" && msbuild IridiumSimulator.dproj /t:Build /p:Config=Debug /p:Platform=Win64'
   ```
   A successful compile ends with a line like `NNNNN lines, N.NN seconds, ... bytes code`.
-  The external `uMatrix.pas` / `uJVector.pas` units emit many harmless H2164/W1036/W1029
-  hints and warnings — these are expected, not build failures.
+  A handful of harmless hints from the external units are expected, not build failures.
+  (The bulk of that noise used to come from `uMatrix.pas` and `uJVector.pas`, which were
+  listed in the `.dpr` but used by nothing. They were removed, taking ~8,000 lines of dead
+  code out of every build — 86,581 lines down to 78,465.)
 - **Output:** `Win64\Debug\` (DCUs under `Win64\Debug\dcu`).
 - **No automated test suite exists.** Verification is manual: run the app, load a model
   (built-in models live in `uBuiltInModels.pas`, or `*.ant` files in the repo root such as
@@ -45,23 +52,47 @@ The app loads two native libraries at startup and will not function without them
 ## External source roots
 
 The project pulls `.pas` units from sibling directories outside this repo via relative
-paths in the `.dpr` — these are **not** in this repository:
-- `..\..\CommonCode\libRoadRunner\` — the RoadRunner Pascal wrapper and numeric libs
-  (`uRoadRunner.pas`, `uRoadRunner.API.pas`, `uMatrix.pas`, `uRR2DSimpleMatrix.pas`, etc.).
-  This is registered as an additional working directory.
+paths in the `.dpr` — these are **not** in this repository.
+
+**Every one of them sits beside this repository**, in the same parent folder, which is why
+each path is a single `..\`. They are referenced rather than copied, so a fix in one is a fix
+everywhere it is used — and so a checkout that puts them anywhere else will not build. Two of
+these folders have been renamed (`libAntimonyAPI` → `libAntimony_Delphi_Bindings`,
+`RateLawChecker` → `ModelCheckerLib`); older notes, comments and sibling projects may still
+carry the old names.
+- `..\libRoadRunner_Delphi_Bindings\` — the RoadRunner Pascal wrapper: `uRoadRunner.pas`,
+  `uRoadRunner.API.pas`, `uRR2DSimpleMatrix.pas`, `uRRList.pas`, `uRRTypes.pas`. Five units,
+  and Iridium uses all five. Registered as an additional working directory.
+
+  **This is Iridium's own copy, taken from `CommonCode\libRoadRunner`, which still exists and
+  is still used by other projects.** The original is the older, larger set: it also carries
+  `uComplex.pas` (needed by `RoadRunnerMCAModule` and by the wrapper's own test projects) and
+  once carried `uMatrix`, `uJVector`, `uEigenvalues` and `uIMSLLib`, all of which Iridium
+  listed in its `.dpr` and none of which anything ever `used` — about 8,000 lines of dead code
+  in every build until they were dropped. Do not re-add them here; if something ever needs a
+  matrix type, that is a decision to make deliberately rather than by inheritance.
+
+  Because it is a copy, **the two will drift**. A fix made here does not reach the other
+  projects and vice versa. That is the accepted cost of not breaking them; the intent is to
+  migrate them over time and retire the original.
 - `..\RhodyComponents\PlottingComponent\Source\` — the Skia-based plotting component
   (`SkPlotPaintBox`, `uPlotSeries`, `ufPlotEditor`, etc.). Shared with other
   applications, so a change here affects them too. `..\RhodyComponents\RhoEditor\Source\`
   resolves through `DCC_UnitSearchPath` rather than an explicit reference.
 
-**Do not change public signatures in the libRoadRunner or RhodyComponents trees.** They
-are compiled into several other applications, so any change there means retesting all of
-them — a far bigger cost than most fixes are worth. Propose the change and let the user
-decide; fix what you can on Iridium's side of the boundary instead. (A known example left
-alone deliberately: `TRoadRunner.getSBML : AnsiString` mis-decodes non-ASCII SBML, but its
+**Do not change public signatures in the RhodyComponents tree.** It is compiled into several
+other applications, so any change there means retesting all of them — a far bigger cost than
+most fixes are worth. Propose the change and let the user decide; fix what you can on
+Iridium's side of the boundary instead.
+
+That constraint no longer applies to `libRoadRunner_Delphi_Bindings`, which is Iridium's own
+copy — but the caution it encodes still does, in a weaker form: a signature change here makes
+the copy harder to reconcile with `CommonCode\libRoadRunner` later, so it is still worth
+proposing rather than doing. (A known example left alone deliberately:
+`TRoadRunner.getSBML : AnsiString` mis-decodes non-ASCII SBML, but its
 only caller reads ASCII element names out of the result, so it is latent.)
 - `..\T3DBarGraph-main\U3DBarGraph.pas` — the 3D bar-graph component (control-coefficient plots).
-- `..\..\Antimony_MetaData_Support\` — the `Sim.Meta.*` simulation-metadata library
+- `..\Antimony_MetaData_Support\` — the `Sim.Meta.*` simulation-metadata library
   (see **Simulation metadata** below). Its own project, with its own console test
   harness; referenced rather than copied so a fix there is a fix here. **RTL-only by
   design** — nothing in it may reference FMX or libRoadRunner, which is what will let
@@ -70,15 +101,15 @@ only caller reads ASCII element names out of the result, so it is latent.)
   **Exporting** below. Unlike the trees above, this is the user's own project and a bug
   in it is fixed there rather than worked around here.
 
-- `..\..\libAntimonyAPI\` — the maintained libantimony wrapper (`uAntimonyAPI.pas`,
+- `..\libAntimony_Delphi_Bindings\` — the maintained libantimony wrapper (`uAntimonyAPI.pas`,
   `uAntimonyRaw.pas`, `uAntimonyTypes.pas`). **This replaced the old in-repo
   `uAntimonyAPI.pas`, which is gone.** `TModelErrorState` now lives in `uAntimonyTypes`
   and nowhere else. Two things to know: the raw unit binds ~135 entry points and
   **refuses to load if any is missing**, so an older `libantimony.dll` makes the app halt
   at start-up with "Unable to find the Antimony library" — the matching DLL is the one in
-  `libAntimonyAPI\binary\lib\`. And `freeAll` must be called after a batch of queries,
+  `libAntimony_Delphi_Bindings\WinBinary\lib\`. And `freeAll` must be called after a batch of queries,
   because the library leaks without it.
-- `..\..\RateLawChecker\` — the rate law checker (`RateLaw.*.pas`), with its own console
+- `..\ModelCheckerLib\` — the rate law checker (`RateLaw.*.pas`), with its own console
   test harness. **RTL-only by design**: nothing in it may reference FMX, libantimony or
   libRoadRunner, which is what lets it be tested without a GUI or a DLL and reused later.
   Iridium contributes exactly two things — `uRateLawModelSource.pas`, an `IModelSource`
@@ -216,7 +247,7 @@ must not follow the user across a panel switch:
 
 A model may describe the experiments run on it, in an Antimony block comment whose
 first non-whitespace character is `@`. The format, its conformance rules and Iridium's
-own documented behaviour are specified in `..\..\Antimony_MetaData_Support\`
+own documented behaviour are specified in `..\Antimony_MetaData_Support\`
 (`simulation-metadata-spec.md`, `implementation.md`, `HANDOFF.md`) — read the spec
 before changing behaviour, since §13 records Iridium as the reference implementation.
 
@@ -339,8 +370,16 @@ external validator will tell you about:
 ### Rate law checking
 
 `btnModelChecker` and the code-built **Check** menu run the checker and write a report to
-the Text tab. The engine lives in `..\..\RateLawChecker\`; read
+the Text tab. The engine lives in `..\ModelCheckerLib\`; read
 `specification_rate_law_checker_iridium.md` before changing behaviour.
+
+**The folder is `ModelCheckerLib` but the units are `RateLaw.*` — this is deliberate, not a
+missed rename.** The library is named for what it will become: model checking generally, of
+which rate laws are the first kind. The `RateLaw.*.pas` units check rate laws, so that is
+what they are called, and they keep those names. Checks of other kinds get their own prefix
+as they arrive — `Model.*` — rather than everything being flattened under one. So do not
+"tidy" `RateLaw.*` into `ModelChecker.*` for consistency with the folder: the prefix names
+the subject of the check, and the folder names the library.
 
 The one idea everything follows from: **the set of rate laws checked is data, not code.**
 A law is a JSON registry entry giving a canonical expression, the roles of its symbols, and
@@ -366,7 +405,7 @@ Things that are easy to get wrong:
 - **The behavioural half is opt-in** (`Check ▸ Rate Laws and Options...`). It samples each
   law over a grid, so it is orders of magnitude more work, and the report says which half
   ran — otherwise "no problems found" overstates what was looked at.
-- **Adding a rate law is a JSON file, not code.** `..\..\RateLawChecker\RATE_LAW_MANUAL.md`
+- **Adding a rate law is a JSON file, not code.** `..\ModelCheckerLib\RATE_LAW_MANUAL.md`
   is the authoring guide, reachable in the app from **Help ▸ Rate Law Help**: the schema, the ten invariant types, families such as mass
   action, annotations, and what each rejection code means. If a new law ever needs an
   engine change, that is a defect in the engine and worth recording as one.
@@ -429,24 +468,24 @@ authoring manual itself is done), **M16** (Layer 3 simulation checks, `D101`–`
 the association floor question — `S011` (247 models) and `S006` (181) are what is left, and
 no global threshold separates them from the founding defect at d=0.125.
 
-Build and test, from `..\..\RateLawChecker\`:
+Build and test, from `..\ModelCheckerLib\`:
 
 **`-NUdcu` is not optional.** Without it `dcc64` writes its DCUs beside the
 sources, and that directory is on Iridium's unit search path — so the next
 Iridium build finds compiled units there and uses them instead of recompiling
 the `.pas`. The symptom is the IDE silently ignoring changes to the checker:
 edit a law, rebuild, and yesterday's registry is still what runs. If that
-happens, delete `..\..\RateLawChecker\*.dcu` and
+happens, delete `..\ModelCheckerLib\*.dcu` and
 `Win64\Debug\dcu\*.dcu`, then rebuild.
 
 ```
-dcc64 -B -NUdcu RateLawChecker_Project.dpr  (after sourcing rsvars.bat)
-RateLawChecker_Project                      the whole suite
-RateLawChecker_Project -coverage            the mutation matrix, per law
-RateLawChecker_Project -laws                every registered law and whether it validates
-RateLawChecker_Project -check <case>        one corpus case, in full
-RateLawChecker_Project -bind <case>         which law each candidate binds to, and how far off
-RateLawChecker_Project -expr "<expr>"       parse one expression, both trees
+dcc64 -B -NUdcu ModelCheckerLib_Project.dpr  (after sourcing rsvars.bat)
+ModelCheckerLib_Project                      the whole suite
+ModelCheckerLib_Project -coverage            the mutation matrix, per law
+ModelCheckerLib_Project -laws                every registered law and whether it validates
+ModelCheckerLib_Project -check <case>        one corpus case, in full
+ModelCheckerLib_Project -bind <case>         which law each candidate binds to, and how far off
+ModelCheckerLib_Project -expr "<expr>"       parse one expression, both trees
 ```
 
 and from `Win64\Debug`, against real models:
@@ -581,8 +620,8 @@ loads it through the same sequence as Import SBML (`Unload` → `ClearPlotAndLoa
   reinstates it only when the restored text is still the old auto value — so a title the
   user typed, or one an `@plot xlabel:` set, is left alone.
 - **Help documents master in their own project and are COPIED into `Win64\Debug\Help\`.**
-  `METADATA_MANUAL.md` lives in `..\..\Antimony_MetaData_Support\` and
-  `RATE_LAW_MANUAL.md` in `..\..\RateLawChecker\`; the copies under `Win64\` are a
+  `METADATA_MANUAL.md` lives in `..\Antimony_MetaData_Support\` and
+  `RATE_LAW_MANUAL.md` in `..\ModelCheckerLib\`; the copies under `Win64\` are a
   deploy target, not a source, and are git-ignored. Edit the master and re-copy — a fix
   made to the deployed copy is lost at the next clean build. **Copy into BOTH
   `Win64\Debug\Help\` and `Win64\Release\Help\`**: the viewer resolves everything

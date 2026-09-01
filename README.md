@@ -277,19 +277,27 @@ The rest of the dependencies are **source**, not installed packages. They are re
 relative path from `IridiumSimulator.dpr`, so they must sit beside this repository in the
 expected layout rather than being copied in — a fix in one is then a fix everywhere it is used.
 
-| Project | What it provides |
-|---|---|
-| `CommonCode/libRoadRunner` | RoadRunner Pascal wrapper and numeric libraries |
-| `Antimony_MetaData_Support` | the simulation-metadata parser, writer and exporters |
-| `libAntimonyAPI` | the maintained libantimony wrapper |
-| `RateLawChecker` | the rate law checking engine |
-| `T3DBarGraph` | the 3D bar graph for control coefficients |
+Every one of them must sit **beside** this repository, in the same parent folder, under
+exactly these names — the paths in the `.dpr` are a single `..\`, so a differently named or
+differently placed checkout will not build.
 
-`T3DBarGraph` is a source dependency rather than an installed component: `ufBar3DWindow`
+| Folder | What it provides |
+|---|---|
+| [`libRoadRunner_Delphi_Bindings`](https://github.com/sys-bio/libRoadRunner_Delphi_Bindings) | the RoadRunner Pascal wrapper |
+| [`libAntimony_Delphi_Bindings`](https://github.com/sys-bio/libAntimony_Delphi_Bindings) | the libantimony wrapper |
+| [`ModelCheckerLib`](https://github.com/sys-bio/ModelCheckerLib) | the model checking engine (currently rate laws) |
+| `Antimony_MetaData_Support` | the simulation-metadata parser, writer and exporters |
+| `RhodyComponents` | the source of the Step 1 components — the `.dpr` compiles ~12 units from `RhodyComponents\PlottingComponent\Source\` directly, so the tree must be present even though the components are also installed |
+| `T3DBarGraph-main` | the 3D bar graph for control coefficients |
+
+Note the `-main` suffix on `T3DBarGraph-main`: that is the folder name a GitHub zip download
+produces, and it is what the `.dpr` expects.
+
+`T3DBarGraph-main` is a source dependency rather than an installed component: `ufBar3DWindow`
 constructs the bar graph in code and docks it, deliberately, so that no `.fmx` references the
 unit and the IDE never has to load its package.
 
-Three parts of the codebase — the metadata library, the rate law checker, and the preferences
+Three parts of the codebase — the metadata library, the model checker, and the preferences
 unit — are **RTL-only by design**: nothing in them may reference FMX or libRoadRunner. That is
 what lets them be tested from a console harness without a GUI or a DLL, and reused by other
 tools later.
@@ -304,7 +312,7 @@ tools later.
 `rsvars.bat` sets up the compiler environment and must be sourced first. Output lands in
 `Win64\Debug\`. A successful compile ends with a line like
 `NNNNN lines, N.NN seconds, ... bytes code`. Some external numeric units emit a large number
-of harmless hints and warnings; these are expected and are not build failures.
+of harmless hints; these are expected and are not build failures.
 
 ### Runtime dependencies
 
@@ -341,10 +349,10 @@ changes.
 ### Testing
 
 There is no automated test suite for the application itself; verification is manual — load a
-model and exercise the analysis panels. The two RTL-only sibling projects (metadata support
-and rate law checker) *do* have console test harnesses.
+model and exercise the analysis panels. The RTL-only sibling projects (metadata support and
+`ModelCheckerLib`) *do* have console test harnesses, and so do the two wrapper projects.
 
-The rate law checker is additionally measured against the **1013-model curated BioModels
+The model checker is additionally measured against the **1013-model curated BioModels
 corpus**. As of the 2026-08-28 baseline: 15.7% of models report an error (down from 33.1%),
 66.5% are entirely silent (up from 35.1%), and 40.3% of the 45,319 reactions are associated
 with a known rate law (up from 17.1%). Because BioModels is curated, a reported error is
