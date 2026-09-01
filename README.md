@@ -250,17 +250,9 @@ first, then come back here.
 
 | Component | Class | Used for |
 |---|---|---|
-| Plotting component | `TSkPlotPaintBox` | every chart in the application |
-| Markdown viewer | `TRhoMarkdownViewer` | the Help tab and the Reports tab |
-| Code editor | `TSkiaCodeEditor` | the Antimony editor |
-
-Links to Component Repos:
-
-Plotting Component: https://github.com/hsauro/Plot2DComponent
-
-Markdown Viewer: https://github.com/hsauro/RhoMarkdownViewer
-
-Code Editor: https://github.com/hsauro/RhoSkiaCodeEditor
+| [Plotting component](https://github.com/hsauro/Plot2DComponent) | `TSkPlotPaintBox` | every chart in the application |
+| [Markdown viewer](https://github.com/hsauro/RhoMarkdownViewer) | `TRhoMarkdownViewer` | the Help tab and the Reports tab |
+| [Code editor](https://github.com/hsauro/RhoSkiaCodeEditor) | `TSkiaCodeEditor` | the Antimony editor |
 
 These are all design-time packages: once installed they appear on the component palette, which is
 what lets `ufMain.fmx` and the analysis frames open in the form designer. If you open the
