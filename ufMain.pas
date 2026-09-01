@@ -48,7 +48,6 @@ uses
   FMX.Edit,
   FMX.EditBox,
   FMX.BehaviorManager,
-  FMX.RichEdit.Style,
   FMX.NumberBox,
   FMX.Objects,
   uBuiltInModels,
