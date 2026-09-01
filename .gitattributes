@@ -1,0 +1,108 @@
+# Line endings and diff behaviour for a Delphi / RAD Studio repository.
+#
+# The problem this solves: the RAD Studio editor and form designer always write
+# CRLF, but this repository's history is stored with LF. Without these rules
+# every file the IDE touches shows up as entirely rewritten -- one ufMain.fmx
+# save reported 103,923 changed lines when 409 had actually changed -- which
+# makes diff, blame and review useless.
+#
+# The rule below is "LF in the repository, CRLF in the working tree". Git
+# normalises on commit and converts back on checkout, so the IDE gets the line
+# endings it wants, the history stays stable, and it behaves the same way on
+# every machine regardless of anyone's core.autocrlf setting.
+#
+# After adding or changing this file, renormalise once:
+#
+#     git add --renormalize .
+#     git commit -m "Normalise line endings"
+#
+# Do that as a commit of its own -- mixed with real changes it is unreviewable.
+
+# Anything Git decides is text gets normalised to LF in the repository.
+* text=auto
+
+# ---------------------------------------------------------------------------
+# Delphi source and project files -- CRLF in the working tree.
+#
+# Delphi reads either, but writes CRLF. Declaring it explicitly means a
+# contributor on macOS or Linux also checks out CRLF, so the IDE does not
+# rewrite the whole file the first time it saves.
+# ---------------------------------------------------------------------------
+*.pas       text eol=crlf
+*.dpr       text eol=crlf
+*.dpk       text eol=crlf
+*.dproj     text eol=crlf diff=xml
+*.groupproj text eol=crlf diff=xml
+*.deployproj text eol=crlf diff=xml
+*.inc       text eol=crlf
+*.rc        text eol=crlf
+*.ridl      text eol=crlf
+
+# Form designer files. Text, but machine-written: never hand-merge one.
+# ufMain.fmx is several megabytes, so it is also worth not diffing casually.
+*.fmx       text eol=crlf
+*.dfm       text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Documentation and data -- LF, which is what GitHub and every other tool
+# renders and diffs most cleanly.
+# ---------------------------------------------------------------------------
+*.md        text eol=lf
+*.txt       text eol=lf
+*.json      text eol=lf
+*.xml       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.py        text eol=lf
+*.sh        text eol=lf
+*.csv       text eol=lf
+LICENSE     text eol=lf
+
+# Antimony models. LF: they are read by libantimony, by Tellurium and by
+# people on every platform, not only by the IDE.
+*.ant       text eol=lf
+*.sbml      text eol=lf
+*.sedml     text eol=lf
+
+# Windows batch files must keep CRLF or cmd.exe can mis-parse them.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Binary. Marked explicitly so Git never attempts newline conversion on them
+# -- a corrupted .res or .png is the usual result of getting this wrong.
+# ---------------------------------------------------------------------------
+*.res       binary
+*.dcu       binary
+*.dcp       binary
+*.bpl       binary
+*.exe       binary
+*.dll       binary
+*.dylib     binary
+*.so        binary
+*.a         binary
+*.o         binary
+*.lib       binary
+*.tlb       binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.bmp       binary
+*.ico       binary
+*.icns      binary
+*.pdf       binary
+*.zip       binary
+*.omex      binary
+
+# ---------------------------------------------------------------------------
+# GitHub presentation.
+#
+# RichMemo is a vendored third-party editor, not code written for Iridium, so
+# it is excluded from the repository's language statistics. It keeps its own
+# .gitattributes, which continues to govern line endings inside that folder.
+# ---------------------------------------------------------------------------
+RichMemo/** linguist-vendored
+
+# Screenshots and icons are not source.
+Images/** linguist-documentation
