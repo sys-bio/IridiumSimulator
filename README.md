@@ -20,6 +20,10 @@ simulation engine and is fully [SBML](https://github.com/sbmlteam/libsbml) compl
 
 <img src="/Images/iridium1.png" width="80%"></img>
 
+Here is a short vide that briefly shows how to use the platform:
+
+https://youtu.be/OKD2pzLkGpM
+
 ---
 
 ## Acknowledgements
